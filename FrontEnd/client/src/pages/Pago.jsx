@@ -1,0 +1,218 @@
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
+import { api } from '../lib/api'
+import { dinero } from '../lib/format'
+
+const FORM_INICIAL = { titular: '', numero: '', vencimiento: '', cvv: '', cuotas: '1' }
+
+export default function Pago() {
+  const { items, totales, vaciar } = useCart()
+  const { usuario } = useAuth()
+  const [form, setForm] = useState(FORM_INICIAL)
+  const [error, setError] = useState('')
+  const [procesando, setProcesando] = useState(false)
+  const [venta, setVenta] = useState(null)
+
+  if (venta) {
+    return (
+      <div className="pago-exitoso card">
+        <span className="pago-exitoso__icono" aria-hidden="true">
+          ✅
+        </span>
+        <h1>¡Pago aprobado!</h1>
+        <p>
+          Tu compra <strong>#{venta.id}</strong> fue registrada el {venta.fecha}. Te enviamos el
+          detalle a {usuario?.email || 'tu correo'}.
+        </p>
+
+        <div className="ticket">
+          {venta.items.map((i) => (
+            <div key={i.id} className="ticket__linea">
+              <span>
+                {i.cantidad}× {i.nombre}
+              </span>
+              <span>{dinero(i.precio * i.cantidad)}</span>
+            </div>
+          ))}
+          <div className="ticket__linea">
+            <span>Subtotal</span>
+            <span>{dinero(venta.subtotal)}</span>
+          </div>
+          {venta.descuento_pct > 0 && (
+            <div className="ticket__linea ticket__linea--descuento">
+              <span>Descuento {venta.descuento_pct}% (65+)</span>
+              <span>- {dinero(venta.descuento_monto)}</span>
+            </div>
+          )}
+          <div className="ticket__linea ticket__linea--total">
+            <span>Total pagado</span>
+            <span>{dinero(venta.total)}</span>
+          </div>
+        </div>
+
+        <div className="pago-exitoso__acciones">
+          <Link to="/mis-compras" className="boton boton--primario">
+            Ver mis compras
+          </Link>
+          <Link to="/productos" className="boton boton--fantasma">
+            Seguir comprando
+          </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0) {
+    return (
+      <div className="vacio card">
+        <h1>No hay productos para pagar</h1>
+        <p>Agregá productos al carrito antes de iniciar el pago.</p>
+        <Link to="/productos" className="boton boton--primario">
+          Ir al catálogo
+        </Link>
+      </div>
+    )
+  }
+
+  const actualizar = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }))
+
+  const validar = () => {
+    if (!form.titular.trim()) return 'Ingresá el nombre del titular de la tarjeta.'
+    const numero = form.numero.replace(/\s+/g, '')
+    if (!/^\d{16}$/.test(numero)) return 'El número de tarjeta debe tener 16 dígitos.'
+    if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(form.vencimiento)) return 'El vencimiento debe tener el formato MM/AA.'
+    if (!/^\d{3,4}$/.test(form.cvv)) return 'El código de seguridad debe tener 3 o 4 dígitos.'
+    return ''
+  }
+
+  const pagar = async (e) => {
+    e.preventDefault()
+    const falla = validar()
+    if (falla) {
+      setError(falla)
+      return
+    }
+
+    setError('')
+    setProcesando(true)
+    try {
+      const data = await api('/ventas', {
+        method: 'POST',
+        body: {
+          items: items.map((i) => ({ producto_id: i.producto_id, cantidad: i.cantidad })),
+          metodo_pago: 'tarjeta',
+          cuotas: Number(form.cuotas)
+        }
+      })
+      setVenta(data.venta)
+      vaciar()
+    } catch (err) {
+      setError(err.message)
+    } finally {
+      setProcesando(false)
+    }
+  }
+
+  return (
+    <div className="pago">
+      <form className="card pago__formulario" onSubmit={pagar}>
+        <div className="pago__encabezado">
+          <h1>Pago</h1>
+          <span className="chip chip--demo">demo · no se cobra nada</span>
+        </div>
+        <p className="seccion__bajada">
+          Completá los datos de la tarjeta. Este entorno es ficticio y no procesa cobros reales.
+        </p>
+
+        {error && <p className="alerta alerta--error">{error}</p>}
+
+        <label className="campo">
+          <span>Titular de la tarjeta</span>
+          <input
+            value={form.titular}
+            onChange={(e) => actualizar('titular', e.target.value)}
+            placeholder="Como figura en la tarjeta"
+          />
+        </label>
+
+        <label className="campo">
+          <span>Número de tarjeta</span>
+          <input
+            value={form.numero}
+            onChange={(e) => actualizar('numero', e.target.value.replace(/[^\d ]/g, '').slice(0, 19))}
+            placeholder="4111 1111 1111 1111"
+            inputMode="numeric"
+          />
+        </label>
+
+        <div className="fila-campos">
+          <label className="campo">
+            <span>Vencimiento</span>
+            <input
+              value={form.vencimiento}
+              onChange={(e) => {
+                let v = e.target.value.replace(/[^\d]/g, '').slice(0, 4)
+                if (v.length > 2) v = `${v.slice(0, 2)}/${v.slice(2)}`
+                actualizar('vencimiento', v)
+              }}
+              placeholder="MM/AA"
+            />
+          </label>
+          <label className="campo">
+            <span>CVV</span>
+            <input
+              value={form.cvv}
+              onChange={(e) => actualizar('cvv', e.target.value.replace(/[^\d]/g, '').slice(0, 4))}
+              placeholder="123"
+              inputMode="numeric"
+            />
+          </label>
+          <label className="campo">
+            <span>Cuotas</span>
+            <select value={form.cuotas} onChange={(e) => actualizar('cuotas', e.target.value)}>
+              <option value="1">1 pago</option>
+              <option value="3">3 cuotas</option>
+              <option value="6">6 cuotas</option>
+              <option value="12">12 cuotas</option>
+            </select>
+          </label>
+        </div>
+
+        <button type="submit" className="boton boton--primario boton--grande boton--bloque" disabled={procesando}>
+          {procesando ? 'Procesando pago…' : `Pagar ${dinero(totales.total)}`}
+        </button>
+      </form>
+
+      <aside className="card pago__resumen">
+        <h2>Tu pedido</h2>
+        {items.map((i) => (
+          <div key={i.producto_id} className="resumen-linea">
+            <span>
+              {i.cantidad}× {i.nombre}
+            </span>
+            <span>{dinero(i.precio * i.cantidad)}</span>
+          </div>
+        ))}
+        <div className="resumen-linea">
+          <span>Subtotal</span>
+          <span>{dinero(totales.subtotal)}</span>
+        </div>
+        {totales.porcentaje > 0 && (
+          <div className="resumen-linea resumen-linea--descuento">
+            <span>Descuento 65+ ({totales.porcentaje}%)</span>
+            <span>- {dinero(totales.descuento)}</span>
+          </div>
+        )}
+        <div className="resumen-linea resumen-linea--total">
+          <span>Total</span>
+          <span>{dinero(totales.total)}</span>
+        </div>
+        <small className="pago__nota">
+          El descuento para mayores de 65 años se valida con tu fecha de nacimiento registrada.
+        </small>
+      </aside>
+    </div>
+  )
+}

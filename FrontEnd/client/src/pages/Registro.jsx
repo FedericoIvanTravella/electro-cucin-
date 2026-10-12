@@ -53,7 +53,8 @@ export default function Registro() {
       <form className="card auth__form" onSubmit={enviar}>
         <h1>Crear cuenta</h1>
         <p className="seccion__bajada">
-          Tu contraseña se encripta con bcrypt (10 rondas) y nunca se guarda en texto plano.
+          Completá tus datos y empezá a comprar. Al registrarte podés acceder al descuento para
+          mayores de 65 años.
         </p>
 
         {error && <p className="alerta alerta--error">{error}</p>}

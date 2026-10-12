@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
-import { dinero } from '../lib/format'
+import { dinero, imagenProducto, tieneImagen } from '../lib/format'
 
 export default function Carrito() {
   const { items, agregar, cambiarCantidad, quitar, vaciar, totales } = useCart()
@@ -60,8 +60,8 @@ export default function Carrito() {
           {items.map((item) => (
             <div key={item.producto_id} className="linea-carrito">
               <div className="linea-carrito__media" aria-hidden="true">
-                {item.imagen?.startsWith('http') ? (
-                  <img src={item.imagen} alt="" />
+                {imagenProducto(item) ? (
+                  <img src={imagenProducto(item)} alt="" />
                 ) : (
                   <span>{item.imagen || '🍽️'}</span>
                 )}
@@ -135,7 +135,11 @@ export default function Carrito() {
               )}
               {disponibles.slice(0, 8).map((p) => (
                 <div key={p.id} className="agregar-productos__item">
-                  <span aria-hidden="true">{p.imagen || '🍽️'}</span>
+                  {tieneImagen(p) ? (
+                    <img src={imagenProducto(p)} alt="" className="agregar-productos__thumb" />
+                  ) : (
+                    <span aria-hidden="true">{p.imagen || '🍽️'}</span>
+                  )}
                   <div>
                     <strong>{p.nombre}</strong>
                     <small>

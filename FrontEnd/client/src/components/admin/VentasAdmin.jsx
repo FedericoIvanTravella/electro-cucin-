@@ -130,6 +130,9 @@ export default function VentasAdmin() {
                       TOTAL <strong>{dinero(v.total)}</strong>
                     </p>
                     <p className="venta__metodo">Método de pago: {v.metodo_pago}</p>
+                    {v.direccion_envio && (
+                      <p className="venta__metodo">📦 Envío a: {v.direccion_envio}</p>
+                    )}
                   </div>
                   {v.estado === 'completada' && (
                     <button type="button" className="boton boton--peligro" onClick={() => anular(v)}>

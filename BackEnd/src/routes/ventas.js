@@ -16,7 +16,7 @@ function detalleVenta(venta) {
 }
 
 router.post('/', requerirAuth, (req, res) => {
-  const { items, metodo_pago = 'tarjeta', cliente_id = null } = req.body || {}
+  const { items, metodo_pago = 'tarjeta', cliente_id = null, direccion_envio = '' } = req.body || {}
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'El carrito estÃ¡ vacÃ­o.' })
@@ -57,10 +57,19 @@ router.post('/', requerirAuth, (req, res) => {
   const resultado = transaction(() => {
     const venta = db
       .prepare(
-        `INSERT INTO ventas (usuario_id, cliente_id, subtotal, descuento_pct, descuento_monto, total, metodo_pago)
-         VALUES (?, ?, ?, ?, ?, ?, ?)`
+        `INSERT INTO ventas (usuario_id, cliente_id, subtotal, descuento_pct, descuento_monto, total, metodo_pago, direccion_envio)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
       )
-      .run(req.usuario.id, cliente_id ?? null, subtotal, descuento_pct, descuento_monto, total, metodo_pago)
+      .run(
+        req.usuario.id,
+        cliente_id ?? null,
+        subtotal,
+        descuento_pct,
+        descuento_monto,
+        total,
+        metodo_pago,
+        direccion_envio
+      )
 
     const ventaId = venta.lastInsertRowid
     const itemStmt = db.prepare(

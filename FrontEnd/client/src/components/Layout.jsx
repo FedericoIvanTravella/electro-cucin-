@@ -37,6 +37,7 @@ function Navbar() {
         <nav className={`navbar__nav ${abierto ? 'abierto' : ''}`}>
           <NavLink to="/">Inicio</NavLink>
           <NavLink to="/productos">Productos</NavLink>
+          <NavLink to="/ayuda">Ayuda</NavLink>
           {usuario && <NavLink to="/mis-compras">Mis compras</NavLink>}
           {esAdmin && <NavLink to="/admin">Panel del superusuario</NavLink>}
         </nav>
@@ -89,6 +90,9 @@ function Footer() {
           <p className="footer__titulo">Atención al cliente</p>
           <p>Av. Siempreviva 742 · 0800-123-4567</p>
           <p>lunes a sábados de 9 a 20 h</p>
+          <p>
+            <Link to="/ayuda">Ayuda al comprador</Link>
+          </p>
         </div>
         <div>
           <p className="footer__titulo">Beneficio</p>

@@ -62,7 +62,7 @@ export default function Home() {
               </li>
             )}
             <li>
-              <strong>+30</strong>
+              <strong>+100</strong>
               <span>productos para tu cocina</span>
             </li>
             <li>

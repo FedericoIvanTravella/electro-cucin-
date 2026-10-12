@@ -30,9 +30,7 @@ export default function Login() {
     <div className="auth">
       <form className="card auth__form" onSubmit={enviar}>
         <h1>Iniciar sesión</h1>
-        <p className="seccion__bajada">
-          Ingresá para gestionar tus compras. Las contraseñas se guardan encriptadas con bcrypt.
-        </p>
+        <p className="seccion__bajada">Ingresá para gestionar tus compras y acceder a tus beneficios.</p>
 
         {error && <p className="alerta alerta--error">{error}</p>}
 

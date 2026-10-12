@@ -5,7 +5,17 @@ import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
 import { dinero } from '../lib/format'
 
-const FORM_INICIAL = { titular: '', numero: '', vencimiento: '', cvv: '', cuotas: '1' }
+const FORM_INICIAL = {
+  titular: '',
+  numero: '',
+  vencimiento: '',
+  cvv: '',
+  cuotas: '1',
+  calle: '',
+  ciudad: '',
+  cp: '',
+  provincia: ''
+}
 
 export default function Pago() {
   const { items, totales, vaciar } = useCart()
@@ -50,6 +60,12 @@ export default function Pago() {
             <span>Total pagado</span>
             <span>{dinero(venta.total)}</span>
           </div>
+          {venta.direccion_envio && (
+            <div className="ticket__linea ticket__linea--envio">
+              <span>📦 Envío a:</span>
+              <span className="ticket__envio-texto">{venta.direccion_envio}</span>
+            </div>
+          )}
         </div>
 
         <div className="pago-exitoso__acciones">
@@ -78,12 +94,21 @@ export default function Pago() {
 
   const actualizar = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }))
 
+  const direccionEnvio = () =>
+    [form.calle.trim(), form.ciudad.trim(), form.cp.trim() && `CP ${form.cp.trim()}`, form.provincia.trim()]
+      .filter(Boolean)
+      .join(', ')
+
   const validar = () => {
     if (!form.titular.trim()) return 'Ingresá el nombre del titular de la tarjeta.'
     const numero = form.numero.replace(/\s+/g, '')
     if (!/^\d{16}$/.test(numero)) return 'El número de tarjeta debe tener 16 dígitos.'
     if (!/^(0[1-9]|1[0-2])\/\d{2}$/.test(form.vencimiento)) return 'El vencimiento debe tener el formato MM/AA.'
     if (!/^\d{3,4}$/.test(form.cvv)) return 'El código de seguridad debe tener 3 o 4 dígitos.'
+    if (!form.calle.trim()) return 'Ingresá la calle y número para el envío.'
+    if (!form.ciudad.trim()) return 'Ingresá la ciudad de envío.'
+    if (!/^\d{4,5}$/.test(form.cp.trim())) return 'Ingresá el código postal correcto.'
+    if (!form.provincia.trim()) return 'Ingresá la provincia de envío.'
     return ''
   }
 
@@ -103,7 +128,8 @@ export default function Pago() {
         body: {
           items: items.map((i) => ({ producto_id: i.producto_id, cantidad: i.cantidad })),
           metodo_pago: 'tarjeta',
-          cuotas: Number(form.cuotas)
+          cuotas: Number(form.cuotas),
+          direccion_envio: direccionEnvio()
         }
       })
       setVenta(data.venta)
@@ -177,6 +203,47 @@ export default function Pago() {
               <option value="6">6 cuotas</option>
               <option value="12">12 cuotas</option>
             </select>
+          </label>
+        </div>
+
+        <h2 className="pago__subtitulo">Dirección de envío</h2>
+        <label className="campo">
+          <span>Calle y número</span>
+          <input
+            value={form.calle}
+            onChange={(e) => actualizar('calle', e.target.value)}
+            placeholder="Av. Corrientes 1234, piso 2 (opcional: depto / referencia)"
+            autoComplete="street-address"
+          />
+        </label>
+        <div className="fila-campos">
+          <label className="campo">
+            <span>Ciudad</span>
+            <input
+              value={form.ciudad}
+              onChange={(e) => actualizar('ciudad', e.target.value)}
+              placeholder="Ciudad"
+              autoComplete="address-level2"
+            />
+          </label>
+          <label className="campo">
+            <span>Código postal</span>
+            <input
+              value={form.cp}
+              onChange={(e) => actualizar('cp', e.target.value.replace(/[^\d]/g, '').slice(0, 5))}
+              placeholder="1414"
+              inputMode="numeric"
+              autoComplete="postal-code"
+            />
+          </label>
+          <label className="campo">
+            <span>Provincia</span>
+            <input
+              value={form.provincia}
+              onChange={(e) => actualizar('provincia', e.target.value)}
+              placeholder="Buenos Aires (CABA)"
+              autoComplete="address-level1"
+            />
           </label>
         </div>
 

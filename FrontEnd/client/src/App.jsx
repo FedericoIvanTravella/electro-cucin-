@@ -8,6 +8,7 @@ import Pago from './pages/Pago.jsx'
 import Login from './pages/Login.jsx'
 import Registro from './pages/Registro.jsx'
 import MisCompras from './pages/MisCompras.jsx'
+import Ayuda from './pages/Ayuda.jsx'
 import Admin from './pages/Admin.jsx'
 import NotFound from './pages/NotFound.jsx'
 
@@ -32,6 +33,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Home />} />
         <Route path="/productos" element={<Productos />} />
+        <Route path="/ayuda" element={<Ayuda />} />
         <Route path="/carrito" element={<Carrito />} />
         <Route
           path="/pago"

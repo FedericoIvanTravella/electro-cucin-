@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../lib/api'
-import { dinero } from '../../lib/format'
+import { ahorroPorcentaje, dinero, imagenProducto } from '../../lib/format'
 
-const VACIO = { nombre: '', categoria: '', descripcion: '', precio: '', stock: '', imagen: '' }
+const VACIO = { nombre: '', categoria: '', descripcion: '', precio: '', precio_tachado: '', stock: '', imagen: '' }
 const CATEGORIAS = ['Cocción', 'Preparación', 'Cafetería', 'Limpieza']
 
 export default function ProductosAdmin() {
@@ -13,6 +13,7 @@ export default function ProductosAdmin() {
   const [mostrarOcultos, setMostrarOcultos] = useState(false)
   const [form, setForm] = useState({ abierto: false, editando: null, datos: VACIO })
   const [mensaje, setMensaje] = useState('')
+  const [imagenes, setImagenes] = useState([])
 
   const cargar = () => {
     setCargando(true)
@@ -25,7 +26,12 @@ export default function ProductosAdmin() {
       .finally(() => setCargando(false))
   }
 
-  useEffect(cargar, [])
+  useEffect(() => {
+    cargar()
+    api('/productos/imagenes')
+      .then((d) => setImagenes(d.imagenes))
+      .catch(() => setImagenes([]))
+  }, [])
 
   const visibles = useMemo(() => {
     return productos.filter(
@@ -49,6 +55,7 @@ export default function ProductosAdmin() {
       categoria: form.datos.categoria,
       descripcion: form.datos.descripcion,
       precio: Number(form.datos.precio),
+      precio_tachado: Number(form.datos.precio_tachado || 0),
       stock: Number(form.datos.stock),
       imagen: form.datos.imagen,
       activo: form.datos.activo === 1 || form.datos.activo
@@ -163,7 +170,11 @@ export default function ProductosAdmin() {
                 <tr key={p.id} className={p.activo ? '' : 'fila-oculta'}>
                   <td>
                     <div className="celda-producto">
-                      <span aria-hidden="true">{p.imagen || '🍽️'}</span>
+                      {imagenProducto(p) ? (
+                        <img src={imagenProducto(p)} alt="" className="celda-producto__thumb" />
+                      ) : (
+                        <span aria-hidden="true">{p.imagen || '🍽️'}</span>
+                      )}
                       <div>
                         <strong>{p.nombre}</strong>
                         <small>{p.descripcion}</small>
@@ -171,7 +182,20 @@ export default function ProductosAdmin() {
                     </div>
                   </td>
                   <td>{p.categoria}</td>
-                  <td>{dinero(p.precio)}</td>
+                  <td>
+                    <div>
+                      <strong>{dinero(p.precio)}</strong>
+                      {p.precio_tachado > p.precio && (
+                        <>
+                          <br />
+                          <small className="celda-tachado">{dinero(p.precio_tachado)}</small>
+                          <span className="chip chip--descuento">
+                            {ahorroPorcentaje(p.precio, p.precio_tachado)}% OFF
+                          </span>
+                        </>
+                      )}
+                    </div>
+                  </td>
                   <td>
                     <div className="stock-control">
                       <button type="button" onClick={() => cambiarStock(p, -1)} aria-label="Restar stock">
@@ -234,13 +258,23 @@ export default function ProductosAdmin() {
                 </select>
               </label>
               <label className="campo">
-                <span>Precio *</span>
+                <span>Precio de venta *</span>
                 <input
                   type="number"
                   min="0"
                   value={form.datos.precio}
                   onChange={(e) => actualizar('precio', e.target.value)}
                   required
+                />
+              </label>
+              <label className="campo">
+                <span>Precio anterior (para mostrar OF)</span>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.datos.precio_tachado}
+                  onChange={(e) => actualizar('precio_tachado', e.target.value)}
+                  placeholder="opcional"
                 />
               </label>
               <label className="campo">
@@ -266,11 +300,11 @@ export default function ProductosAdmin() {
 
             <div className="fila-campos">
               <label className="campo">
-                <span>Ícono (emoji o URL de imagen)</span>
+                <span>Imagen (número de archivo, URL o emoji)</span>
                 <input
                   value={form.datos.imagen}
                   onChange={(e) => actualizar('imagen', e.target.value)}
-                  placeholder="🍳 o https://…"
+                  placeholder="ej: 42 · https://… · 🍳"
                 />
               </label>
               <label className="check check--primaria">
@@ -282,6 +316,29 @@ export default function ProductosAdmin() {
                 Visible en el catálogo
               </label>
             </div>
+
+            {imagenes.length > 0 && (
+              <div className="selector-imagenes">
+                <span>Imágenes disponibles en el servidor:</span>
+                <div className="selector-imagenes__lista">
+                  {imagenes.map((archivo) => {
+                    const numero = archivo.replace(/\.[^.]+$/, '')
+                    const activa = String(form.datos.imagen) === String(numero)
+                    return (
+                      <button
+                        key={archivo}
+                        type="button"
+                        className={`chip chip--boton ${activa ? 'chip--primario' : ''}`}
+                        onClick={() => actualizar('imagen', activa ? '' : numero)}
+                        title={`Usar ${archivo}`}
+                      >
+                        {archivo}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
 
             <div className="modal__acciones">
               <button type="button" className="boton boton--fantasma" onClick={cerrar}>

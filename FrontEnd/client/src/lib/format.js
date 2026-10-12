@@ -8,6 +8,35 @@ export function dinero(valor) {
   return MONEDA.format(Number(valor) || 0)
 }
 
+export function cuota(precio, cantidad = 12) {
+  return (Number(precio) || 0) / cantidad
+}
+
+export function ahorroPorcentaje(precio, precioTachado) {
+  const p = Number(precio) || 0
+  const t = Number(precioTachado) || 0
+  if (t <= p) return 0
+  return Math.round(((t - p) / t) * 100)
+}
+
+// Resuelve la imagen de un producto.
+//  - "5"        -> archivo numerado: /productos/5.jpg
+//  - "https…"   -> URL externa
+//  - "/productos/x.jpg" -> ruta directa
+//  - emoji      -> sin imagen (se muestra el emoji)
+export function imagenProducto(producto) {
+  const img = producto?.imagen
+  if (!img) return ''
+  if (/^\d+$/.test(img)) return `/productos/${img}.jpg`
+  if (/^https?:\/\//.test(img)) return img
+  if (img.startsWith('/')) return img
+  return ''
+}
+
+export function tieneImagen(producto) {
+  return Boolean(imagenProducto(producto))
+}
+
 export function fecha(fechaTexto) {
   if (!fechaTexto) return '—'
   const fecha = new Date(String(fechaTexto).replace(' ', 'T'))

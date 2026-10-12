@@ -40,6 +40,10 @@ app.use((err, req, res, next) => {
 })
 
 const dist = path.join(__dirname, '..', 'FrontEnd', 'client', 'dist')
+const publico = path.join(__dirname, 'public')
+if (fs.existsSync(publico)) {
+  app.use(express.static(publico))
+}
 if (fs.existsSync(dist)) {
   app.use(express.static(dist))
   app.get(/^(?!\/api).*/, (req, res) => {

@@ -1,10 +1,20 @@
 import { Router } from 'express'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import { db } from '../db.js'
 import { requerirAdmin } from '../auth.js'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const CARPETA_IMAGENES = path.join(__dirname, '..', '..', 'public', 'productos')
+
 const router = Router()
 
-const SOLOS_CATEGORIAS = ['Cocción', 'Preparación', 'Cafetería', 'Limpieza']
+const CATEGORIAS = ['Cocción', 'Preparación', 'Cafetería', 'Limpieza']
+
+function normalizarImagen(valor) {
+  return String(valor || '').trim().slice(0, 300)
+}
 
 function validarProducto(body, { parcial = false } = {}) {
   const errores = []
@@ -23,20 +33,25 @@ function validarProducto(body, { parcial = false } = {}) {
     if (!Number.isFinite(precio) || precio < 0) errores.push('El precio debe ser un número mayor o igual a 0.')
     datos.precio = precio
   }
+  if (!parcial || body.precio_tachado !== undefined) {
+    const tachado = Number(body.precio_tachado ?? 0)
+    if (!Number.isFinite(tachado) || tachado < 0) errores.push('El precio anterior debe ser un número mayor o igual a 0.')
+    datos.precio_tachado = tachado
+  }
   if (!parcial || body.stock !== undefined) {
     const stock = Number(body.stock)
     if (!Number.isInteger(stock) || stock < 0) errores.push('El stock debe ser un entero mayor o igual a 0.')
     datos.stock = stock
   }
   if (body.descripcion !== undefined) datos.descripcion = String(body.descripcion || '')
-  if (body.imagen !== undefined) datos.imagen = String(body.imagen || '').trim().slice(0, 300)
+  if (body.imagen !== undefined) datos.imagen = normalizarImagen(body.imagen)
   if (body.activo !== undefined) datos.activo = body.activo ? 1 : 0
 
   return { errores, datos }
 }
 
 router.get('/', (req, res) => {
-  const { q = '', categoria = '', soloStock = '', admin = '' } = req.query
+  const { q = '', categoria = '', soloStock = '', admin = '', min = '', max = '' } = req.query
   const filtros = []
   const params = []
 
@@ -54,15 +69,31 @@ router.get('/', (req, res) => {
     params.push(categoria)
   }
   if (soloStock === '1') filtros.push('stock > 0')
+  if (min !== '' && !Number.isNaN(Number(min))) {
+    filtros.push('precio >= ?')
+    params.push(Number(min))
+  }
+  if (max !== '' && !Number.isNaN(Number(max))) {
+    filtros.push('precio <= ?')
+    params.push(Number(max))
+  }
 
   const productos = db
     .prepare(`SELECT * FROM productos WHERE ${filtros.join(' AND ')} ORDER BY nombre`)
     .all(...params)
 
-  res.json({
-    productos,
-    categorias: SOLOS_CATEGORIAS
-  })
+  res.json({ productos, categorias: CATEGORIAS })
+})
+
+router.get('/imagenes', requerirAdmin, (req, res) => {
+  let archivos = []
+  if (fs.existsSync(CARPETA_IMAGENES)) {
+    archivos = fs
+      .readdirSync(CARPETA_IMAGENES)
+      .filter((f) => /\.(jpe?g|png|webp|avif|gif)$/i.test(f))
+      .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
+  }
+  res.json({ imagenes: archivos, ruta: '/productos' })
 })
 
 router.get('/:id', (req, res) => {
@@ -77,14 +108,15 @@ router.post('/', requerirAdmin, (req, res) => {
 
   const resultado = db
     .prepare(
-      `INSERT INTO productos (nombre, categoria, descripcion, precio, stock, imagen, activo)
-       VALUES (?, ?, ?, ?, ?, ?, ?)`
+      `INSERT INTO productos (nombre, categoria, descripcion, precio, precio_tachado, stock, imagen, activo)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`
     )
     .run(
       datos.nombre,
       datos.categoria,
       datos.descripcion ?? '',
       datos.precio,
+      datos.precio_tachado ?? 0,
       datos.stock ?? 0,
       datos.imagen ?? '',
       datos.activo ?? 1
@@ -102,13 +134,14 @@ router.put('/:id', requerirAdmin, (req, res) => {
   if (errores.length) return res.status(400).json({ error: errores.join(' ') })
 
   db.prepare(
-    `UPDATE productos SET nombre = ?, categoria = ?, descripcion = ?, precio = ?, stock = ?,
-      imagen = ?, activo = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`
+    `UPDATE productos SET nombre = ?, categoria = ?, descripcion = ?, precio = ?, precio_tachado = ?,
+      stock = ?, imagen = ?, activo = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`
   ).run(
     datos.nombre,
     datos.categoria,
     datos.descripcion ?? '',
     datos.precio,
+    datos.precio_tachado ?? 0,
     datos.stock ?? 0,
     datos.imagen ?? '',
     datos.activo ?? 1,
@@ -156,7 +189,7 @@ router.delete('/:id', requerirAdmin, (req, res) => {
 
   const vendido = db.prepare('SELECT COUNT(*) AS n FROM venta_items WHERE producto_id = ?').get(producto.id).n
   if (vendido > 0) {
-    db.prepare('UPDATE productos SET activo = 0, updated_at = datetime(\'now\', \'localtime\') WHERE id = ?').run(producto.id)
+    db.prepare("UPDATE productos SET activo = 0, updated_at = datetime('now', 'localtime') WHERE id = ?").run(producto.id)
     return res.json({ producto: db.prepare('SELECT * FROM productos WHERE id = ?').get(producto.id), oculto: true })
   }
 

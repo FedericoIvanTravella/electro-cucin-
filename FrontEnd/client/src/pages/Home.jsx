@@ -1,9 +1,12 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import TestimoniosCarrusel from '../components/TestimoniosCarrusel'
+import Revelar from '../components/Revelar'
+import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
-import { dinero } from '../lib/format'
+import { dinero, imagenProducto } from '../lib/format'
 
 const beneficios = [
   { icono: '🚚', titulo: 'Envío sin cargo', texto: 'En compras superiores a $150.000 en todo el país.' },
@@ -12,19 +15,32 @@ const beneficios = [
   { icono: '👵', titulo: '30% para mayores', texto: 'Si tenés 65 años o más, iniciá sesión y el descuento se aplica solo.' }
 ]
 
+const categorias = [
+  { nombre: 'Cocción', icono: '🍳', texto: 'Hornos, freidoras y anafes' },
+  { nombre: 'Preparación', icono: '🥣', texto: 'Batidoras, licuadoras y procesadoras' },
+  { nombre: 'Cafetería', icono: '☕', texto: 'Cafeteras, pavas y tostadoras' },
+  { nombre: 'Limpieza', icono: '🧽', texto: 'Lavavajillas y extractores' }
+]
+
 export default function Home() {
   const { usuario } = useAuth()
   const [destacados, setDestacados] = useState([])
+  const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
     api('/productos?soloStock=1')
       .then((data) => setDestacados(data.productos.slice(0, 4)))
       .catch(() => setDestacados([]))
+      .finally(() => setCargando(false))
   }, [])
 
   const masBarato = destacados.length
     ? destacados.reduce((min, p) => (p.precio < min.precio ? p : min), destacados[0])
     : null
+
+  // Producto destacado con imagen real para el hero (reemplaza los emojis).
+  const productoHero = destacados.find((p) => imagenProducto(p)) || destacados[0] || null
+  const imagenHero = productoHero ? imagenProducto(productoHero) : null
 
   return (
     <div className="home">
@@ -71,17 +87,24 @@ export default function Home() {
             </li>
           </ul>
         </div>
-        <div className="hero__arte" aria-hidden="true">
-          <div className="hero__plato">
-            <span>🥘</span>
-            <span>🍳</span>
-            <span>☕</span>
-            <span>🥄</span>
-          </div>
+        <div className="hero__arte">
+          {imagenHero ? (
+            <div className="hero__producto">
+              <img src={imagenHero} alt={productoHero.nombre} className="hero__producto-img" />
+              <span className="hero__producto-etiqueta">{productoHero.categoria}</span>
+            </div>
+          ) : (
+            <div className="hero__plato" aria-hidden="true">
+              <span>🥘</span>
+              <span>🍳</span>
+              <span>☕</span>
+              <span>🥄</span>
+            </div>
+          )}
         </div>
       </section>
 
-      <section className="beneficios">
+      <Revelar as="section" className="beneficios">
         {beneficios.map((b) => (
           <article key={b.titulo} className="beneficio">
             <span className="beneficio__icono" aria-hidden="true">
@@ -91,9 +114,34 @@ export default function Home() {
             <p>{b.texto}</p>
           </article>
         ))}
-      </section>
+      </Revelar>
 
-      <section className="seccion">
+      <Revelar as="section" className="seccion">
+        <div className="seccion__cabecera">
+          <div>
+            <h2>Explorá por categoría</h2>
+            <p className="seccion__bajada">Encontrá rápido lo que necesitás para tu cocina.</p>
+          </div>
+        </div>
+        <div className="categorias-strip">
+          {categorias.map((c) => (
+            <Link
+              key={c.nombre}
+              to={`/productos?categoria=${encodeURIComponent(c.nombre)}`}
+              className="card categoria-card"
+            >
+              <span className="categoria-card__icono" aria-hidden="true">
+                {c.icono}
+              </span>
+              <h3>{c.nombre}</h3>
+              <p>{c.texto}</p>
+              <span className="categoria-card__link">Ver productos →</span>
+            </Link>
+          ))}
+        </div>
+      </Revelar>
+
+      <Revelar as="section" className="seccion">
         <div className="seccion__cabecera">
           <div>
             <h2>Destacados de la semana</h2>
@@ -104,15 +152,29 @@ export default function Home() {
           </Link>
         </div>
 
-        <div className="grilla-productos">
-          {destacados.length === 0 && <p className="aviso">Cargando productos…</p>}
-          {destacados.map((p) => (
-            <ProductCard key={p.id} producto={p} destacado />
-          ))}
-        </div>
-      </section>
+        {cargando ? (
+          <GrillaSkeleton cantidad={4} />
+        ) : (
+          <div className="grilla-productos">
+            {destacados.map((p) => (
+              <ProductCard key={p.id} producto={p} destacado />
+            ))}
+          </div>
+        )}
+      </Revelar>
 
-      <section className="descuento">
+      <Revelar as="section" className="seccion">
+        <div className="seccion__cabecera">
+          <div>
+            <h2>Lo que dicen nuestros clientes</h2>
+            <p className="seccion__bajada">Miles de cocinas argentinas ya confían en Electro Cuciné.</p>
+          </div>
+          <span className="chip chip--demo">★ 4.8 / 5 promedio</span>
+        </div>
+        <TestimoniosCarrusel />
+      </Revelar>
+
+      <Revelar as="section" className="descuento">
         <div>
           <h2>Beneficio para mayores de 65 años</h2>
           <p>
@@ -123,7 +185,7 @@ export default function Home() {
         <Link to={usuario ? '/productos' : '/registro'} className="boton boton--primario boton--grande">
           {usuario ? 'Comprar ahora' : 'Quiero mi beneficio'}
         </Link>
-      </section>
+      </Revelar>
     </div>
   )
 }

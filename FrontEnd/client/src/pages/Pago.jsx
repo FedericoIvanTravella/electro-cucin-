@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import TarjetaCredito from '../components/TarjetaCredito'
+import EstadoVacio from '../components/EstadoVacio'
 import { api } from '../lib/api'
 import { dinero } from '../lib/format'
 
@@ -82,13 +84,14 @@ export default function Pago() {
 
   if (items.length === 0) {
     return (
-      <div className="vacio card">
-        <h1>No hay productos para pagar</h1>
-        <p>Agregá productos al carrito antes de iniciar el pago.</p>
-        <Link to="/productos" className="boton boton--primario">
+      <EstadoVacio
+        titulo="No hay productos para pagar"
+        mensaje="Agregá productos al carrito antes de iniciar el pago."
+      >
+        <Link to="/productos" className="boton boton--primario boton--grande">
           Ir al catálogo
         </Link>
-      </div>
+      </EstadoVacio>
     )
   }
 
@@ -151,6 +154,13 @@ export default function Pago() {
         <p className="seccion__bajada">
           Completá los datos de la tarjeta. Este entorno es ficticio y no procesa cobros reales.
         </p>
+
+        <TarjetaCredito
+          numero={form.numero}
+          titular={form.titular}
+          vencimiento={form.vencimiento}
+          cvv={form.cvv}
+        />
 
         {error && <p className="alerta alerta--error">{error}</p>}
 

@@ -1,6 +1,6 @@
 /* eslint-disable react-refresh/only-export-components */
 import { createContext, useCallback, useContext, useEffect, useState } from 'react'
-import { api, getToken, setToken } from '../lib/api'
+import { api } from '../lib/api'
 
 const AuthContext = createContext(null)
 
@@ -8,27 +8,23 @@ export function AuthProvider({ children }) {
   const [usuario, setUsuario] = useState(null)
   const [cargando, setCargando] = useState(true)
 
+  // Al cargar la app preguntamos al backend si hay sesión (cookie httpOnly).
+  // Esto también hace que el navegador reciba/renueve la cookie CSRF.
   useEffect(() => {
-    if (!getToken()) {
-      setCargando(false)
-      return
-    }
     api('/auth/me')
       .then((data) => setUsuario(data.usuario))
-      .catch(() => setToken(null))
+      .catch(() => setUsuario(null))
       .finally(() => setCargando(false))
   }, [])
 
   const entrar = useCallback(async (username, password) => {
     const data = await api('/auth/login', { method: 'POST', body: { username, password } })
-    setToken(data.token)
     setUsuario(data.usuario)
     return data.usuario
   }, [])
 
   const registrar = useCallback(async (datos) => {
     const data = await api('/auth/register', { method: 'POST', body: datos })
-    setToken(data.token)
     setUsuario(data.usuario)
     return data.usuario
   }, [])
@@ -39,7 +35,11 @@ export function AuthProvider({ children }) {
     } catch {
       // la sesión se cierra igual en el cliente
     }
-    setToken(null)
+    setUsuario(null)
+  }, [])
+
+  const revocarSesiones = useCallback(async () => {
+    await api('/auth/revocar-sesiones', { method: 'POST' })
     setUsuario(null)
   }, [])
 
@@ -54,7 +54,17 @@ export function AuthProvider({ children }) {
 
   return (
     <AuthContext.Provider
-      value={{ usuario, cargando, esAdmin, conDescuento, entrar, registrar, salir, refrescar }}
+      value={{
+        usuario,
+        cargando,
+        esAdmin,
+        conDescuento,
+        entrar,
+        registrar,
+        salir,
+        revocarSesiones,
+        refrescar
+      }}
     >
       {children}
     </AuthContext.Provider>

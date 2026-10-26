@@ -1,9 +1,11 @@
 import { Router } from 'express'
-import { db, transaction, tieneDescuento, PORCENTAJE_DESCUENTO } from '../db.js'
+import { db, transaction, tieneDescuento, PORCENTAJE_DESCUENTO, registrarAuditoria } from '../db.js'
 import { requerirAuth, requerirAdmin } from '../auth.js'
 
 const router = Router()
 
+// ---------------------- SECCIÓN: VENTAS ----------------------
+// arma el detalle completo de una venta: sus ítems + usuario/cliente.
 function detalleVenta(venta) {
   const items = db.prepare('SELECT * FROM venta_items WHERE venta_id = ?').all(venta.id)
   const usuario = venta.usuario_id
@@ -15,6 +17,9 @@ function detalleVenta(venta) {
   return { ...venta, items, usuario, cliente }
 }
 
+// ---------------------- POST /api/ventas · Registrar una compra ----------------------
+// Requiere sesión. Valida stock, calcula el descuento de 65+, guarda la
+// cabecera + ítems y descuenta el stock, todo dentro de UNA transacción.
 router.post('/', requerirAuth, (req, res) => {
   const { items, metodo_pago = 'tarjeta', cliente_id = null, direccion_envio = '' } = req.body || {}
 
@@ -22,11 +27,13 @@ router.post('/', requerirAuth, (req, res) => {
     return res.status(400).json({ error: 'El carrito estÃ¡ vacÃ­o.' })
   }
 
+  // --- Descuento 65+ y cálculo del subtotal ---
   const descuentoActivo = tieneDescuento(req.usuario)
   const descuento_pct = descuentoActivo ? PORCENTAJE_DESCUENTO : 0
   const lineas = []
   let subtotal = 0
 
+  // Valida cada producto: que exista, esté activo y tenga stock suficiente.
   for (const item of items) {
     const cantidad = Number(item.cantidad)
     const producto = db.prepare('SELECT * FROM productos WHERE id = ? AND activo = 1').get(item.producto_id)
@@ -54,6 +61,7 @@ router.post('/', requerirAuth, (req, res) => {
     return res.status(400).json({ error: 'El cliente indicado no existe.' })
   }
 
+  // --- Insert de cabecera + ítems + descuento de stock (todo o nada) ---
   const resultado = transaction(() => {
     const venta = db
       .prepare(
@@ -84,9 +92,11 @@ router.post('/', requerirAuth, (req, res) => {
   })
 
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(resultado)
+  registrarAuditoria(req.usuario, 'venta', `Venta #${venta.id} por $${total}`)
   res.status(201).json({ venta: detalleVenta(venta) })
 })
 
+// ---------------------- GET /api/ventas/mias · Mis compras (cliente) ----------------------
 router.get('/mias', requerirAuth, (req, res) => {
   const ventas = db
     .prepare('SELECT * FROM ventas WHERE usuario_id = ? ORDER BY fecha DESC')
@@ -95,6 +105,7 @@ router.get('/mias', requerirAuth, (req, res) => {
   res.json({ ventas })
 })
 
+// ---------------------- GET /api/ventas · Todas (admin, con filtro por estado) ----------------------
 router.get('/', requerirAdmin, (req, res) => {
   const { estado = '' } = req.query
   const filtros = estado ? 'WHERE v.estado = ?' : ''
@@ -106,12 +117,15 @@ router.get('/', requerirAdmin, (req, res) => {
   res.json({ ventas })
 })
 
+// ---------------------- GET /api/ventas/:id · Detalle de una venta (admin) ----------------------
 router.get('/:id', requerirAdmin, (req, res) => {
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(req.params.id)
   if (!venta) return res.status(404).json({ error: 'Venta no encontrada.' })
   res.json({ venta: detalleVenta(venta) })
 })
 
+// ---------------------- DELETE /api/ventas/:id · Anular (admin) ----------------------
+// "Anula" la venta (estado = 'anulada') y restituye el stock de sus ítems.
 router.delete('/:id', requerirAdmin, (req, res) => {
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(req.params.id)
   if (!venta) return res.status(404).json({ error: 'Venta no encontrada.' })
@@ -127,9 +141,12 @@ router.delete('/:id', requerirAdmin, (req, res) => {
     db.prepare("UPDATE ventas SET estado = 'anulada' WHERE id = ?").run(venta.id)
   })
 
+  registrarAuditoria(req.usuario, 'venta-anular', `Venta #${venta.id} por $${venta.total}`)
   res.json({ venta: detalleVenta(db.prepare('SELECT * FROM ventas WHERE id = ?').get(venta.id)) })
 })
 
+// ---------------------- Estadísticas (para el panel del superusuario) ----------------------
+// Solo suma las ventas "completada" (las anuladas no cuentan).
 export function estadisticas() {
   const ventas = db.prepare("SELECT * FROM ventas WHERE estado = 'completada'").all()
   const ingresos = ventas.reduce((acc, v) => acc + v.total, 0)

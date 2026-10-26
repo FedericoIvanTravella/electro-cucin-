@@ -2,20 +2,24 @@ import { Router } from 'express'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { db } from '../db.js'
+import { db, registrarAuditoria } from '../db.js'
 import { requerirAdmin } from '../auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+// Carpeta pública donde viven las imágenes numeradas (/productos/1.jpg, etc.).
 const CARPETA_IMAGENES = path.join(__dirname, '..', '..', 'public', 'productos')
 
 const router = Router()
 
+// ---------------------- Constantes y utilidades ----------------------
 const CATEGORIAS = ['Cocción', 'Preparación', 'Cafetería', 'Limpieza']
 
 function normalizarImagen(valor) {
   return String(valor || '').trim().slice(0, 300)
 }
 
+// Valida el body de un producto (parcial = solo campos enviados).
+// Devuelve { errores[], datos{} } con los campos ya limpios.
 function validarProducto(body, { parcial = false } = {}) {
   const errores = []
   const datos = {}
@@ -50,6 +54,9 @@ function validarProducto(body, { parcial = false } = {}) {
   return { errores, datos }
 }
 
+// ---------------------- GET /api/productos · Listado con filtros ----------------------
+// Público. Filtros: q (texto), categoria, soloStock, min/max (precio) y
+// admin=1 (el panel admin pide también los productos ocultos).
 router.get('/', (req, res) => {
   const { q = '', categoria = '', soloStock = '', admin = '', min = '', max = '' } = req.query
   const filtros = []
@@ -85,6 +92,9 @@ router.get('/', (req, res) => {
   res.json({ productos, categorias: CATEGORIAS })
 })
 
+// ---------------------- GET /api/productos/imagenes · Imágenes disponibles ----------------------
+// Solo admin. Devuelve los archivos de imagen subidos al servidor para
+// poder elegirlos desde el panel (selector de imágenes).
 router.get('/imagenes', requerirAdmin, (req, res) => {
   let archivos = []
   if (fs.existsSync(CARPETA_IMAGENES)) {
@@ -96,12 +106,14 @@ router.get('/imagenes', requerirAdmin, (req, res) => {
   res.json({ imagenes: archivos, ruta: '/productos' })
 })
 
+// ---------------------- GET /api/productos/:id · Detalle ----------------------
 router.get('/:id', (req, res) => {
   const producto = db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id)
   if (!producto) return res.status(404).json({ error: 'Producto no encontrado.' })
   res.json({ producto })
 })
 
+// ---------------------- POST /api/productos · Crear (admin) ----------------------
 router.post('/', requerirAdmin, (req, res) => {
   const { errores, datos } = validarProducto(req.body || {})
   if (errores.length) return res.status(400).json({ error: errores.join(' ') })
@@ -123,9 +135,11 @@ router.post('/', requerirAdmin, (req, res) => {
     )
 
   const producto = db.prepare('SELECT * FROM productos WHERE id = ?').get(resultado.lastInsertRowid)
+  registrarAuditoria(req.usuario, 'producto-crear', `#${producto.id} ${producto.nombre}`)
   res.status(201).json({ producto })
 })
 
+// ---------------------- PUT /api/productos/:id · Actualizar (admin) ----------------------
 router.put('/:id', requerirAdmin, (req, res) => {
   const actual = db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id)
   if (!actual) return res.status(404).json({ error: 'Producto no encontrado.' })
@@ -148,9 +162,12 @@ router.put('/:id', requerirAdmin, (req, res) => {
     req.params.id
   )
 
+  registrarAuditoria(req.usuario, 'producto-editar', `#${req.params.id} ${datos.nombre}`)
   res.json({ producto: db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id) })
 })
 
+// ---------------------- PATCH /api/productos/:id/stock · Ajustar stock (admin) ----------------------
+// Acepta "stock" (valor fijo) o "ajuste" (delta, puede ser negativo).
 router.patch('/:id/stock', requerirAdmin, (req, res) => {
   const producto = db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id)
   if (!producto) return res.status(404).json({ error: 'Producto no encontrado.' })
@@ -180,9 +197,13 @@ router.patch('/:id/stock', requerirAdmin, (req, res) => {
     "UPDATE productos SET stock = ?, updated_at = datetime('now', 'localtime') WHERE id = ?"
   ).run(nuevoStock, req.params.id)
 
+  registrarAuditoria(req.usuario, 'producto-stock', `#${producto.id} ${producto.nombre}: ${producto.stock} → ${nuevoStock}`)
   res.json({ producto: db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id) })
 })
 
+// ---------------------- DELETE /api/productos/:id · Eliminar (admin) ----------------------
+// Si el producto ya se vendió se oculta (activo = 0) para no romper las
+// ventas históricas; si nunca se vendió se borra físicamente.
 router.delete('/:id', requerirAdmin, (req, res) => {
   const producto = db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id)
   if (!producto) return res.status(404).json({ error: 'Producto no encontrado.' })
@@ -190,10 +211,12 @@ router.delete('/:id', requerirAdmin, (req, res) => {
   const vendido = db.prepare('SELECT COUNT(*) AS n FROM venta_items WHERE producto_id = ?').get(producto.id).n
   if (vendido > 0) {
     db.prepare("UPDATE productos SET activo = 0, updated_at = datetime('now', 'localtime') WHERE id = ?").run(producto.id)
+    registrarAuditoria(req.usuario, 'producto-ocultar', `#${producto.id} ${producto.nombre}`)
     return res.json({ producto: db.prepare('SELECT * FROM productos WHERE id = ?').get(producto.id), oculto: true })
   }
 
   db.prepare('DELETE FROM productos WHERE id = ?').run(producto.id)
+  registrarAuditoria(req.usuario, 'producto-eliminar', `#${producto.id} ${producto.nombre}`)
   res.json({ eliminado: true })
 })
 

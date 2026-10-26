@@ -1,3 +1,10 @@
+// =====================================================================
+// SECCIÓN: BASE DE DATOS (SQLite con node:sqlite)
+// - Único módulo que toca la DB. Los routers importan `db` desde acá.
+// - Al importarse este archivo se (1) crean las tablas, (2) se aplican
+//   migraciones de columnas nuevas y (3) se siembran datos iniciales
+//   (superusuario y catálogo de 100 productos) si la DB está vacía.
+// =====================================================================
 import { DatabaseSync } from 'node:sqlite'
 import bcrypt from 'bcrypt'
 import fs from 'node:fs'
@@ -8,8 +15,13 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const dataDir = path.join(__dirname, '..', 'data')
 fs.mkdirSync(dataDir, { recursive: true })
 
+// ---------------------- Conexión a la base ----------------------
+// Abre (o crea) el archivo data/electrocucine.db en modo síncrono.
 export const db = new DatabaseSync(path.join(dataDir, 'electrocucine.db'))
 
+// ---------------------- Helper de transacciones ----------------------
+// node:sqlite no trae db.transaction(): este helper envuelve una función
+// en BEGIN/COMMIT y hace ROLLBACK automático si algo falla a mitad.
 export function transaction(accion) {
   db.exec('BEGIN')
   try {
@@ -21,6 +33,15 @@ export function transaction(accion) {
     throw error
   }
 }
+
+// ---------------------- Esquema de tablas ----------------------
+// CREATE TABLE IF NOT EXISTS: no borra nada si la tabla ya existe.
+//  - usuarios: cuentas (password = hash bcrypt, nunca texto plano).
+//  - sesiones: tokens de sesión con fecha de expiración.
+//  - productos: catálogo; {precio, precio_tachado} = precio de oferta y
+//    precio "tachado" anterior (para mostrar % OFF).
+//  - clientes: libreta de contactos del superusuario.
+//  - ventas / venta_items: cabecera de venta + detalle por producto.
 
 db.exec(`
   PRAGMA journal_mode = WAL;
@@ -91,9 +112,20 @@ db.exec(`
     precio REAL NOT NULL,
     cantidad INTEGER NOT NULL
   );
+
+  CREATE TABLE IF NOT EXISTS auditoria (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    usuario TEXT DEFAULT '',
+    accion TEXT NOT NULL,
+    detalle TEXT DEFAULT '',
+    fecha TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+  );
 `)
 
-// Migraciones: agrega columnas nuevas a tablas existentes sin perder datos.
+// ---------------------- Migraciones ----------------------
+// Si una versión anterior de la DB no tiene una columna nueva,
+// se la agrega con ALTER TABLE sin perder los datos existentes.
 function migrar() {
   const columnasProductos = db.prepare('PRAGMA table_info(productos)').all().map((c) => c.name)
   if (!columnasProductos.includes('precio_tachado')) {
@@ -106,6 +138,8 @@ function migrar() {
 }
 migrar()
 
+// ---------------------- Helpers de edad y descuento ----------------------
+// Calcula la edad a partir de la fecha de nacimiento.
 export function calcularEdad(fechaNacimiento) {
   if (!fechaNacimiento) return null
   const nac = new Date(`${fechaNacimiento}T00:00:00`)
@@ -117,14 +151,50 @@ export function calcularEdad(fechaNacimiento) {
   return edad
 }
 
+// Constantes del negocio: descuento 30% para mayores de 65, tope de 100 años.
 export const EDAD_DESCUENTO = 65
 export const PORCENTAJE_DESCUENTO = 30
+export const EDAD_MAXIMA = 100
 
+// Valida una fecha de nacimiento (formato, futuro y límite de edad).
+// Devuelve '' si es correcta o un mensaje de error legible.
+export function validarFechaNacimiento(fecha) {
+  if (!fecha) return ''
+  const nacimiento = new Date(`${fecha}T00:00:00`)
+  if (Number.isNaN(nacimiento.getTime())) return 'La fecha de nacimiento no es válida.'
+  if (nacimiento > new Date()) return 'La fecha de nacimiento no puede ser a futuro.'
+  const edad = calcularEdad(fecha)
+  if (edad !== null && edad > EDAD_MAXIMA) {
+    return `Debés tener como máximo ${EDAD_MAXIMA} años para crear la cuenta.`
+  }
+  return ''
+}
+
+// Indica si un usuario accede al descuento (65 años o más).
 export function tieneDescuento(usuario) {
   const edad = calcularEdad(usuario?.fecha_nacimiento)
   return edad !== null && edad >= EDAD_DESCUENTO
 }
 
+// ---------------------- Auditoría ----------------------
+// Registra una acción sensible (quién hizo qué y cuándo). Nunca debe
+// romper la operación principal, por eso atrapa cualquier error.
+export function registrarAuditoria(usuario, accion, detalle = '') {
+  try {
+    db.prepare('INSERT INTO auditoria (usuario_id, usuario, accion, detalle) VALUES (?, ?, ?, ?)').run(
+      usuario?.id ?? null,
+      usuario?.username ?? 'sistema',
+      accion,
+      String(detalle)
+    )
+  } catch {
+    // La auditoría es secundaria: si falla, no interrumpe la acción.
+  }
+}
+
+// ---------------------- Seed: superusuario ----------------------
+// Si no existe, crea la cuenta de administrador. La contraseña también
+// se encripta con bcrypt (hash de 10 rondas) antes de guardarla.
 const SUPER_USER = {
   username: 'federico',
   password: 'admin23',
@@ -133,6 +203,7 @@ const SUPER_USER = {
   rol: 'admin'
 }
 
+// ---------------------- Seed: catálogo de productos ----------------------
 // [nombre, categoria, descripcion, precio, stock, precio_tachado]
 // El orden define el ID de cada producto. La imagen "1.jpg" pertenece al producto 1,
 // "2.jpg" al 2, etc.: el campo imagen se guarda como el número de archivo.
@@ -240,8 +311,10 @@ const productosIniciales = [
 ]
 
 function seed() {
+  // --- Superusuario ---
   const admin = db.prepare('SELECT id FROM usuarios WHERE username = ?').get(SUPER_USER.username)
   if (!admin) {
+    // la contraseña "admin23" se guarda como hash bcrypt.
     const hash = bcrypt.hashSync(SUPER_USER.password, 10)
     db.prepare(
       'INSERT INTO usuarios (username, password, nombre, email, fecha_nacimiento, rol) VALUES (?, ?, ?, ?, ?, ?)'
@@ -249,11 +322,14 @@ function seed() {
     console.log(`[seed] Superusuario creado: ${SUPER_USER.username}`)
   }
 
+  // --- Catálogo inicial (solo si la tabla productos está vacía) ---
   const cantidad = db.prepare('SELECT COUNT(*) AS n FROM productos').get().n
   if (cantidad === 0) {
     const stmt = db.prepare(
       'INSERT INTO productos (nombre, categoria, descripcion, precio, precio_tachado, stock, imagen) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
+    // Cada lista es [nombre, categoria, descripcion, precio, stock, precio_tachado].
+    // La imagen se guarda como el número de ID (1 -> /productos/1.jpg).
     productosIniciales.forEach((p, indice) => {
       stmt.run(p[0], p[1], p[2], p[3], p[5], p[4], String(indice + 1))
     })

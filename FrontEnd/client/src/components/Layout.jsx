@@ -2,10 +2,37 @@ import { useEffect, useState } from 'react'
 import { Link, NavLink, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
+import { useFavoritos } from '../context/FavoritosContext'
+import { useTema } from '../context/TemaContext'
+
+// Barra superior con beneficios rotativos (se ve apenas abre la página).
+const PROMOS = [
+  '🚚 Envío sin cargo en compras superiores a $150.000',
+  '💳 12 cuotas sin interés con tarjetas seleccionadas',
+  '👵 30% de descuento para mayores de 65 años',
+  '🛡️ 2 años de garantía en todos los productos'
+]
+
+function BarraPromos() {
+  const [actual, setActual] = useState(0)
+  useEffect(() => {
+    const timer = setInterval(() => setActual((i) => (i + 1) % PROMOS.length), 4000)
+    return () => clearInterval(timer)
+  }, [])
+  return (
+    <div className="promos">
+      <span className="promos__item" key={actual}>
+        {PROMOS[actual]}
+      </span>
+    </div>
+  )
+}
 
 function Navbar() {
-  const { usuario, esAdmin, salir } = useAuth()
+  const { usuario, esAdmin, salir, revocarSesiones } = useAuth()
   const { totales } = useCart()
+  const { cantidad: favs } = useFavoritos()
+  const { tema, alternar } = useTema()
   const [abierto, setAbierto] = useState(false)
   const ubicacion = useLocation()
 
@@ -13,13 +40,19 @@ function Navbar() {
     setAbierto(false)
   }, [ubicacion.pathname])
 
+  const cerrarTodos = async () => {
+    try {
+      await revocarSesiones()
+    } catch {
+      // si falla, igual cerramos del lado del cliente
+    }
+  }
+
   return (
     <header className="navbar">
       <div className="navbar__interior contenedor">
         <Link to="/" className="marca">
-          <span className="marca__icono" aria-hidden="true">
-            🍳
-          </span>
+          <img src="/logo.png" alt="Logo Electro Cuciné" className="marca__logo" />
           <span className="marca__texto">
             Electro <strong>Cuciné</strong>
           </span>
@@ -37,12 +70,23 @@ function Navbar() {
         <nav className={`navbar__nav ${abierto ? 'abierto' : ''}`}>
           <NavLink to="/">Inicio</NavLink>
           <NavLink to="/productos">Productos</NavLink>
+          <NavLink to="/favoritos">Favoritos{favs > 0 ? ` (${favs})` : ''}</NavLink>
           <NavLink to="/ayuda">Ayuda</NavLink>
           {usuario && <NavLink to="/mis-compras">Mis compras</NavLink>}
           {esAdmin && <NavLink to="/admin">Panel del superusuario</NavLink>}
         </nav>
 
         <div className="navbar__acciones">
+          <button
+            type="button"
+            className="tema-boton"
+            onClick={alternar}
+            aria-label={tema === 'oscuro' ? 'Activar tema claro' : 'Activar tema oscuro'}
+            title={tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro'}
+          >
+            {tema === 'oscuro' ? '☀️' : '🌙'}
+          </button>
+
           <Link to="/carrito" className="carrito-boton" title="Ver carrito">
             🛒 Carrito
             {totales.unidades > 0 && <span className="badge-carrito">{totales.unidades}</span>}
@@ -58,6 +102,14 @@ function Navbar() {
                   <span className="chip">{usuario.rol === 'admin' ? 'Superusuario' : 'Cliente'}</span>
                 )}
               </div>
+              <button
+                type="button"
+                className="boton boton--fantasma boton--chico"
+                onClick={cerrarTodos}
+                title="Cerrar sesión en todos los dispositivos"
+              >
+                Cerrar todo
+              </button>
               <button type="button" className="boton boton--fantasma boton--chico" onClick={salir}>
                 Salir
               </button>
@@ -83,6 +135,7 @@ function Footer() {
     <footer className="footer">
       <div className="contenedor footer__interior">
         <div>
+          <img src="/logo.png" alt="Electro Cuciné" className="footer__logo" />
           <p className="footer__marca">Electro Cuciné</p>
           <p>Electrodomésticos de cocina para todos los días.</p>
         </div>
@@ -107,6 +160,7 @@ function Footer() {
 export default function Layout() {
   return (
     <div className="app">
+      <BarraPromos />
       <Navbar />
       <main className="contenedor main">
         <Outlet />

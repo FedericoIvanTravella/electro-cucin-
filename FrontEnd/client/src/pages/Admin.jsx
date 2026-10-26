@@ -4,12 +4,14 @@ import ResumenAdmin from '../components/admin/ResumenAdmin.jsx'
 import ProductosAdmin from '../components/admin/ProductosAdmin.jsx'
 import ClientesAdmin from '../components/admin/ClientesAdmin.jsx'
 import VentasAdmin from '../components/admin/VentasAdmin.jsx'
+import AuditoriaAdmin from '../components/admin/AuditoriaAdmin.jsx'
 
 const vistas = [
   { id: 'resumen', nombre: 'Resumen', icono: '📊' },
   { id: 'productos', nombre: 'Productos y stock', icono: '📦' },
   { id: 'clientes', nombre: 'Clientes', icono: '👥' },
-  { id: 'ventas', nombre: 'Registro de ventas', icono: '🧾' }
+  { id: 'ventas', nombre: 'Registro de ventas', icono: '🧾' },
+  { id: 'auditoria', nombre: 'Auditoría', icono: '🛡️' }
 ]
 
 export default function Admin() {
@@ -45,6 +47,7 @@ export default function Admin() {
         {vista === 'productos' && <ProductosAdmin />}
         {vista === 'clientes' && <ClientesAdmin />}
         {vista === 'ventas' && <VentasAdmin />}
+        {vista === 'auditoria' && <AuditoriaAdmin />}
       </div>
     </div>
   )

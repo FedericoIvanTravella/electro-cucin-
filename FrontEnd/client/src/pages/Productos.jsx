@@ -1,5 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
+import { useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import { GrillaSkeleton } from '../components/SkeletonProducto'
+import EstadoVacio from '../components/EstadoVacio'
 import { api } from '../lib/api'
 import { ahorroPorcentaje, imagenProducto } from '../lib/format'
 
@@ -7,10 +10,14 @@ const INICIAL = { busqueda: '', categorias: [], min: '', max: '', soloStock: fal
 const POR_PAGINA = 18
 
 export default function Productos() {
+  const [params] = useSearchParams()
+  const categoriaInicial = params.get('categoria')
   const [productos, setProductos] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
-  const [filtros, setFiltros] = useState(INICIAL)
+  const [filtros, setFiltros] = useState(
+    categoriaInicial ? { ...INICIAL, categorias: [categoriaInicial] } : INICIAL
+  )
   const [orden, setOrden] = useState('relevancia')
   const [pagina, setPagina] = useState(1)
   const [ladoAbierto, setLadoAbierto] = useState(false)
@@ -220,17 +227,32 @@ export default function Productos() {
           </div>
 
           {error && <p className="alerta alerta--error">{error}</p>}
-          {cargando && <p className="aviso">Cargando catálogo…</p>}
 
           {!cargando && visibles.length === 0 && !error && (
-            <p className="aviso">No encontramos productos con esos filtros.</p>
+            <EstadoVacio
+              titulo="No encontramos productos"
+              mensaje="Probá con otros filtros o quitá la búsqueda: seguro hay algo rico esperándote."
+              size={150}
+            >
+              <button
+                type="button"
+                className="boton boton--fantasma boton--grande"
+                onClick={limpiarFiltros}
+              >
+                Limpiar filtros
+              </button>
+            </EstadoVacio>
           )}
 
-          <div className="grilla-productos">
-            {paginados.map((p) => (
-              <ProductCard key={p.id} producto={p} />
-            ))}
-          </div>
+          {cargando ? (
+            <GrillaSkeleton cantidad={9} />
+          ) : (
+            <div className="grilla-productos">
+              {paginados.map((p) => (
+                <ProductCard key={p.id} producto={p} />
+              ))}
+            </div>
+          )}
 
           {totalPaginas > 1 && (
             <nav className="paginacion" aria-label="Paginación">

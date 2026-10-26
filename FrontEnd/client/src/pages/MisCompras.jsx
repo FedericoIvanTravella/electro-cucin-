@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
+import EstadoVacio from '../components/EstadoVacio'
 import { api } from '../lib/api'
 import { dinero, fechaHora } from '../lib/format'
 
@@ -28,13 +29,14 @@ export default function MisCompras() {
       {cargando && <p className="aviso">Cargando compras…</p>}
 
       {!cargando && ventas.length === 0 && (
-        <div className="vacio card">
-          <h2>Todavía no hiciste compras</h2>
-          <p>Cuando completes un pago vas a verlo acá.</p>
-          <Link to="/productos" className="boton boton--primario">
+        <EstadoVacio
+          titulo="Todavía no hiciste compras"
+          mensaje="Cuando completes un pago vas a verlo acá."
+        >
+          <Link to="/productos" className="boton boton--primario boton--grande">
             Ver productos
           </Link>
-        </div>
+        </EstadoVacio>
       )}
 
       <div className="compras">

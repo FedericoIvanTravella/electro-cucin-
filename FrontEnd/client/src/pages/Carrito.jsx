@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
+import EstadoVacio from '../components/EstadoVacio'
 import { api } from '../lib/api'
 import { dinero, imagenProducto, tieneImagen } from '../lib/format'
 
@@ -28,16 +29,14 @@ export default function Carrito() {
 
   if (items.length === 0) {
     return (
-      <div className="vacio card">
-        <span className="vacio__icono" aria-hidden="true">
-          🛒
-        </span>
-        <h1>Tu carrito está vacío</h1>
-        <p>Agregá productos desde el catálogo y volvé a esta ventana para gestionarlos.</p>
-        <Link to="/productos" className="boton boton--primario">
+      <EstadoVacio
+        titulo="Tu carrito está vacío"
+        mensaje="Agregá productos desde el catálogo y volvé a esta ventana para gestionarlos."
+      >
+        <Link to="/productos" className="boton boton--primario boton--grande">
           Ir al catálogo
         </Link>
-      </div>
+      </EstadoVacio>
     )
   }
 

@@ -5,8 +5,7 @@ import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { useTema } from '../context/TemaContext'
 
-// Barra superior con beneficios rotativos (se ve apenas abre la página).
-// Los íconos son Flaticon UIcons (la fuente está cargada globalmente).
+// Barra superior: cinta de beneficios deslizante (marquee infinito).
 const PROMOS = [
   { icono: 'fi-rr-shipping-fast', texto: 'Envío sin cargo en compras superiores a $150.000' },
   { icono: 'fi-rr-credit-card', texto: '12 cuotas sin interés con tarjetas seleccionadas' },
@@ -15,16 +14,17 @@ const PROMOS = [
 ]
 
 function BarraPromos() {
-  const [actual, setActual] = useState(0)
-  useEffect(() => {
-    const timer = setInterval(() => setActual((i) => (i + 1) % PROMOS.length), 4000)
-    return () => clearInterval(timer)
-  }, [])
+  // El contenido se repite dos veces para que el bucle sea perfecto.
+  const contenido = [...PROMOS, ...PROMOS]
   return (
-    <div className="promos">
-      <span className="promos__item" key={actual}>
-        <i className={`fi ${PROMOS[actual].icono}`} aria-hidden="true" /> {PROMOS[actual].texto}
-      </span>
+    <div className="promos" aria-hidden="true">
+      <div className="promos__track">
+        {contenido.map((p, i) => (
+          <span className="promos__item" key={i}>
+            <i className={`fi ${p.icono}`} aria-hidden="true" /> {p.texto}
+          </span>
+        ))}
+      </div>
     </div>
   )
 }
@@ -90,7 +90,11 @@ function Navbar() {
 
           <Link to="/carrito" className="carrito-boton" title="Ver carrito">
             <i className="fi fi-rr-shopping-cart" aria-hidden="true" /> Carrito
-            {totales.unidades > 0 && <span className="badge-carrito">{totales.unidades}</span>}
+            {totales.unidades > 0 && (
+              <span className="badge-carrito badge-carrito--bump" key={totales.unidades}>
+                {totales.unidades}
+              </span>
+            )}
           </Link>
 
           {usuario ? (
@@ -139,6 +143,20 @@ function Footer() {
           <img src="/logo.png" alt="Electro Cuciné" className="footer__logo" />
           <p className="footer__marca">Electro Cuciné</p>
           <p>Electrodomésticos de cocina para todos los días.</p>
+          <div className="footer__social">
+            <a href="https://www.instagram.com/electrocucine" aria-label="Instagram" title="Instagram">
+              <i className="fi fi-brands-instagram" />
+            </a>
+            <a href="https://www.facebook.com/electrocucine" aria-label="Facebook" title="Facebook">
+              <i className="fi fi-brands-facebook" />
+            </a>
+            <a href="https://www.youtube.com/@electrocucine" aria-label="YouTube" title="YouTube">
+              <i className="fi fi-brands-youtube" />
+            </a>
+            <a href="https://wa.me/5491100000000" aria-label="WhatsApp" title="WhatsApp">
+              <i className="fi fi-brands-whatsapp" />
+            </a>
+          </div>
         </div>
         <div>
           <p className="footer__titulo">Atención al cliente</p>
@@ -149,11 +167,35 @@ function Footer() {
           </p>
         </div>
         <div>
-          <p className="footer__titulo">Beneficio</p>
-          <p>30% de descuento para clientes de 65 años o más al iniciar sesión.</p>
+          <p className="footer__titulo">Confianza</p>
+          <ul className="footer__confianza">
+            <li>
+              <i className="fi fi-rr-shipping-fast" aria-hidden="true" /> Envío gratis +$150.000
+            </li>
+            <li>
+              <i className="fi fi-rr-shield-check" aria-hidden="true" /> 2 años de garantía oficial
+            </li>
+            <li>
+              <i className="fi fi-rr-undo" aria-hidden="true" /> 30 días para cambios
+            </li>
+          </ul>
+        </div>
+        <div>
+          <p className="footer__titulo">Medios de pago</p>
+          <ul className="footer__pagos">
+            <li>VISA</li>
+            <li>Mastercard</li>
+            <li>Amex</li>
+            <li>Débito</li>
+            <li>Naranja X</li>
+            <li>Transferencia</li>
+          </ul>
+          <p className="footer__nota">Hasta 12 cuotas sin interés.</p>
         </div>
       </div>
       <p className="footer__legal">
+        <Link to="/ayuda">Términos y condiciones</Link> · <Link to="/ayuda">Privacidad</Link> ·{' '}
+        <Link to="/ayuda">Devoluciones</Link><br />
         © {new Date().getFullYear()} Electro Cuciné · Proyecto académico · Íconos por{' '}
         <a href="https://www.flaticon.com" target="_blank" rel="noreferrer">
           Flaticon

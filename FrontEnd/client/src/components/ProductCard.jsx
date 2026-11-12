@@ -36,7 +36,7 @@ export default function ProductCard({ producto, destacado = false }) {
 
   return (
     <article className={`producto ${destacado ? 'producto--destacado' : ''}`}>
-      <div className="producto__media">
+      <div className={`producto__media ${!imagen ? `producto__media--tinte producto__media--${(producto.categoria || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-')}` : ''}`}>
         <button
           type="button"
           className={`producto__favorito ${favorito ? 'producto__favorito--activo' : ''}`}

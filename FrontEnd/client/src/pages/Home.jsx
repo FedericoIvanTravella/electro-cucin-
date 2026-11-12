@@ -6,7 +6,7 @@ import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
-import { dinero, imagenProducto } from '../lib/format'
+import { dinero, imagenProducto, ahorroPorcentaje, tieneImagen } from '../lib/format'
 
 const beneficios = [
   { icono: 'fi-rr-shipping-fast', titulo: 'Envío sin cargo', texto: 'En compras superiores a $150.000 en todo el país.' },
@@ -30,7 +30,14 @@ export default function Home() {
   useEffect(() => {
     const controlador = new AbortController()
     api('/productos?soloStock=1', { signal: controlador.signal })
-      .then((data) => setDestacados(data.productos.slice(0, 4)))
+      .then((data) => {
+        // Primero los que tienen foto (la vidriera luce más), ordenados
+        // por la fuerza de su oferta; si no hay fotos, por id.
+        const ordenados = [...data.productos].sort(
+          (a, b) => Number(tieneImagen(b)) - Number(tieneImagen(a)) || ahorroPorcentaje(b.precio, b.precio_tachado) - ahorroPorcentaje(a.precio, a.precio_tachado) || a.id - b.id
+        )
+        setDestacados(ordenados.slice(0, 4))
+      })
       .catch(() => {
         if (controlador.signal.aborted) return
         setDestacados([])
@@ -97,8 +104,17 @@ export default function Home() {
         <div className="hero__arte">
           {imagenHero ? (
             <div className="hero__producto">
-              <img src={imagenHero} alt={productoHero.nombre} className="hero__producto-img" />
-              <span className="hero__producto-etiqueta">{productoHero.categoria}</span>
+              <Link to={`/producto/${productoHero.id}`} className="hero__producto-enlace" aria-label={`Ver ${productoHero.nombre}`}>
+                <img src={imagenHero} alt={productoHero.nombre} className="hero__producto-img" />
+                <span className="hero__producto-etiqueta">{productoHero.categoria}</span>
+                <span className="hero__producto-oferta">
+                  <i className="fi fi-rr-badge-percent" aria-hidden="true" /> {ahorroPorcentaje(productoHero.precio, productoHero.precio_tachado)}% OFF
+                </span>
+                <span className="hero__producto-precio">
+                  <small>{productoHero.nombre.length > 38 ? productoHero.nombre.slice(0, 38) + '…' : productoHero.nombre}</small>
+                  <strong>{dinero(productoHero.precio)}</strong>
+                </span>
+              </Link>
             </div>
           ) : (
             <div className="hero__plato" aria-hidden="true">

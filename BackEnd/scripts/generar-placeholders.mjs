@@ -94,9 +94,10 @@ function generarSvg(nombre, categoria) {
   const estilo = ESTILO_CATEGORIA[categoria] || ESTILO_DEFAULT
   const pictograma = (PICTOGRAMAS[categoria] || PICTOGRAMAS.Cocción).replaceAll('ICONO', estilo.claro)
   const lineas = envolver(nombre)
-  const inicioY = 470 - (lineas.length - 1) * 24
+  // El pictograma se desplaza hacia arriba (translate -46) para no pisar el texto.
+  const inicioY = lineas.length === 1 ? 474 : lineas.length === 2 ? 450 : 430
   const textoNombre = lineas
-    .map((linea, i) => `      <tspan x="${W / 2}" y="${inicioY + i * 46}">${escapeXml(linea)}</tspan>`)
+    .map((linea, i) => `      <tspan x="${W / 2}" y="${inicioY + i * 44}">${escapeXml(linea)}</tspan>`)
     .join('\n')
 
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" role="img" aria-label="${escapeXml(nombre)}">
@@ -115,7 +116,7 @@ function generarSvg(nombre, categoria) {
   <circle cx="120" cy="120" r="150" fill="#ffffff" fill-opacity="0.05"/>
   <circle cx="700" cy="500" r="180" fill="#000000" fill-opacity="0.08"/>
   <text x="${W / 2}" y="52" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" letter-spacing="6" fill="#ffffff" fill-opacity="0.85">${escapeXml(categoria.toUpperCase())}</text>
-  ${pictograma}
+  ${pictograma.replace(/<g stroke=/, '<g transform="translate(0, -46)" stroke=')}
   <text text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="34" fill="#ffffff">
 ${textoNombre}
   </text>

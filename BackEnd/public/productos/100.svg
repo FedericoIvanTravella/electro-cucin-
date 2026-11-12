@@ -15,15 +15,15 @@
   <circle cx="700" cy="500" r="180" fill="#000000" fill-opacity="0.08"/>
   <text x="400" y="52" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" letter-spacing="6" fill="#ffffff" fill-opacity="0.85">LIMPIEZA</text>
   
-    <g stroke="#6ee7b7" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.95">
+    <g transform="translate(0, -46)" stroke="#6ee7b7" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.95">
       <path d="M330 260 h90 l22 60 v140 a26 26 0 0 1 -26 24 h-82 a26 26 0 0 1 -26 -24 v-140 z" fill="#6ee7b7" fill-opacity="0.18"/>
       <path d="M330 260 v-34 h90 v34"/>
       <path d="M442 300 l70 -24 M448 330 l72 0 M442 360 l70 24"/>
       <path d="M330 420 h-52"/>
     </g>
   <text text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="34" fill="#ffffff">
-      <tspan x="400" y="446">Extractor de humos</tspan>
-      <tspan x="400" y="492">compacto 45cm</tspan>
+      <tspan x="400" y="450">Extractor de humos</tspan>
+      <tspan x="400" y="494">compacto 45cm</tspan>
   </text>
   <text x="400" y="578" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17" letter-spacing="4" fill="#ffffff" fill-opacity="0.65">ELECTRO CUCINÉ</text>
 </svg>

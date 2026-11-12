@@ -15,15 +15,15 @@
   <circle cx="700" cy="500" r="180" fill="#000000" fill-opacity="0.08"/>
   <text x="400" y="52" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="22" letter-spacing="6" fill="#ffffff" fill-opacity="0.85">CAFETERÍA</text>
   
-    <g stroke="#fcd34d" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.95">
+    <g transform="translate(0, -46)" stroke="#fcd34d" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" fill="none" opacity="0.95">
       <path d="M280 250 h210 v100 a58 58 0 0 1 -58 56 h-94 a58 58 0 0 1 -58 -56 z" fill="#fcd34d" fill-opacity="0.18"/>
       <path d="M490 270 h34 a34 34 0 0 1 0 68 h-36"/>
       <path d="M320 210 a18 18 0 0 1 36 0 M415 210 a18 18 0 0 1 36 0"/>
       <path d="M265 462 h280"/>
     </g>
   <text text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="34" fill="#ffffff">
-      <tspan x="400" y="446">Máquina de chocolate</tspan>
-      <tspan x="400" y="492">caliente</tspan>
+      <tspan x="400" y="450">Máquina de chocolate</tspan>
+      <tspan x="400" y="494">caliente</tspan>
   </text>
   <text x="400" y="578" text-anchor="middle" font-family="Arial, Helvetica, sans-serif" font-size="17" letter-spacing="4" fill="#ffffff" fill-opacity="0.65">ELECTRO CUCINÉ</text>
 </svg>

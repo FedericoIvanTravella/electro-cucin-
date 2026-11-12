@@ -95,7 +95,9 @@ GitHub Actions (`.github/workflows/ci.yml`): en cada push/PR a `main` corre lint
 
 ## Imágenes y créditos
 
-- Productos 1–5: fotos en `public/productos/*.jpg`. El resto **no lleva imagen** a propósito (se muestra un ícono vectorial por defecto). Podés asignar cualquier imagen desde el panel del superusuario.
+- Productos 1–5: fotos en `public/productos/*.jpg`.
+- Productos con foto elegida por el dueño: 7, 8, 10, 11, 13, 23, 31, 40, 82 y 98 (mapa `src/imagenes-reales.json`).
+- El resto no lleva imagen a propósito (se muestra un ícono vectorial por defecto). Podés asignar cualquier imagen desde el panel del superusuario.
 - **Íconos**: [Flaticon UIcons](https://www.flaticon.com/uicons) vía el paquete oficial `@flaticon/flaticon-uicons` (uso gratuito con atribución, incluida en el footer del sitio).
 
 ## Ofertas y descuentos

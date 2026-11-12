@@ -10,9 +10,24 @@
 //     ADMIN_NOMBRE / ADMIN_EMAIL (opcionales)
 // =====================================================================
 import { randomBytes } from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import bcrypt from 'bcrypt'
 import { db } from './db.js'
 import { productosIniciales } from './catalogo.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// Imágenes elegidas por el dueño del proyecto (public/productos/<id>.<ext>).
+// Si el mapa no existe (checkout parcial) se siembra con los defaults.
+const imagenesElegidas = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, 'imagenes-reales.json'), 'utf8'))
+  } catch {
+    return {}
+  }
+})()
 
 const RONDAS_BCRYPT = 10
 
@@ -56,11 +71,12 @@ export function seedInicial() {
       'INSERT INTO productos (nombre, categoria, descripcion, precio, precio_tachado, stock, imagen) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
     // Cada lista es [nombre, categoria, descripcion, precio, stock, precio_tachado].
-    // La imagen: los productos 1..5 traen foto real (<id>.jpg); el resto sin
-    // imagen a propósito (se muestra el ícono por defecto).
+    // La imagen: productos elegidos por el dueño del proyecto (mapa
+    // imagenes-reales.json); los 1..5 traen foto propia (<id>.jpg); el resto
+    // sin imagen a propósito (se muestra el ícono por defecto).
     productosIniciales.forEach((p, indice) => {
       const id = indice + 1
-      const imagen = id <= 5 ? String(id) : ''
+      const imagen = imagenesElegidas[id] ?? (id <= 5 ? String(id) : '')
       const tachado = id % 3 === 0 ? 0 : p[5] // cada 3er producto sin oferta
       stmt.run(p[0], p[1], p[2], p[3], tachado, p[4], imagen)
     })

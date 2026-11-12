@@ -193,6 +193,25 @@ function migrar() {
     escribirMeta('sin_imagenes_v2', '1')
   }
 
+  // Imágenes elegidas por el dueño del proyecto (mapa src/imagenes-reales.json):
+  // solo archivos ubicados en public/productos/<archivo>; se aplican sobre
+  // instalaciones existentes una sola vez.
+  if (leerMeta('imagenes_elegidas_v1') !== '1') {
+    try {
+      const rutaMapa = path.join(__dirname, 'imagenes-reales.json')
+      const mapa = JSON.parse(fs.readFileSync(rutaMapa, 'utf8'))
+      const actualizar = db.prepare('UPDATE productos SET imagen = ? WHERE id = ?')
+      for (const [id, archivo] of Object.entries(mapa)) {
+        if (fs.existsSync(path.join(__dirname, '..', 'public', 'productos', archivo))) {
+          actualizar.run(archivo, Number(id))
+        }
+      }
+      escribirMeta('imagenes_elegidas_v1', '1')
+    } catch {
+      // Sin el mapa (checkout parcial) no se toca nada.
+    }
+  }
+
   // No todos los productos llevan oferta: cada 3er producto queda a precio
   // normal (precio_tachado = 0). Aplicado una sola vez sobre DB existentes.
   if (leerMeta('descuentos_mixtos_v1') !== '1') {

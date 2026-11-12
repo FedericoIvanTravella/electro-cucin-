@@ -175,22 +175,29 @@ function migrar() {
     escribirMeta('imagenes_svg_v1', '1')
   }
 
-  // Los placeholders SVG de esta versión se reemplazaron por fotos reales
-  // descargadas de Wikimedia Commons (mapa src/imagenes-reales.json).
-  // Solo pisa filas cuyo imagen era el placeholder ("<id>.svg") o el número
-  // pelado heredado del seed viejo ("<id>"); una imagen elegida a mano queda intacta.
-  if (leerMeta('imagenes_reales_v1') !== '1') {
-    try {
-      const rutaMapa = path.join(__dirname, 'imagenes-reales.json')
-      const mapa = JSON.parse(fs.readFileSync(rutaMapa, 'utf8'))
-      const actualizar = db.prepare('UPDATE productos SET imagen = ? WHERE id = ? AND (imagen = ? OR imagen = ?)')
-      for (const [id, archivo] of Object.entries(mapa)) {
-        actualizar.run(archivo, Number(id), String(id), `${id}.svg`)
+  // Solo los productos 1..5 tienen foto real. Las imágenes "técnicas"
+  // ("<id>", "<id>.jpg|png|svg") se quitan a propósito: se muestran con el
+  // ícono por defecto. Cualquier imagen elegida a mano (base distinta del id)
+  // se respeta.
+  if (leerMeta('sin_imagenes_v2') !== '1') {
+    const filas = db.prepare('SELECT id, imagen FROM productos WHERE id > 5').all()
+    const limpiar = db.prepare("UPDATE productos SET imagen = '' WHERE id = ?")
+    for (const { id, imagen } of filas) {
+      const texto = String(imagen || '')
+      if (!texto) continue
+      const base = texto.replace(/\.(jpe?g|png|webp|svg)$/i, '')
+      if (texto === String(id) || (/^\d+$/.test(base) && Number(base) === id)) {
+        limpiar.run(id)
       }
-      escribirMeta('imagenes_reales_v1', '1')
-    } catch {
-      // Sin el mapa (checkout parcial) se conserva lo que haya en productos.imagen.
     }
+    escribirMeta('sin_imagenes_v2', '1')
+  }
+
+  // No todos los productos llevan oferta: cada 3er producto queda a precio
+  // normal (precio_tachado = 0). Aplicado una sola vez sobre DB existentes.
+  if (leerMeta('descuentos_mixtos_v1') !== '1') {
+    db.exec('UPDATE productos SET precio_tachado = 0 WHERE id % 3 = 0')
+    escribirMeta('descuentos_mixtos_v1', '1')
   }
 
   // Los tokens de sesión se guardan hasheados (SHA-256) desde esta versión.

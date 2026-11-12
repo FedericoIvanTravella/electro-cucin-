@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import EstadoVacio from '../components/EstadoVacio'
+import RutaEntrega from '../components/RutaEntrega'
 import { api } from '../lib/api'
 import { dinero, fechaHora } from '../lib/format'
 
@@ -72,6 +73,7 @@ export default function MisCompras() {
               )}
               <strong>Total: {dinero(venta.total)}</strong>
             </footer>
+            {venta.estado !== 'anulada' && <RutaEntrega compacto />}
           </article>
         ))}
       </div>

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import EstadoVacio from '../components/EstadoVacio'
 import { api } from '../lib/api'
-import { ahorroPorcentaje, imagenProducto } from '../lib/format'
+import { ahorroPorcentaje } from '../lib/format'
 
 const INICIAL = { busqueda: '', categorias: [], min: '', max: '', soloStock: false, conDescuento: false }
 const POR_PAGINA = 18
@@ -66,9 +67,11 @@ export default function Productos() {
           ahorroPorcentaje(b.precio, b.precio_tachado) - ahorroPorcentaje(a.precio, a.precio_tachado)
       )
     } else {
+      // Relevancia de la vidriera: primero las ofertas más fuertes.
       copia.sort(
         (a, b) =>
-          (imagenProducto(b) ? 0 : 1) - (imagenProducto(a) ? 0 : 1) || a.id - b.id
+          ahorroPorcentaje(b.precio, b.precio_tachado) - ahorroPorcentaje(a.precio, a.precio_tachado) ||
+          a.id - b.id
       )
     }
     return copia
@@ -255,8 +258,10 @@ export default function Productos() {
             <GrillaSkeleton cantidad={9} />
           ) : (
             <div className="grilla-productos">
-              {paginados.map((p) => (
-                <ProductCard key={p.id} producto={p} />
+              {paginados.map((p, i) => (
+                <Revelar key={p.id} delay={(i % 6) * 70} className="revelar--item">
+                  <ProductCard producto={p} />
+                </Revelar>
               ))}
             </div>
           )}

@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import TarjetaCredito from '../components/TarjetaCredito'
 import EstadoVacio from '../components/EstadoVacio'
+import RutaEntrega from '../components/RutaEntrega'
 import { api } from '../lib/api'
 import { dinero } from '../lib/format'
 
@@ -38,6 +39,7 @@ export default function Pago() {
           Tu compra <strong>#{venta.id}</strong> fue registrada el {venta.fecha}. Te enviamos el
           detalle a {usuario?.email || 'tu correo'}.
         </p>
+        <RutaEntrega />
 
         <div className="ticket">
           {venta.items.map((i) => (

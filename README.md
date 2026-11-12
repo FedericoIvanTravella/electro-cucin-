@@ -48,7 +48,7 @@ BackEnd/            API Express 5 (ESM)
   src/auth.js       Sesiones (tokens SHA-256), middlewares requerirAuth/Admin
   src/seguridad.js  Rate limit de login, política de contraseñas, CSRF
   src/routes/       auth, productos, clientes, ventas
-  public/productos/ Imágenes: 1-5 jpg reales + 95 placeholders SVG generados
+  public/productos/ Imágenes: solo 1-5 tienen foto; el resto se muestra con ícono por defecto
   test/             Tests de API (base :memory:)
 FrontEnd/client/    React 19 + Vite (SPA)
   src/pages/        Home, catálogo, Producto (detalle), carrito, pago, admin…
@@ -95,9 +95,12 @@ GitHub Actions (`.github/workflows/ci.yml`): en cada push/PR a `main` corre lint
 
 ## Imágenes y créditos
 
-- Productos 1–5: fotos reales en `public/productos/*.jpg`.
-- Productos 6–100: **placeholders SVG** generados por `scripts/generar-placeholders.mjs` (regenerar con `node BackEnd/scripts/generar-placeholders.mjs`).
+- Productos 1–5: fotos en `public/productos/*.jpg`. El resto **no lleva imagen** a propósito (se muestra un ícono vectorial por defecto). Podés asignar cualquier imagen desde el panel del superusuario.
 - **Íconos**: [Flaticon UIcons](https://www.flaticon.com/uicons) vía el paquete oficial `@flaticon/flaticon-uicons` (uso gratuito con atribución, incluida en el footer del sitio).
+
+## Ofertas y descuentos
+
+No todos los productos llevan oferta: **cada 3er producto** (id múltiplo de 3) se muestra a precio normal. El resto trae `precio_tachado` > precio con el % OFF correspondiente. Se puede editar producto por producto desde el panel del superusuario.
 
 ## Notas de higiene del repo
 

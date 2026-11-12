@@ -3403,3 +3403,135 @@ textarea:focus {
 .stock-salud__dot--ok {
   background: #00a650;
 }
+
+/* ================================================================
+   Ruta de entrega (animación de envío)
+   ================================================================ */
+.ruta-entrega {
+  margin-top: 0.75rem;
+  padding: 0.65rem 0.75rem 0.4rem;
+  border: 1px dashed var(--borde);
+  border-radius: 12px;
+  background: var(--gris-claro);
+}
+
+.ruta-entrega--compacto {
+  padding: 0.5rem 0.65rem 0.35rem;
+}
+
+.ruta-entrega__franja {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.ruta-entrega__punto {
+  flex: none;
+  width: 2.1rem;
+  height: 2.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  font-size: 1rem;
+}
+
+.ruta-entrega__punto--origen {
+  background: #e7f6ec;
+  color: #00a650;
+}
+
+.ruta-entrega__punto--destino {
+  background: #e8effa;
+  color: var(--marca);
+}
+
+.ruta-entrega__carretera {
+  position: relative;
+  flex: 1;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+
+.ruta-entrega__asfalto {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 50%;
+  height: 3px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background-image: repeating-linear-gradient(90deg, var(--texto-sec) 0 14px, transparent 14px 26px);
+  background-size: 200% 100%;
+  animation: carreteraDesliza 1.6s linear infinite;
+  opacity: 0.7;
+}
+
+.ruta-entrega__camion {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  font-size: 1.35rem;
+  color: var(--marca);
+  transform: translate(-8%, -58%);
+  animation: camionAvanza 2.6s cubic-bezier(0.45, 0, 0.35, 1) infinite;
+}
+
+.ruta-entrega__texto {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0 0.1rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--texto-sec);
+}
+
+.ruta-entrega__pulso {
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 999px;
+  background: #00a650;
+  animation: pulsoPunto 1.4s ease-in-out infinite;
+}
+
+@keyframes carreteraDesliza {
+  from { background-position: 0 0; }
+  to { background-position: -52px 0; }
+}
+
+@keyframes camionAvanza {
+  0% { left: -10%; }
+  55% { left: 62%; }
+  75% { left: 62%; }
+  100% { left: 112%; }
+}
+
+@keyframes pulsoPunto {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.6); opacity: 0.6; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ruta-entrega__camion,
+  .ruta-entrega__asfalto,
+  .ruta-entrega__pulso {
+    animation: none;
+  }
+  .ruta-entrega__camion {
+    left: 50%;
+  }
+}
+
+/* ================================================================
+   Ítems de lista con aparición escalonada (Revelar por ítem)
+   ================================================================ */
+.revelar--item {
+  height: 100%;
+}
+.revelar--item > * {
+  height: 100%;
+}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import EstadoVacio from '../components/EstadoVacio'
 import { useFavoritos } from '../context/FavoritosContext'
@@ -52,8 +53,10 @@ export default function Favoritos() {
       )}
 
       <div className="grilla-productos">
-        {elegidos.map((p) => (
-          <ProductCard key={p.id} producto={p} />
+        {elegidos.map((p, i) => (
+          <Revelar key={p.id} delay={i * 70} className="revelar--item">
+            <ProductCard producto={p} />
+          </Revelar>
         ))}
       </div>
     </div>

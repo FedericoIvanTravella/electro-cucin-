@@ -111,17 +111,19 @@ export default function Home() {
         </div>
       </section>
 
-      <Revelar as="section" className="beneficios">
-        {beneficios.map((b) => (
-          <article key={b.titulo} className="beneficio">
-            <span className="beneficio__icono" aria-hidden="true">
-              <i className={`fi ${b.icono}`} />
-            </span>
-            <h3>{b.titulo}</h3>
-            <p>{b.texto}</p>
-          </article>
+      <section className="beneficios">
+        {beneficios.map((b, i) => (
+          <Revelar key={b.titulo} delay={i * 90}>
+            <article className="beneficio">
+              <span className="beneficio__icono" aria-hidden="true">
+                <i className={`fi ${b.icono}`} />
+              </span>
+              <h3>{b.titulo}</h3>
+              <p>{b.texto}</p>
+            </article>
+          </Revelar>
         ))}
-      </Revelar>
+      </section>
 
       <Revelar as="section" className="seccion">
         <div className="seccion__cabecera">
@@ -131,19 +133,20 @@ export default function Home() {
           </div>
         </div>
         <div className="categorias-strip">
-          {categorias.map((c) => (
-            <Link
-              key={c.nombre}
-              to={`/productos?categoria=${encodeURIComponent(c.nombre)}`}
-              className="card categoria-card"
-            >
-              <span className="categoria-card__icono" aria-hidden="true">
-                <i className={`fi ${c.icono}`} />
-              </span>
-              <h3>{c.nombre}</h3>
-              <p>{c.texto}</p>
-              <span className="categoria-card__link">Ver productos <i className="fi fi-rr-arrow-right" aria-hidden="true" /></span>
-            </Link>
+          {categorias.map((c, i) => (
+            <Revelar key={c.nombre} delay={i * 80} className="revelar--item">
+              <Link
+                to={`/productos?categoria=${encodeURIComponent(c.nombre)}`}
+                className="card categoria-card"
+              >
+                <span className="categoria-card__icono" aria-hidden="true">
+                  <i className={`fi ${c.icono}`} />
+                </span>
+                <h3>{c.nombre}</h3>
+                <p>{c.texto}</p>
+                <span className="categoria-card__link">Ver productos <i className="fi fi-rr-arrow-right" aria-hidden="true" /></span>
+              </Link>
+            </Revelar>
           ))}
         </div>
       </Revelar>
@@ -163,8 +166,10 @@ export default function Home() {
           <GrillaSkeleton cantidad={4} />
         ) : (
           <div className="grilla-productos">
-            {destacados.map((p) => (
-              <ProductCard key={p.id} producto={p} destacado />
+            {destacados.map((p, i) => (
+              <Revelar key={p.id} delay={i * 90} className="revelar--item">
+                <ProductCard producto={p} destacado />
+              </Revelar>
             ))}
           </div>
         )}

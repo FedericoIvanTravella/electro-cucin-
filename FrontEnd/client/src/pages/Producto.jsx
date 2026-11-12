@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
+import Revelar from '../components/Revelar'
 import Lightbox from '../components/Lightbox'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
@@ -296,8 +297,10 @@ export default function Producto() {
             </Link>
           </div>
           <div className="grilla-productos">
-            {relacionados.map((p) => (
-              <ProductCard key={p.id} producto={p} />
+            {relacionados.map((p, i) => (
+              <Revelar key={p.id} delay={i * 80} className="revelar--item">
+                <ProductCard producto={p} />
+              </Revelar>
             ))}
           </div>
         </section>

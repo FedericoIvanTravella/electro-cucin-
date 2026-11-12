@@ -1,0 +1,25 @@
+# Normalización de fin de línea para todo el repo
+* text=auto eol=lf
+
+# Archivos de texto conocidos
+*.js    text
+*.jsx   text
+*.json  text
+*.css   text
+*.html  text
+*.md    text
+*.yml   text
+*.yaml  text
+*.svg   text
+
+# Archivos binarios (no normalizar)
+*.jpg   binary
+*.jpeg  binary
+*.png   binary
+*.gif   binary
+*.ico   binary
+*.woff  binary
+*.woff2 binary
+*.db    binary
+*.db-shm binary
+*.db-wal binary

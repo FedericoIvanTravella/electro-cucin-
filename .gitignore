@@ -1,0 +1,31 @@
+# Node / dependencias (nunca commitear node_modules)
+node_modules/
+
+# Base de datos SQLite (datos locales y WAL, no van al repo)
+BackEnd/data/
+*.db
+*.db-shm
+*.db-wal
+*.db-journal
+
+# Builds
+dist/
+build/
+
+# Entorno y secretos
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
+npm-debug.log*
+
+# Sistema operativo / editores
+Thumbs.db
+.DS_Store
+.vscode/
+.idea/
+
+# Salidas de test / coverage
+coverage/

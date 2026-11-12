@@ -10,9 +10,25 @@
 //     ADMIN_NOMBRE / ADMIN_EMAIL (opcionales)
 // =====================================================================
 import { randomBytes } from 'node:crypto'
+import fs from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
 import bcrypt from 'bcrypt'
 import { db } from './db.js'
 import { productosIniciales } from './catalogo.js'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
+
+// Mapa id -> archivo real descargado de Wikimedia Commons (ver
+// scripts/descargar-imagenes-reales.mjs). Si falta el archivo o el mapa,
+// se siembra con el placeholder SVG.
+const imagenesReales = (() => {
+  try {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, 'imagenes-reales.json'), 'utf8'))
+  } catch {
+    return {}
+  }
+})()
 
 const RONDAS_BCRYPT = 10
 
@@ -60,7 +76,7 @@ export function seedInicial() {
     // real; 6+: <id>.svg placeholder generado).
     productosIniciales.forEach((p, indice) => {
       const id = indice + 1
-      const imagen = id <= 5 ? String(id) : `${id}.svg`
+      const imagen = imagenesReales[id] ?? (id <= 5 ? String(id) : `${id}.svg`)
       stmt.run(p[0], p[1], p[2], p[3], p[5], p[4], imagen)
     })
     console.log(`[seed] ${productosIniciales.length} productos cargados`)

@@ -175,6 +175,24 @@ function migrar() {
     escribirMeta('imagenes_svg_v1', '1')
   }
 
+  // Los placeholders SVG de esta versión se reemplazaron por fotos reales
+  // descargadas de Wikimedia Commons (mapa src/imagenes-reales.json).
+  // Solo pisa filas cuyo imagen era el placeholder ("<id>.svg") o el número
+  // pelado heredado del seed viejo ("<id>"); una imagen elegida a mano queda intacta.
+  if (leerMeta('imagenes_reales_v1') !== '1') {
+    try {
+      const rutaMapa = path.join(__dirname, 'imagenes-reales.json')
+      const mapa = JSON.parse(fs.readFileSync(rutaMapa, 'utf8'))
+      const actualizar = db.prepare('UPDATE productos SET imagen = ? WHERE id = ? AND (imagen = ? OR imagen = ?)')
+      for (const [id, archivo] of Object.entries(mapa)) {
+        actualizar.run(archivo, Number(id), String(id), `${id}.svg`)
+      }
+      escribirMeta('imagenes_reales_v1', '1')
+    } catch {
+      // Sin el mapa (checkout parcial) se conserva lo que haya en productos.imagen.
+    }
+  }
+
   // Los tokens de sesión se guardan hasheados (SHA-256) desde esta versión.
   // Antes se guardaban en texto plano: se hashean los existentes una sola vez.
   // (Los tokens crudos y su hash son ambos 64 hex: el marcador meta garantiza

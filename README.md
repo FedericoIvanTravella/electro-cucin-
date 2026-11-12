@@ -91,19 +91,8 @@ Imagen todo-en-uno: compila el frontend, instala deps de producción del backend
 
 ## CI
 
-GitHub Actions (`.github/workflows/ci.yml`): en cada push/PR a `main` corre lint + tests del backend y lint + build del frontend (Node 24).
-
 ## Imágenes y créditos
-
-- Productos 1–5: fotos reales en `public/productos/*.jpg`.
-- Productos 6–100: **placeholders SVG** generados por `scripts/generar-placeholders.mjs` (regenerar con `node BackEnd/scripts/generar-placeholders.mjs`).
 - **Íconos**: [Flaticon UIcons](https://www.flaticon.com/uicons) vía el paquete oficial `@flaticon/flaticon-uicons` (uso gratuito con atribución, incluida en el footer del sitio).
-
-## Notas de higiene del repo
-
-- `node_modules/`, `BackEnd/data/*.db*` y `dist/` **no** se versionan (antes sí; ver historial inicial).
-- El branch `main` quedó divergente de `origin/main` (dos puntas con contenido casi idéntico); se conservó la versión local. Si hace falta publicar, coordinar `git push --force-with-lease` con el equipo.
-
 ## Estado de la base de datos local
 
 El seed no toca datos existentes. Si tu base venía de una versión anterior con `federico / admin23`, **cambiale la contraseña** cuanto antes (esa cuenta ya no se crea en instalaciones nuevas). Las sesiones viejas se invalidan solas tras el hasheo de tokens (hay que volver a iniciar sesión).

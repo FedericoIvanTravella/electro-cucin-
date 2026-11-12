@@ -6,9 +6,15 @@
   "author": "Travella Federico",
   "type": "module",
   "main": "index.js",
+  "engines": {
+    "node": ">=22.5.0"
+  },
   "scripts": {
     "start": "node index.js",
-    "dev": "node --watch index.js"
+    "dev": "node --watch index.js",
+    "seed": "node src/seed.js",
+    "lint": "eslint .",
+    "test": "node --test test/"
   },
   "dependencies": {
     "bcrypt": "^6.0.0",
@@ -16,5 +22,10 @@
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "helmet": "^8.3.0"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^10.14.0",
+    "supertest": "^7.1.4"
   }
 }

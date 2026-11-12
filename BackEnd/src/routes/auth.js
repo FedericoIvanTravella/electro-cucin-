@@ -18,6 +18,7 @@ import {
   usuarioPublico,
   cerrarSesion,
   revocarSesiones,
+  obtenerUsuario,
   COOKIE_SESION,
   COOKIE_CSRF
 } from '../auth.js'
@@ -30,6 +31,11 @@ import {
 } from '../seguridad.js'
 
 const router = Router()
+
+// Hash precomputado para igualar el tiempo de respuesta cuando el usuario
+// no existe (evita oráculo por timing entre "usuario inexistente" y
+// "contraseña equivocada").
+const DUMMY_HASH = '$2b$10$C6UzMDM.H6dfI/f/IKcEeO7ZBk5Jq0MPj0vBhGMGWGd7K4U0HfzWe'
 
 // ---------------------- Cookies ----------------------
 // En producción las cookies van con secure (solo por HTTPS).
@@ -68,8 +74,11 @@ router.post('/register', (req, res) => {
   if (!username || !password || !nombre) {
     return res.status(400).json({ error: 'Usuario, contraseña y nombre son obligatorios.' })
   }
-  if (String(username).trim().length < 3) {
-    return res.status(400).json({ error: 'El usuario debe tener al menos 3 caracteres.' })
+  if (!/^[\w.-]{3,30}$/u.test(String(username).trim())) {
+    return res.status(400).json({ error: 'El usuario solo puede tener letras, números, ".", "_" y "-" (3 a 30 caracteres).' })
+  }
+  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email).trim())) {
+    return res.status(400).json({ error: 'El email no tiene un formato válido.' })
   }
   // --- Política de contraseñas fuertes ---
   const errorPassword = validarContrasena(password, String(username).trim())
@@ -123,7 +132,10 @@ router.post('/login', (req, res) => {
 
   const usuario = db.prepare('SELECT * FROM usuarios WHERE username = ?').get(String(username).trim())
   // compareSync compara la contraseña ingresada contra el hash bcrypt guardado.
-  if (!usuario || !bcrypt.compareSync(String(password), usuario.password)) {
+  // Si el usuario no existe se compara contra DUMMY_HASH para no filtrar
+  // por tiempo qué usuarios existen.
+  const coincide = bcrypt.compareSync(String(password), usuario?.password ?? DUMMY_HASH)
+  if (!usuario || !coincide) {
     registrarFallo(clave)
     registrarAuditoria(null, 'login-fallido', `Usuario intentado: ${String(username).trim()}`)
     return res.status(401).json({ error: 'Usuario o contraseña incorrectos.' })
@@ -140,7 +152,7 @@ router.post('/login', (req, res) => {
 // Borra la sesión actual de la base y limpia las cookies.
 router.post('/logout', (req, res) => {
   const token = req.cookies?.[COOKIE_SESION]
-  const usuario = token ? db.prepare('SELECT * FROM usuarios WHERE id = (SELECT usuario_id FROM sesiones WHERE token = ?)').get(token) : null
+  const usuario = token ? obtenerUsuario(token) : null
   cerrarSesion(token)
   limpiarCookies(res)
   if (usuario) registrarAuditoria(usuario, 'logout', `Cierre de sesión de ${usuario.username}`)
@@ -161,14 +173,7 @@ router.post('/revocar-sesiones', requerirAuth, (req, res) => {
 // frontend, al cargar, sepa si hay sesión y reciba el token CSRF.
 router.get('/me', (req, res) => {
   const token = req.cookies?.[COOKIE_SESION]
-  const usuario = token
-    ? db
-        .prepare(
-          `SELECT u.* FROM sesiones s JOIN usuarios u ON u.id = s.usuario_id
-           WHERE s.token = ? AND s.expira_en > datetime('now')`
-        )
-        .get(token)
-    : null
+  const usuario = token ? obtenerUsuario(token) : null
   res.json({ usuario: usuario ? usuarioPublico(usuario) : null })
 })
 

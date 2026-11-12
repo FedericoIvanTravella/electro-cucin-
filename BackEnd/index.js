@@ -2,6 +2,7 @@
 // Electro Cuciné · BackEnd — PUNTO DE ENTRADA DEL SERVIDOR
 // Express monta (1) la API REST bajo /api y (2) sirve la app de
 // React ya compilada (carpeta dist del FrontEnd) para producción.
+// Exporta `app` para los tests; solo escucha si se ejecuta directamente.
 // =====================================================================
 import express from 'express'
 import cors from 'cors'
@@ -9,20 +10,30 @@ import helmet from 'helmet'
 import cookieParser from 'cookie-parser'
 import path from 'node:path'
 import fs from 'node:fs'
-import { fileURLToPath } from 'node:url'
-import './src/db.js' // Importar fuerza la creación del esquema, la migración y el seed.
-import { db } from './src/db.js'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+import { db, purgarSesionesExpiradas } from './src/db.js'
+import { seedInicial } from './src/seed.js'
 import authRoutes from './src/routes/auth.js'
 import productosRoutes from './src/routes/productos.js'
 import clientesRoutes from './src/routes/clientes.js'
 import ventasRoutes, { estadisticas } from './src/routes/ventas.js'
 import { requerirAdmin, COOKIE_CSRF } from './src/auth.js'
-import { generarCsrf } from './src/seguridad.js'
+import { generarCsrf, purgarIntentosViejos } from './src/seguridad.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
+const esPrincipal = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 const app = express()
 const PORT = process.env.PORT || 3001 // Puerto por defecto de la API.
 const esProduccion = process.env.NODE_ENV === 'production'
+
+// Datos iniciales (superusuario desde env + catálogo si está vacío).
+seedInicial()
+
+// Detrás de un proxy/reverse proxy (nginx, IIS, Cloudflare), habilitar con
+// TRUST_PROXY=1 para que req.ip sea la IP real del cliente (rate limit OK).
+if (process.env.TRUST_PROXY === '1') {
+  app.set('trust proxy', 1)
+}
 
 // ---------------------- Seguridad de cabeceras ----------------------
 // helmet() agrega headers de protección (CSP, nosniff, etc.) y elimina
@@ -56,21 +67,29 @@ const origenesPermitidos = (
   .map((o) => o.trim())
   .filter(Boolean)
 
+// Error específico para que el middleware de errores responda 403 y no 500.
+class OrigenNoPermitido extends Error {
+  constructor(origen) {
+    super(`Origen no permitido por CORS: ${origen}`)
+    this.status = 403
+  }
+}
+
 app.use(
   cors({
     origin(origin, cb) {
       // Sin Origin (mismo sitio, curl) o si está en la lista, se permite.
       if (!origin || origenesPermitidos.includes(origin)) return cb(null, true)
-      cb(new Error('Origen no permitido por CORS.'))
+      cb(new OrigenNoPermitido(origin))
     },
     credentials: true
   })
 )
 
 // ---------------------- Middlewares globales ----------------------
-// express.json(): convierte el body de las peticiones a JSON.
+// express.json(): convierte el body de las peticiones a JSON (límite 100kb).
 // cookieParser(): lee las cookies de la petición en req.cookies.
-app.use(express.json())
+app.use(express.json({ limit: '100kb' }))
 app.use(cookieParser())
 
 // ---------------------- Protección CSRF ----------------------
@@ -97,6 +116,16 @@ function verificarCsrf(req, res, next) {
 // Endpoint de prueba para verificar que la API está viva.
 app.get('/api/saludo', (req, res) => {
   res.json({ mensaje: 'API de Electro Cuciné funcionando' })
+})
+
+// Health check con ping a la base (para monitoreo / Docker).
+app.get('/api/salud', (req, res) => {
+  try {
+    db.prepare('SELECT 1').get()
+    res.json({ estado: 'ok', db: 'ok', uptime: Math.round(process.uptime()) })
+  } catch {
+    res.status(503).json({ estado: 'error', db: 'no disponible' })
+  }
 })
 
 // ---------------------- Rutas de la API ----------------------
@@ -126,10 +155,13 @@ app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada.' })
 })
 
-// Manejo centralizado de errores: nunca "tire" la app, responde 500 JSON.
+// Manejo centralizado de errores: nunca "tire" la app. Respeta el status
+// del error si viene marcado (p. ej. 403 por CORS) y oculta detalles.
 app.use((err, req, res, next) => {
-  console.error(err)
-  res.status(500).json({ error: 'Error interno del servidor.' })
+  if (res.headersSent) return next(err)
+  const status = Number.isInteger(err?.status) && err.status >= 400 && err.status < 600 ? err.status : 500
+  if (status >= 500) console.error(err)
+  res.status(status).json({ error: status >= 500 ? 'Error interno del servidor.' : err.message })
 })
 
 // ---------------------- Frontend estático (producción) ----------------------
@@ -149,6 +181,19 @@ if (fs.existsSync(dist)) {
 }
 
 // ---------------------- Arranque ----------------------
-app.listen(PORT, () => {
-  console.log(`Electro Cuciné API escuchando en http://localhost:${PORT}`)
-})
+if (esPrincipal) {
+  // Limpieza de sesiones vencidas al arrancar + cada 6 horas.
+  const purgadas = purgarSesionesExpiradas()
+  if (purgadas > 0) console.log(`[sesiones] ${purgadas} sesiones vencidas eliminadas`)
+  const limpieza = setInterval(() => {
+    purgarSesionesExpiradas()
+    purgarIntentosViejos()
+  }, 6 * 60 * 60 * 1000)
+  limpieza.unref()
+
+  app.listen(PORT, () => {
+    console.log(`Electro Cuciné API escuchando en http://localhost:${PORT}`)
+  })
+}
+
+export default app

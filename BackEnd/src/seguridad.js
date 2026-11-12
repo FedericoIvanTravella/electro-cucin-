@@ -12,6 +12,7 @@ import { randomBytes } from 'node:crypto'
 const MAX_INTENTOS = 5
 const VENTANA_MS = 15 * 60 * 1000 // 15 minutos
 const BLOQUEO_MS = 15 * 60 * 1000 // 15 minutos de bloqueo
+const MAX_ENTRADAS = 500 // tope de claves en memoria (anti inflado)
 
 const intentos = new Map() // clave -> { cantidad, primer_intento, bloqueado_hasta }
 
@@ -28,6 +29,7 @@ export function minutosBloqueo(clave) {
 
 // Suma un intento fallido; si llega al máximo, bloquea la clave.
 export function registrarFallo(clave) {
+  if (intentos.size >= MAX_ENTRADAS) purgarIntentosViejos()
   const ahora = Date.now()
   let registro = intentos.get(clave)
   if (!registro || ahora - registro.primer_intento > VENTANA_MS) {
@@ -45,6 +47,25 @@ export function registrarFallo(clave) {
 // Limpia los intentos al iniciar sesión correctamente.
 export function limpiarIntentos(clave) {
   intentos.delete(clave)
+}
+
+// Elimina las claves vencidas (ventana pasada y sin bloqueo vigente) para
+// que el mapa no crezca sin límite en un proceso longevo.
+export function purgarIntentosViejos() {
+  const ahora = Date.now()
+  for (const [clave, registro] of intentos) {
+    const bloqueoVigente = registro.bloqueado_hasta && registro.bloqueado_hasta > ahora
+    const ventanaVencida = ahora - registro.primer_intento > VENTANA_MS
+    if (!bloqueoVigente && ventanaVencida) intentos.delete(clave)
+  }
+  // Si aun así hay demasiadas entradas, se descartan las más viejas.
+  if (intentos.size > MAX_ENTRADAS) {
+    const ordenadas = [...intentos.entries()].sort((a, b) => a[1].primer_intento - b[1].primer_intento)
+    for (const [clave] of ordenadas.slice(0, intentos.size - MAX_ENTRADAS)) {
+      intentos.delete(clave)
+    }
+  }
+  return intentos.size
 }
 
 // ---------------------- Política de contraseñas ----------------------

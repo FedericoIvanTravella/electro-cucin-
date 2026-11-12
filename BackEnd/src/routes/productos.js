@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { db, registrarAuditoria } from '../db.js'
-import { requerirAdmin } from '../auth.js'
+import { requerirAdmin, obtenerUsuarioOpcional } from '../auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 // Carpeta pública donde viven las imágenes numeradas (/productos/1.jpg, etc.).
@@ -55,18 +55,15 @@ function validarProducto(body, { parcial = false } = {}) {
 }
 
 // ---------------------- GET /api/productos · Listado con filtros ----------------------
-// Público. Filtros: q (texto), categoria, soloStock, min/max (precio) y
-// admin=1 (el panel admin pide también los productos ocultos).
-router.get('/', (req, res) => {
-  const { q = '', categoria = '', soloStock = '', admin = '', min = '', max = '' } = req.query
+// Público. Filtros: q (texto), categoria, soloStock, min/max (precio).
+// admin=1 pide además los productos ocultos y exige rol de admin;
+// sin sesión de admin responde 403 (antes era público: fallo grave).
+function listarProductos(req, res, incluirOcultos) {
+  const { q = '', categoria = '', soloStock = '', min = '', max = '' } = req.query
   const filtros = []
   const params = []
 
-  if (admin === '1') {
-    filtros.push('1 = 1')
-  } else {
-    filtros.push('activo = 1')
-  }
+  if (!incluirOcultos) filtros.push('activo = 1')
   if (q) {
     filtros.push('(nombre LIKE ? OR descripcion LIKE ? OR categoria LIKE ?)')
     params.push(`%${q}%`, `%${q}%`, `%${q}%`)
@@ -85,11 +82,19 @@ router.get('/', (req, res) => {
     params.push(Number(max))
   }
 
+  const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : ''
   const productos = db
-    .prepare(`SELECT * FROM productos WHERE ${filtros.join(' AND ')} ORDER BY nombre`)
+    .prepare(`SELECT * FROM productos ${where} ORDER BY nombre`)
     .all(...params)
 
   res.json({ productos, categorias: CATEGORIAS })
+}
+
+router.get('/', (req, res) => {
+  if (req.query.admin === '1') {
+    return requerirAdmin(req, res, () => listarProductos(req, res, true))
+  }
+  listarProductos(req, res, false)
 })
 
 // ---------------------- GET /api/productos/imagenes · Imágenes disponibles ----------------------
@@ -100,16 +105,23 @@ router.get('/imagenes', requerirAdmin, (req, res) => {
   if (fs.existsSync(CARPETA_IMAGENES)) {
     archivos = fs
       .readdirSync(CARPETA_IMAGENES)
-      .filter((f) => /\.(jpe?g|png|webp|avif|gif)$/i.test(f))
+      .filter((f) => /\.(jpe?g|png|webp|avif|gif|svg)$/i.test(f))
       .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }))
   }
   res.json({ imagenes: archivos, ruta: '/productos' })
 })
 
 // ---------------------- GET /api/productos/:id · Detalle ----------------------
+// Público para productos activos; los ocultos solo los ve un admin.
 router.get('/:id', (req, res) => {
   const producto = db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id)
   if (!producto) return res.status(404).json({ error: 'Producto no encontrado.' })
+  if (!producto.activo) {
+    const usuario = obtenerUsuarioOpcional(req)
+    if (!usuario || usuario.rol !== 'admin') {
+      return res.status(404).json({ error: 'Producto no encontrado.' })
+    }
+  }
   res.json({ producto })
 })
 

@@ -1,0 +1,21 @@
+{
+  "name": "electro-cucine",
+  "version": "1.0.0",
+  "description": "Electro Cuciné — e-commerce de electrodomésticos de cocina (Express + SQLite + React/Vite)",
+  "private": true,
+  "author": "Travella Federico",
+  "license": "ISC",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "install:all": "npm --prefix BackEnd install && npm --prefix FrontEnd/client install",
+    "dev:backend": "npm --prefix BackEnd run dev",
+    "dev:frontend": "npm --prefix FrontEnd/client run dev",
+    "build": "npm --prefix FrontEnd/client run build",
+    "start": "npm --prefix BackEnd start",
+    "lint": "npm --prefix BackEnd run lint && npm --prefix FrontEnd/client run lint",
+    "test": "npm --prefix BackEnd test",
+    "seed": "node BackEnd/src/seed.js"
+  }
+}

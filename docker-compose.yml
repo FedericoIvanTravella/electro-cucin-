@@ -1,0 +1,20 @@
+# Comodidad para levantar todo con `docker compose up --build`.
+# No es obligatorio: el Dockerfile solo ya alcanza.
+services:
+  app:
+    build: .
+    ports:
+      - "3001:3001"
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      # Cambiá estos valores para la primera creación del superusuario:
+      ADMIN_USERNAME: admin
+      ADMIN_PASSWORD: "" # vacío = el contenedor genera una y la muestra en los logs
+      # CORS_ORIGINS: https://tu-dominio.example
+    volumes:
+      - ec-data:/app/BackEnd/data
+    restart: unless-stopped
+
+volumes:
+  ec-data:

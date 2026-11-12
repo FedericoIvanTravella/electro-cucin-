@@ -4,6 +4,7 @@
 // React ya compilada (carpeta dist del FrontEnd) para producción.
 // Exporta `app` para los tests; solo escucha si se ejecuta directamente.
 // =====================================================================
+import './src/env.js' // PRIMERO: carga .env antes que cualquier módulo lea process.env
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'

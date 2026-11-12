@@ -1,0 +1,17 @@
+.git
+**/node_modules
+**/dist
+BackEnd/data
+*.db
+*.db-shm
+*.db-wal
+.env
+.env.*
+!.env.example
+coverage
+*.log
+.vscode
+.idea
+Dockerfile
+docker-compose.yml
+.github

@@ -1,18 +1,25 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../lib/api'
 import { dinero } from '../../lib/format'
+import ChartDonut from '../ChartDonut'
+import ChartColumns from '../ChartColumns'
+import ChartBars from '../ChartBars'
 
 export default function ResumenAdmin() {
   const [stats, setStats] = useState(null)
+  const [analitica, setAnalitica] = useState(null)
   const [ventasRecientes, setVentasRecientes] = useState([])
   const [error, setError] = useState('')
 
   const cargar = useCallback(() => {
     api('/stats')
-      .then((d) => setStats(d.stats))
+      .then((d) => {
+        setStats(d.stats)
+        setAnalitica(d.analitica || null)
+      })
       .catch((e) => setError(e.message))
-    api('/ventas')
-      .then((d) => setVentasRecientes(d.ventas.slice(0, 5)))
+    api('/ventas?por_pagina=5')
+      .then((d) => setVentasRecientes(d.ventas))
       .catch(() => {})
   }, [])
 
@@ -50,6 +57,105 @@ export default function ResumenAdmin() {
           </article>
         ))}
       </div>
+
+      {analitica && (
+        <section className="analitica">
+          <h2 className="h2-seccion">Analítica</h2>
+          <div className="analitica__grilla">
+            <div className="card grafico">
+              <h3>Ingresos por categoría</h3>
+              <ChartDonut
+                datos={analitica.porCategoria.map((c) => ({ etiqueta: c.categoria, valor: c.ingresos }))}
+                formato={dinero}
+                centroTitulo="Ingresos"
+              />
+              <p className="grafico__pie">Ingresos brutos por línea (sin prorratear descuentos de pedido).</p>
+            </div>
+
+            <div className="card grafico">
+              <h3>Unidades vendidas por categoría</h3>
+              <ChartDonut
+                datos={analitica.porCategoria.map((c) => ({ etiqueta: c.categoria, valor: c.unidades }))}
+                formato={(v) => `${v} u.`}
+                centroTitulo="Unidades"
+              />
+            </div>
+
+            <div className="card grafico">
+              <h3>Catálogo por categoría</h3>
+              <ChartDonut
+                datos={analitica.catalogoPorCategoria.map((c) => ({ etiqueta: c.categoria, valor: c.cantidad }))}
+                formato={(v) => `${v} prod.`}
+                centroTitulo="Productos"
+              />
+            </div>
+
+            <div className="card grafico">
+              <h3>Estado de ventas</h3>
+              <ChartDonut
+                datos={analitica.ventasPorEstado.map((e) => ({ etiqueta: e.estado, valor: e.cantidad }))}
+                formato={(v) => `${v} ventas`}
+                centroTitulo="Ventas"
+                centroValor={String(analitica.ventasPorEstado.reduce((s, e) => s + e.cantidad, 0))}
+              />
+            </div>
+
+            <div className="card grafico grafico--ancho">
+              <h3>Ventas de los últimos 14 días</h3>
+              <ChartColumns
+                datos={analitica.ventasPorDia.map((d) => ({
+                  etiqueta: d.etiqueta,
+                  valor: d.ingresos,
+                  tooltip: `${d.etiqueta}: ${d.cantidad} ventas${d.descuentos > 0 ? `, descuentos ${dinero(d.descuentos)}` : ''}`
+                }))}
+                formato={dinero}
+              />
+              <p className="grafico__pie">
+                Total del período:{' '}
+                {dinero(analitica.ventasPorDia.reduce((s, d) => s + d.ingresos, 0))} en{' '}
+                {analitica.ventasPorDia.reduce((s, d) => s + d.cantidad, 0)} ventas
+              </p>
+            </div>
+
+            <div className="card grafico grafico--ancho">
+              <h3>Top 8 productos por unidades</h3>
+              <ChartBars
+                datos={analitica.topProductos.map((p) => ({ etiqueta: p.nombre, valor: p.unidades }))}
+                formato={(v) => `${v} u.`}
+              />
+            </div>
+
+            <div className="card grafico grafico--ancho">
+              <h3>Salud del inventario</h3>
+              {(() => {
+                const { sinStock, stockBajo, stockOk } = analitica.stock
+                const total = sinStock + stockBajo + stockOk
+                const pct = (n) => (total > 0 ? (n / total) * 100 : 0)
+                return (
+                  <div className="stock-salud">
+                    <div className="stock-salud__barra" role="img" aria-label="Distribución del inventario por nivel de stock">
+                      {sinStock > 0 && <span className="stock-salud__seg stock-salud__seg--sin" style={{ width: `${pct(sinStock)}%` }} />}
+                      {stockBajo > 0 && <span className="stock-salud__seg stock-salud__seg--bajo" style={{ width: `${pct(stockBajo)}%` }} />}
+                      {stockOk > 0 && <span className="stock-salud__seg stock-salud__seg--ok" style={{ width: `${pct(stockOk)}%` }} />}
+                    </div>
+                    <ul className="stock-salud__leyenda">
+                      <li>
+                        <span className="stock-salud__dot stock-salud__dot--sin" /> Sin stock: <strong>{sinStock}</strong>
+                      </li>
+                      <li>
+                        <span className="stock-salud__dot stock-salud__dot--bajo" /> Stock bajo (≤ 5): <strong>{stockBajo}</strong>
+                      </li>
+                      <li>
+                        <span className="stock-salud__dot stock-salud__dot--ok" /> Stock saludable: <strong>{stockOk}</strong>
+                      </li>
+                    </ul>
+                  </div>
+                )
+              })()}
+            </div>
+          </div>
+        </section>
+      )}
 
       <h2 className="h2-seccion">Últimas ventas</h2>
       {ventasRecientes.length === 0 && <p className="aviso">Todavía no hay ventas registradas.</p>}

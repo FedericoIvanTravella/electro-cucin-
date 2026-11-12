@@ -176,6 +176,13 @@ test('GET /api/stats requiere rol admin', async () => {
   const admin = await login('admin', 'claveAdmin123')
   const ok = await request(app).get('/api/stats').set('Cookie', headerCookie(admin.cookies))
   if (ok.status !== 200 || typeof ok.body.stats.ingresos !== 'number') throw new Error('stats admin: ' + ok.status)
+  const a = ok.body.analitica
+  if (!a || !Array.isArray(a.porCategoria) || !Array.isArray(a.ventasPorDia) || a.ventasPorDia.length !== 14) {
+    throw new Error('analitica incompleta: ' + JSON.stringify(Object.keys(a || {})))
+  }
+  for (const clave of ['catalogoPorCategoria', 'ventasPorEstado', 'topProductos', 'stock']) {
+    if (!(clave in a)) throw new Error('falta analitica.' + clave)
+  }
 })
 
 test('ruta /api inexistente responde 404 JSON', async () => {

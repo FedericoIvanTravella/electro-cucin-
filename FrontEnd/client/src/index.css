@@ -3209,3 +3209,197 @@ textarea:focus {
 .pdp-relacionados {
   margin-top: 0.25rem;
 }
+
+/* ================================================================
+   Analítica del panel de superusuario (gráficos SVG sin dependencias)
+   ================================================================ */
+.analitica {
+  margin: 1.25rem 0;
+}
+
+.analitica__grilla {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+@media (max-width: 900px) {
+  .analitica__grilla {
+    grid-template-columns: 1fr;
+  }
+}
+
+.grafico {
+  padding: 1rem 1.1rem 1.1rem;
+}
+.grafico h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+.grafico--ancho {
+  grid-column: 1 / -1;
+}
+.grafico__pie {
+  margin: 0.6rem 0 0;
+  font-size: 0.82rem;
+  color: var(--texto-sec);
+  text-align: right;
+}
+
+/* ---------- Donut ---------- */
+.donut {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.donut__svg {
+  width: 140px;
+  height: 140px;
+  flex: none;
+}
+.donut__centro-valor {
+  font-size: 17px;
+  font-weight: 800;
+  fill: var(--texto);
+}
+.donut__centro-label {
+  font-size: 9.5px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--texto-sec);
+}
+.donut__leyenda {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+  flex: 1;
+  min-width: 150px;
+}
+.donut__leyenda li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+.donut__dot {
+  width: 0.75rem;
+  height: 0.75rem;
+  border-radius: 999px;
+  flex: none;
+}
+.donut__label {
+  flex: 1;
+}
+.donut__valor {
+  color: var(--texto-sec);
+  font-variant-numeric: tabular-nums;
+}
+.donut__valor em {
+  font-style: normal;
+  opacity: 0.75;
+  font-size: 0.78em;
+}
+
+/* ---------- Columnas 14 días ---------- */
+.columnas__svg {
+  width: 100%;
+  height: auto;
+}
+.columnas__barra {
+  fill: var(--marca);
+}
+.columnas__label {
+  font-size: 10px;
+  fill: var(--texto-sec);
+}
+
+/* ---------- Barras horizontales (ranking) ---------- */
+.barras-h {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.barras-h__fila {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 2fr) auto;
+  align-items: center;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+}
+.barras-h__etiqueta {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.barras-h__pista {
+  background: var(--gris-claro);
+  border-radius: 999px;
+  height: 0.65rem;
+  overflow: hidden;
+}
+.barras-h__barra {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--marca), #2d5aa0);
+  border-radius: 999px;
+  min-width: 2px;
+}
+.barras-h__valor {
+  font-variant-numeric: tabular-nums;
+  color: var(--texto-sec);
+}
+
+/* ---------- Salud del inventario ---------- */
+.stock-salud__barra {
+  display: flex;
+  height: 0.9rem;
+  border-radius: 999px;
+  overflow: hidden;
+  background: var(--gris-claro);
+}
+.stock-salud__seg--sin {
+  background: var(--rojo);
+}
+.stock-salud__seg--bajo {
+  background: #f5a623;
+}
+.stock-salud__seg--ok {
+  background: #00a650;
+}
+.stock-salud__leyenda {
+  list-style: none;
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  padding: 0;
+  margin: 0.65rem 0 0;
+  font-size: 0.86rem;
+  color: var(--texto-sec);
+}
+.stock-salud__leyenda strong {
+  color: var(--texto);
+}
+.stock-salud__dot {
+  display: inline-block;
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 999px;
+  margin-right: 0.3rem;
+  vertical-align: -0.05em;
+}
+.stock-salud__dot--sin {
+  background: var(--rojo);
+}
+.stock-salud__dot--bajo {
+  background: #f5a623;
+}
+.stock-salud__dot--ok {
+  background: #00a650;
+}

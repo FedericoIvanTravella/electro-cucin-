@@ -222,6 +222,94 @@ router.delete('/:id', requerirAdmin, (req, res) => {
   res.json({ venta: detalleVenta(db.prepare('SELECT * FROM ventas WHERE id = ?').get(venta.id)) })
 })
 
+// ---------------------- Analítica para el panel del superusuario ----------------------
+// Consolida en UNA llamada todo lo que necesitan los gráficos del panel.
+// Solo cuenta ventas "completada" (las anuladas no suman ingresos ni unidades).
+export function analitica() {
+  const pad = (n) => String(n).padStart(2, '0')
+
+  // Ingresos y unidades por categoría
+  const porCategoria = db
+    .prepare(
+      `SELECT p.categoria AS categoria,
+              COALESCE(SUM(vi.precio * vi.cantidad), 0) AS ingresos,
+              COALESCE(SUM(vi.cantidad), 0) AS unidades
+       FROM venta_items vi
+       JOIN ventas v ON v.id = vi.venta_id AND v.estado = 'completada'
+       JOIN productos p ON p.id = vi.producto_id
+       GROUP BY p.categoria
+       ORDER BY ingresos DESC`
+    )
+    .all()
+
+  // Catálogo activo por categoría (diagnóstico de inventario)
+  const catalogoPorCategoria = db
+    .prepare('SELECT categoria, COUNT(*) AS cantidad FROM productos WHERE activo = 1 GROUP BY categoria ORDER BY cantidad DESC')
+    .all()
+
+  // Ingresos/unidades/cantidad por estado de venta (completada vs anulada)
+  const ventasPorEstado = db
+    .prepare('SELECT estado, COUNT(*) AS cantidad, COALESCE(SUM(total), 0) AS total FROM ventas GROUP BY estado')
+    .all()
+
+  // Top 8 productos por unidades vendidas
+  const topProductos = db
+    .prepare(
+      `SELECT vi.nombre AS nombre,
+              COALESCE(SUM(vi.cantidad), 0) AS unidades,
+              COALESCE(SUM(vi.precio * vi.cantidad), 0) AS ingresos
+       FROM venta_items vi
+       JOIN ventas v ON v.id = vi.venta_id AND v.estado = 'completada'
+       GROUP BY vi.nombre
+       ORDER BY unidades DESC
+       LIMIT 8`
+    )
+    .all()
+
+  // Serie de los últimos 14 días (incluye días sin ventas con 0)
+  const filas14 = db
+    .prepare(
+      `SELECT date(fecha) AS dia,
+              COALESCE(SUM(total), 0) AS ingresos,
+              COUNT(*) AS cantidad,
+              COALESCE(SUM(descuento_monto), 0) AS descuentos
+       FROM ventas
+       WHERE estado = 'completada' AND fecha >= datetime('now', 'localtime', '-13 days', 'start of day')
+       GROUP BY date(fecha)`
+    )
+    .all()
+  const porDia = new Map(filas14.map((r) => [r.dia, r]))
+  const ventasPorDia = []
+  const hoy = new Date()
+  for (let i = 13; i >= 0; i--) {
+    const d = new Date(hoy)
+    d.setDate(d.getDate() - i)
+    const key = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`
+    const fila = porDia.get(key)
+    ventasPorDia.push({
+      dia: key,
+      etiqueta: `${pad(d.getDate())}/${pad(d.getMonth() + 1)}`,
+      ingresos: fila ? Number(fila.ingresos) : 0,
+      cantidad: fila ? fila.cantidad : 0,
+      descuentos: fila ? Number(fila.descuentos) : 0
+    })
+  }
+
+  // Diagnóstico de stock: sano / bajo / sin unidades
+  const sinStock = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock = 0').get().n
+  const stockBajo = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock BETWEEN 1 AND 5').get().n
+  const stockOk = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock > 5').get().n
+
+  return {
+    porCategoria,
+    catalogoPorCategoria,
+    ventasPorEstado,
+    topProductos,
+    ventasPorDia,
+    stock: { sinStock, stockBajo, stockOk }
+  }
+}
+
 // ---------------------- Estadísticas (para el panel del superusuario) ----------------------
 // Calcula TODO en SQL (sin cargar la tabla completa en memoria).
 // Solo suma las ventas "completada" (las anuladas no cuentan).

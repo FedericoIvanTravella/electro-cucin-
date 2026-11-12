@@ -17,7 +17,7 @@ import { seedInicial } from './src/seed.js'
 import authRoutes from './src/routes/auth.js'
 import productosRoutes from './src/routes/productos.js'
 import clientesRoutes from './src/routes/clientes.js'
-import ventasRoutes, { estadisticas } from './src/routes/ventas.js'
+import ventasRoutes, { estadisticas, analitica } from './src/routes/ventas.js'
 import { requerirAdmin, COOKIE_CSRF } from './src/auth.js'
 import { generarCsrf, purgarIntentosViejos } from './src/seguridad.js'
 
@@ -58,8 +58,11 @@ app.use(
 )
 
 // ---------------------- CORS restringido ----------------------
-// Solo se permite el origen del propio sitio (frontend o dominio real).
-// Se personaliza con la variable de entorno CORS_ORIGINS separada por comas.
+// Solo se aplica a /api (los estáticos pasan siempre).
+// Se permite: (1) sin header Origin (mismo sitio, curl),
+// (2) Origin cuyo host coincide con el Host del pedido (mismo origen),
+//     o (3) Origin presente en la lista CORS_ORIGINS (desarrollo, dominios).
+// El resto responde 403.
 const origenesPermitidos = (
   process.env.CORS_ORIGINS ||
   'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3001,http://127.0.0.1:3001'
@@ -76,16 +79,22 @@ class OrigenNoPermitido extends Error {
   }
 }
 
-app.use(
+const corsRestringido = (req, res, next) =>
   cors({
     origin(origin, cb) {
-      // Sin Origin (mismo sitio, curl) o si está en la lista, se permite.
-      if (!origin || origenesPermitidos.includes(origin)) return cb(null, true)
+      if (!origin) return cb(null, true)
+      try {
+        if (new URL(origin).host === req.headers.host) return cb(null, true)
+      } catch {
+        // Origin malformado: cae al chequeo de la lista.
+      }
+      if (origenesPermitidos.includes(origin)) return cb(null, true)
       cb(new OrigenNoPermitido(origin))
     },
     credentials: true
-  })
-)
+  })(req, res, next)
+
+app.use('/api', corsRestringido)
 
 // ---------------------- Middlewares globales ----------------------
 // express.json(): convierte el body de las peticiones a JSON (límite 100kb).
@@ -138,9 +147,9 @@ app.use('/api/productos', productosRoutes) // Catálogo, stock e imágenes.
 app.use('/api/clientes', clientesRoutes) // Libreta de clientes (admin).
 app.use('/api/ventas', ventasRoutes) // Ventas, mis compras y anulaciones.
 
-// Estadísticas generales para el panel del superusuario (solo admin).
+// Estadísticas generales + analítica de gráficos para el panel del superusuario (admin).
 app.get('/api/stats', requerirAdmin, (req, res) => {
-  res.json({ stats: estadisticas() })
+  res.json({ stats: estadisticas(), analitica: analitica() })
 })
 
 // Registro de auditoría: quién hizo qué acción sensible y cuándo (solo admin).

@@ -9,17 +9,17 @@ import { api } from '../lib/api'
 import { dinero, imagenProducto } from '../lib/format'
 
 const beneficios = [
-  { icono: '🚚', titulo: 'Envío sin cargo', texto: 'En compras superiores a $150.000 en todo el país.' },
-  { icono: '🛡️', titulo: '2 años de garantía', texto: 'Todos los electrodomésticos con servicio técnico oficial.' },
-  { icono: '💳', titulo: '12 cuotas sin interés', texto: 'Con tarjetas bancarias seleccionadas.' },
-  { icono: '👵', titulo: '30% para mayores', texto: 'Si tenés 65 años o más, iniciá sesión y el descuento se aplica solo.' }
+  { icono: 'fi-rr-shipping-fast', titulo: 'Envío sin cargo', texto: 'En compras superiores a $150.000 en todo el país.' },
+  { icono: 'fi-rr-shield-check', titulo: '2 años de garantía', texto: 'Todos los electrodomésticos con servicio técnico oficial.' },
+  { icono: 'fi-rr-credit-card', titulo: '12 cuotas sin interés', texto: 'Con tarjetas bancarias seleccionadas.' },
+  { icono: 'fi-rr-person-walking-with-cane', titulo: '30% para mayores', texto: 'Si tenés 65 años o más, iniciá sesión y el descuento se aplica solo.' }
 ]
 
 const categorias = [
-  { nombre: 'Cocción', icono: '🍳', texto: 'Hornos, freidoras y anafes' },
-  { nombre: 'Preparación', icono: '🥣', texto: 'Batidoras, licuadoras y procesadoras' },
-  { nombre: 'Cafetería', icono: '☕', texto: 'Cafeteras, pavas y tostadoras' },
-  { nombre: 'Limpieza', icono: '🧽', texto: 'Lavavajillas y extractores' }
+  { nombre: 'Cocción', icono: 'fi-rr-pot', texto: 'Hornos, freidoras y anafes' },
+  { nombre: 'Preparación', icono: 'fi-rr-blender', texto: 'Batidoras, licuadoras y procesadoras' },
+  { nombre: 'Cafetería', icono: 'fi-rr-mug-hot', texto: 'Cafeteras, pavas y tostadoras' },
+  { nombre: 'Limpieza', icono: 'fi-rr-spray-can-sparkles', texto: 'Lavavajillas y extractores' }
 ]
 
 export default function Home() {
@@ -28,10 +28,17 @@ export default function Home() {
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
-    api('/productos?soloStock=1')
+    const controlador = new AbortController()
+    api('/productos?soloStock=1', { signal: controlador.signal })
       .then((data) => setDestacados(data.productos.slice(0, 4)))
-      .catch(() => setDestacados([]))
-      .finally(() => setCargando(false))
+      .catch(() => {
+        if (controlador.signal.aborted) return
+        setDestacados([])
+      })
+      .finally(() => {
+        if (!controlador.signal.aborted) setCargando(false)
+      })
+    return () => controlador.abort()
   }, [])
 
   const masBarato = destacados.length
@@ -95,10 +102,10 @@ export default function Home() {
             </div>
           ) : (
             <div className="hero__plato" aria-hidden="true">
-              <span>🥘</span>
-              <span>🍳</span>
-              <span>☕</span>
-              <span>🥄</span>
+              <span><i className="fi fi-rr-pot" /></span>
+              <span><i className="fi fi-rr-blender" /></span>
+              <span><i className="fi fi-rr-mug-hot" /></span>
+              <span><i className="fi fi-rr-utensils" /></span>
             </div>
           )}
         </div>
@@ -108,7 +115,7 @@ export default function Home() {
         {beneficios.map((b) => (
           <article key={b.titulo} className="beneficio">
             <span className="beneficio__icono" aria-hidden="true">
-              {b.icono}
+              <i className={`fi ${b.icono}`} />
             </span>
             <h3>{b.titulo}</h3>
             <p>{b.texto}</p>
@@ -131,11 +138,11 @@ export default function Home() {
               className="card categoria-card"
             >
               <span className="categoria-card__icono" aria-hidden="true">
-                {c.icono}
+                <i className={`fi ${c.icono}`} />
               </span>
               <h3>{c.nombre}</h3>
               <p>{c.texto}</p>
-              <span className="categoria-card__link">Ver productos →</span>
+              <span className="categoria-card__link">Ver productos <i className="fi fi-rr-arrow-right" aria-hidden="true" /></span>
             </Link>
           ))}
         </div>
@@ -169,7 +176,7 @@ export default function Home() {
             <h2>Lo que dicen nuestros clientes</h2>
             <p className="seccion__bajada">Miles de cocinas argentinas ya confían en Electro Cuciné.</p>
           </div>
-          <span className="chip chip--demo">★ 4.8 / 5 promedio</span>
+          <span className="chip chip--demo"><i className="fi fi-sr-star" aria-hidden="true" /> 4.8 / 5 promedio</span>
         </div>
         <TestimoniosCarrusel />
       </Revelar>

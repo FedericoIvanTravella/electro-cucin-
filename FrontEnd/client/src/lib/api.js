@@ -9,7 +9,8 @@ function leerCookie(nombre) {
 // Realiza una petición a la API. La sesión viaja en una cookie httpOnly
 // (por eso "credentials: include"); en los métodos que modifican datos se
 // envía además el token CSRF en el header X-CSRF-Token.
-export async function api(path, { method = 'GET', body } = {}) {
+// Acepta "signal" para cancelar (AbortController) y evitar carreras.
+export async function api(path, { method = 'GET', body, signal } = {}) {
   const headers = { 'Content-Type': 'application/json' }
   const metodo = method.toUpperCase()
   if (!['GET', 'HEAD', 'OPTIONS'].includes(metodo)) {
@@ -22,10 +23,12 @@ export async function api(path, { method = 'GET', body } = {}) {
       method,
       headers,
       credentials: 'include',
+      signal,
       body: body === undefined ? undefined : JSON.stringify(body)
     })
-  } catch {
-    throw new Error('No se pudo conectar con el servidor.')
+  } catch (error) {
+    if (error?.name === 'AbortError') throw error
+    throw new Error('No se pudo conectar con el servidor.', { cause: error })
   }
 
   const data = await res.json().catch(() => ({}))

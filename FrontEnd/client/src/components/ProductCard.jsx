@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { useToast } from '../context/ToastContext'
@@ -43,25 +44,31 @@ export default function ProductCard({ producto, destacado = false }) {
           aria-label={favorito ? 'Quitar de favoritos' : 'Agregar a favoritos'}
           aria-pressed={favorito}
         >
-          {favorito ? '♥' : '♡'}
+          <i className={`fi ${favorito ? 'fi-sr-heart' : 'fi-rr-heart'}`} aria-hidden="true" />
         </button>
 
         {imagen ? (
-          <button
-            type="button"
-            className="producto__zoom"
-            onClick={() => setZoom(true)}
-            aria-label={`Ampliar imagen de ${producto.nombre}`}
-          >
-            <img src={imagen} alt={producto.nombre} loading="lazy" />
-            <span className="producto__zoom-hint" aria-hidden="true">
-              🔍
-            </span>
-          </button>
+          <>
+            <Link
+              to={`/producto/${producto.id}`}
+              className="producto__media-link"
+              aria-label={`Ver ${producto.nombre}`}
+            >
+              <img src={imagen} alt={producto.nombre} loading="lazy" />
+            </Link>
+            <button
+              type="button"
+              className="producto__zoom-fab"
+              onClick={() => setZoom(true)}
+              aria-label={`Ampliar imagen de ${producto.nombre}`}
+            >
+              <i className="fi fi-rr-zoom-in" aria-hidden="true" />
+            </button>
+          </>
         ) : (
-          <span className="producto__emoji" aria-hidden="true">
-            {producto.imagen || '🍽️'}
-          </span>
+          <Link to={`/producto/${producto.id}`} className="producto__media-link" aria-label={`Ver ${producto.nombre}`}>
+            <i className="fi fi-rr-utensils producto__icono" aria-hidden="true" />
+          </Link>
         )}
 
         <span className="producto__categoria">{producto.categoria}</span>
@@ -69,7 +76,9 @@ export default function ProductCard({ producto, destacado = false }) {
       </div>
 
       <div className="producto__cuerpo">
-        <h3 className="producto__nombre">{producto.nombre}</h3>
+        <h3 className="producto__nombre">
+          <Link to={`/producto/${producto.id}`}>{producto.nombre}</Link>
+        </h3>
         <p className="producto__descripcion">{producto.descripcion || 'Electrodoméstico de cocina.'}</p>
 
         <div className="producto__precios">
@@ -92,7 +101,7 @@ export default function ProductCard({ producto, destacado = false }) {
           onClick={sumar}
           disabled={sinStock}
         >
-          {sinStock ? 'Sin stock' : agregado ? '✓ Agregado al carrito' : 'Agregar al carrito'}
+          {sinStock ? 'Sin stock' : agregado ? <><i className="fi fi-rr-check" aria-hidden="true" /> Agregado al carrito</> : 'Agregar al carrito'}
         </button>
       </div>
 

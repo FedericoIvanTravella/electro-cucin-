@@ -6,11 +6,12 @@ import { useFavoritos } from '../context/FavoritosContext'
 import { useTema } from '../context/TemaContext'
 
 // Barra superior con beneficios rotativos (se ve apenas abre la página).
+// Los íconos son Flaticon UIcons (la fuente está cargada globalmente).
 const PROMOS = [
-  '🚚 Envío sin cargo en compras superiores a $150.000',
-  '💳 12 cuotas sin interés con tarjetas seleccionadas',
-  '👵 30% de descuento para mayores de 65 años',
-  '🛡️ 2 años de garantía en todos los productos'
+  { icono: 'fi-rr-shipping-fast', texto: 'Envío sin cargo en compras superiores a $150.000' },
+  { icono: 'fi-rr-credit-card', texto: '12 cuotas sin interés con tarjetas seleccionadas' },
+  { icono: 'fi-rr-person-walking-with-cane', texto: '30% de descuento para mayores de 65 años' },
+  { icono: 'fi-rr-shield-check', texto: '2 años de garantía en todos los productos' }
 ]
 
 function BarraPromos() {
@@ -22,7 +23,7 @@ function BarraPromos() {
   return (
     <div className="promos">
       <span className="promos__item" key={actual}>
-        {PROMOS[actual]}
+        <i className={`fi ${PROMOS[actual].icono}`} aria-hidden="true" /> {PROMOS[actual].texto}
       </span>
     </div>
   )
@@ -64,7 +65,7 @@ function Navbar() {
           onClick={() => setAbierto((v) => !v)}
           aria-label="Abrir menú"
         >
-          ☰
+          <i className="fi fi-rr-menu-burger" aria-hidden="true" />
         </button>
 
         <nav className={`navbar__nav ${abierto ? 'abierto' : ''}`}>
@@ -84,11 +85,11 @@ function Navbar() {
             aria-label={tema === 'oscuro' ? 'Activar tema claro' : 'Activar tema oscuro'}
             title={tema === 'oscuro' ? 'Tema claro' : 'Tema oscuro'}
           >
-            {tema === 'oscuro' ? '☀️' : '🌙'}
+            <i className={`fi ${tema === 'oscuro' ? 'fi-rr-sun' : 'fi-rr-moon'}`} aria-hidden="true" />
           </button>
 
           <Link to="/carrito" className="carrito-boton" title="Ver carrito">
-            🛒 Carrito
+            <i className="fi fi-rr-shopping-cart" aria-hidden="true" /> Carrito
             {totales.unidades > 0 && <span className="badge-carrito">{totales.unidades}</span>}
           </Link>
 
@@ -152,7 +153,12 @@ function Footer() {
           <p>30% de descuento para clientes de 65 años o más al iniciar sesión.</p>
         </div>
       </div>
-      <p className="footer__legal">© {new Date().getFullYear()} Electro Cuciné · Proyecto académico</p>
+      <p className="footer__legal">
+        © {new Date().getFullYear()} Electro Cuciné · Proyecto académico · Íconos por{' '}
+        <a href="https://www.flaticon.com" target="_blank" rel="noreferrer">
+          Flaticon
+        </a>
+      </p>
     </footer>
   )
 }

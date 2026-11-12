@@ -47,7 +47,7 @@ export default function MisCompras() {
                 <h3>Pedido #{venta.id}</h3>
                 <p>{fechaHora(venta.fecha)}</p>
                 {venta.direccion_envio && (
-                  <p className="compra__envio">📦 Envío a: {venta.direccion_envio}</p>
+                  <p className="compra__envio"><i className="fi fi-rr-box" aria-hidden="true" /> Envío a: {venta.direccion_envio}</p>
                 )}
               </div>
               <span className={`chip ${venta.estado === 'anulada' ? 'chip--peligro' : 'chip--exito'}`}>

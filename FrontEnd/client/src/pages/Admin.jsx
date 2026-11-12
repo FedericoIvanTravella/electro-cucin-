@@ -7,11 +7,11 @@ import VentasAdmin from '../components/admin/VentasAdmin.jsx'
 import AuditoriaAdmin from '../components/admin/AuditoriaAdmin.jsx'
 
 const vistas = [
-  { id: 'resumen', nombre: 'Resumen', icono: '📊' },
-  { id: 'productos', nombre: 'Productos y stock', icono: '📦' },
-  { id: 'clientes', nombre: 'Clientes', icono: '👥' },
-  { id: 'ventas', nombre: 'Registro de ventas', icono: '🧾' },
-  { id: 'auditoria', nombre: 'Auditoría', icono: '🛡️' }
+  { id: 'resumen', nombre: 'Resumen', icono: 'fi-rr-chart-pie' },
+  { id: 'productos', nombre: 'Productos y stock', icono: 'fi-rr-box' },
+  { id: 'clientes', nombre: 'Clientes', icono: 'fi-rr-users-alt' },
+  { id: 'ventas', nombre: 'Registro de ventas', icono: 'fi-rr-receipt' },
+  { id: 'auditoria', nombre: 'Auditoría', icono: 'fi-rr-shield-check' }
 ]
 
 export default function Admin() {
@@ -37,7 +37,7 @@ export default function Admin() {
             className={`admin__tab ${vista === v.id ? 'activo' : ''}`}
             onClick={() => setVista(v.id)}
           >
-            <span aria-hidden="true">{v.icono}</span> {v.nombre}
+            <i className={`fi ${v.icono}`} aria-hidden="true" /> {v.nombre}
           </button>
         ))}
       </nav>

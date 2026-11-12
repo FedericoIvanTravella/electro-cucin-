@@ -52,9 +52,14 @@ const TESTIMONIOS = [
 
 function Estrellas({ cantidad }) {
   return (
-    <span className="estrellas" aria-label={`${cantidad} de 5 estrellas`}>
-      {'★'.repeat(cantidad)}
-      <span className="estrellas__vacias">{'★'.repeat(5 - cantidad)}</span>
+    <span className="estrellas" role="img" aria-label={`${cantidad} de 5 estrellas`}>
+      {Array.from({ length: 5 }, (_, i) => (
+        <i
+          key={i}
+          className={`fi ${i < cantidad ? 'fi-sr-star' : 'fi-rr-star estrellas__vacias'}`}
+          aria-hidden="true"
+        />
+      ))}
     </span>
   )
 }
@@ -98,7 +103,7 @@ export default function TestimoniosCarrusel() {
                 <strong>{testimonio.nombre}</strong>
                 <span className="testimonio__lugar">{testimonio.lugar}</span>
               </div>
-              <span className="chip chip--exito testimonio__producto">✔ {testimonio.producto}</span>
+              <span className="chip chip--exito testimonio__producto"><i className="fi fi-rr-check" aria-hidden="true" /> {testimonio.producto}</span>
             </div>
           </article>
         ))}

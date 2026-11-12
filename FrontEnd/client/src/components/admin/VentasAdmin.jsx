@@ -4,6 +4,7 @@ import { dinero, fechaHora } from '../../lib/format'
 
 export default function VentasAdmin() {
   const [ventas, setVentas] = useState([])
+  const [total, setTotal] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
   const [mensaje, setMensaje] = useState('')
@@ -13,8 +14,11 @@ export default function VentasAdmin() {
   const cargar = (estado = estadoFiltro) => {
     setCargando(true)
     setError('')
-    api(`/ventas${estado ? `?estado=${encodeURIComponent(estado)}` : ''}`)
-      .then((d) => setVentas(d.ventas))
+    api(`/ventas?por_pagina=100${estado ? `&estado=${encodeURIComponent(estado)}` : ''}`)
+      .then((d) => {
+        setVentas(d.ventas)
+        setTotal(d.total ?? d.ventas.length)
+      })
       .catch((e) => setError(e.message))
       .finally(() => setCargando(false))
   }
@@ -61,7 +65,8 @@ export default function VentasAdmin() {
           ))}
         </div>
         <p className="aviso aviso--minimo">
-          {ventas.length} ventas · {dinero(totalCompletadas)} en ingresos completados
+          {total > ventas.length ? `${ventas.length} de ${total} ventas` : `${ventas.length} ventas`} ·{' '}
+          {dinero(totalCompletadas)} en ingresos completados
         </p>
       </div>
 
@@ -90,7 +95,7 @@ export default function VentasAdmin() {
                     {v.estado}
                   </span>
                   <span className="venta__flecha" aria-hidden="true">
-                    {abierta === v.id ? '▲' : '▼'}
+                    {abierta === v.id ? <i className="fi fi-rr-angle-up" aria-hidden="true" /> : <i className="fi fi-rr-angle-down" aria-hidden="true" />}
                   </span>
                 </div>
               </header>
@@ -131,7 +136,7 @@ export default function VentasAdmin() {
                     </p>
                     <p className="venta__metodo">Método de pago: {v.metodo_pago}</p>
                     {v.direccion_envio && (
-                      <p className="venta__metodo">📦 Envío a: {v.direccion_envio}</p>
+                      <p className="venta__metodo"><i className="fi fi-rr-box" aria-hidden="true" /> Envío a: {v.direccion_envio}</p>
                     )}
                   </div>
                   {v.estado === 'completada' && (

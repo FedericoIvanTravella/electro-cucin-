@@ -62,7 +62,7 @@ export default function Carrito() {
                 {imagenProducto(item) ? (
                   <img src={imagenProducto(item)} alt="" />
                 ) : (
-                  <span>{item.imagen || '🍽️'}</span>
+                  <span aria-hidden="true"><i className="fi fi-rr-utensils" /></span>
                 )}
               </div>
 
@@ -106,7 +106,7 @@ export default function Carrito() {
                 onClick={() => quitar(item.producto_id)}
                 title="Eliminar del carrito"
               >
-                🗑️
+                <i className="fi fi-rr-trash" aria-hidden="true" />
               </button>
             </div>
           ))}
@@ -117,7 +117,7 @@ export default function Carrito() {
           className="boton boton--fantasma"
           onClick={() => setAbierto((v) => !v)}
         >
-          {abierto ? 'Ocultar productos' : '➕ Agregar otro producto'}
+          {abierto ? 'Ocultar productos' : <><i className="fi fi-rr-plus" aria-hidden="true" /> Agregar otro producto</>}
         </button>
 
         {abierto && (
@@ -137,7 +137,7 @@ export default function Carrito() {
                   {tieneImagen(p) ? (
                     <img src={imagenProducto(p)} alt="" className="agregar-productos__thumb" />
                   ) : (
-                    <span aria-hidden="true">{p.imagen || '🍽️'}</span>
+                    <span aria-hidden="true"><i className="fi fi-rr-utensils" /></span>
                   )}
                   <div>
                     <strong>{p.nombre}</strong>

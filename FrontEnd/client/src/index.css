@@ -740,9 +740,10 @@ textarea:focus {
   mix-blend-mode: multiply;
 }
 
-.producto__emoji {
+.producto__icono {
   font-size: 3.4rem;
   opacity: 0.85;
+  color: var(--texto-sec);
 }
 
 .producto__categoria {
@@ -2560,22 +2561,57 @@ textarea:focus {
   border-color: var(--rojo);
 }
 
-.producto__zoom {
+.producto__media-link {
+  position: absolute;
+  inset: 0;
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
-  height: 100%;
-  padding: 0;
-  border: none;
-  background: none;
-  cursor: zoom-in;
-  position: relative;
+  text-decoration: none;
 }
 
-.producto__zoom img {
+.producto__media-link img {
   display: block;
   width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 0.4rem;
+  mix-blend-mode: multiply;
+}
+
+.producto__zoom-fab {
+  position: absolute;
+  right: 0.6rem;
+  bottom: 0.6rem;
+  z-index: 2;
+  width: 2.2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--texto-sec);
+  font-size: 0.95rem;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+}
+
+.producto__media:hover .producto__zoom-fab,
+.producto__zoom-fab:focus-visible {
+  opacity: 1;
+}
+
+.producto__nombre a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.producto__nombre a:hover {
+  color: var(--marca);
+  text-decoration: underline;
 }
 
 /* La etiqueta de % OFF baja a la esquina inferior izquierda para no
@@ -2585,23 +2621,6 @@ textarea:focus {
   bottom: 0.6rem;
   left: 0.6rem;
   right: auto;
-}
-
-.producto__zoom-hint {
-  position: absolute;
-  bottom: 0.5rem;
-  right: 0.5rem;
-  background: rgba(0, 0, 0, 0.55);
-  color: #fff;
-  border-radius: 999px;
-  font-size: 0.8rem;
-  padding: 0.2rem 0.45rem;
-  opacity: 0;
-  transition: opacity 0.15s;
-}
-
-.producto__zoom:hover .producto__zoom-hint {
-  opacity: 1;
 }
 
 /* ---------- Visor de imagen ampliada (lightbox) ---------- */
@@ -2764,6 +2783,10 @@ textarea:focus {
   fill: #6b4626;
 }
 
+.mascota__cafe-mini {
+  color: #6b4626;
+}
+
 .mascota__ojo,
 .mascota__lagrima {
   fill: #2b2118;
@@ -2869,4 +2892,320 @@ textarea:focus {
   .mascota__vapor path {
     animation: none;
   }
+}
+/* ================================================================
+   �conos Flaticon UIcons
+   - .fi hereda el tama�o y color del texto que lo contiene.
+   - Contenedores con font-size grande = �cono grande.
+   ================================================================ */
+.fi {
+  font-size: inherit;
+  line-height: 1;
+  vertical-align: -0.12em;
+  display: inline-block;
+}
+
+.fi--grande { font-size: 1.4em; }
+
+.estrellas .fi { letter-spacing: 0.08em; }
+.estrellas__vacias .fi { color: #d8dee9; }
+
+/* ================================================================
+   Página de detalle de producto (estilo MercadoLibre)
+   ================================================================ */
+.pdp {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.pdp-migas {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--texto-sec);
+}
+.pdp-migas a {
+  color: var(--marca);
+  text-decoration: none;
+}
+.pdp-migas a:hover {
+  text-decoration: underline;
+}
+.pdp-migas span {
+  color: var(--texto);
+}
+.pdp-migas .fi {
+  font-size: 0.75rem;
+}
+
+.pdp-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: 1.25rem;
+  align-items: start;
+}
+
+@media (max-width: 900px) {
+  .pdp-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.pdp-galeria {
+  padding: 0.75rem;
+}
+
+.pdp-media {
+  position: relative;
+  aspect-ratio: 1 / 0.85;
+  display: grid;
+  place-items: center;
+  background: linear-gradient(180deg, #ffffff, var(--gris-claro));
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.pdp-zoom {
+  border: none;
+  background: none;
+  cursor: zoom-in;
+  width: 100%;
+  height: 100%;
+  padding: 0;
+}
+
+.pdp-zoom img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 1rem;
+  mix-blend-mode: multiply;
+}
+
+.pdp-icono {
+  font-size: 5.5rem;
+  color: var(--texto-sec);
+  opacity: 0.8;
+}
+
+.pdp-flag {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 1;
+  background: var(--rojo);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.8rem;
+  padding: 0.2rem 0.55rem;
+  border-radius: 8px;
+}
+
+.pdp-id {
+  text-align: center;
+  color: var(--texto-sec);
+  font-size: 0.78rem;
+  margin: 0.5rem 0 0.25rem;
+}
+
+.pdp-info {
+  padding: 1.1rem 1.25rem 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.pdp-info__cabecera {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.pdp-info__condicion {
+  font-size: 0.78rem;
+  color: var(--texto-sec);
+  margin: 0 0 0.25rem;
+}
+
+.pdp-info__titulo {
+  font-size: 1.4rem;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.pdp-favorito {
+  flex: none;
+  width: 2.5rem;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--borde);
+  border-radius: 999px;
+  background: var(--superficie);
+  color: var(--rojo);
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.pdp-favorito--activo {
+  background: var(--rojo);
+  border-color: var(--rojo);
+  color: #ffffff;
+}
+
+.pdp-precio {
+  border-top: 1px solid var(--borde);
+  border-bottom: 1px solid var(--borde);
+  padding: 0.7rem 0;
+}
+
+.pdp-precio__tachado {
+  text-decoration: line-through;
+  color: var(--texto-sec);
+  font-size: 0.95rem;
+  margin: 0;
+}
+
+.pdp-precio__fila {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.pdp-precio__actual {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0;
+  line-height: 1.1;
+}
+
+.pdp-precio__off {
+  background: #00a650;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.18rem 0.4rem;
+  border-radius: 6px;
+}
+
+.pdp-precio__cuotas {
+  color: #00a650;
+  font-weight: 700;
+  margin: 0.15rem 0 0;
+}
+
+.pdp-precio__65 {
+  margin: 0.35rem 0 0;
+  font-size: 0.82rem;
+  color: var(--texto);
+  background: var(--gris-claro);
+  border-radius: 8px;
+  padding: 0.35rem 0.5rem;
+}
+
+.pdp-beneficios {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.87rem;
+  color: var(--texto-sec);
+}
+
+.pdp-cantidad {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.pdp-cantidad small {
+  color: var(--texto-sec);
+}
+
+.pdp-acciones {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.boton--secundario {
+  background: var(--superficie);
+  color: var(--marca);
+  border: 1.5px solid var(--marca);
+}
+
+.boton--secundario:hover {
+  background: var(--marca);
+  color: #ffffff;
+}
+
+.pdp-sinstock {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  color: var(--rojo);
+  background: var(--gris-claro);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  margin: 0;
+}
+
+.pdp-vendedor {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  border-top: 1px solid var(--borde);
+  padding-top: 0.75rem;
+  font-size: 0.85rem;
+  color: var(--texto-sec);
+}
+
+.pdp-vendedor .fi {
+  font-size: 1.75rem;
+  color: var(--marca);
+}
+
+.pdp-vendedor strong {
+  color: var(--texto);
+}
+
+.pdp-vendedor p {
+  margin: 0;
+}
+
+.pdp-descripcion {
+  padding: 1.25rem 1.5rem;
+}
+
+.pdp-descripcion h2 {
+  margin-top: 0;
+}
+
+.pdp-descripcion ul {
+  list-style: none;
+  padding: 0;
+  margin: 0.75rem 0 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  color: var(--texto-sec);
+}
+
+.pdp-descripcion li .fi {
+  color: #00a650;
+  margin-right: 0.3rem;
+}
+
+.pdp-relacionados {
+  margin-top: 0.25rem;
 }

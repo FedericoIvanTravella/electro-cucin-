@@ -20,14 +20,17 @@ export function ahorroPorcentaje(precio, precioTachado) {
 }
 
 // Resuelve la imagen de un producto.
-//  - "5"        -> archivo numerado: /productos/5.jpg
-//  - "https…"   -> URL externa
+//  - "5"          -> archivo numerado: /productos/5.jpg
+//  - "6.svg"      -> placeholder generado: /productos/6.svg
+//  - "x.png"      -> /productos/x.png (salvo rutas con /)
+//  - "https…"     -> URL externa
 //  - "/productos/x.jpg" -> ruta directa
-//  - emoji      -> sin imagen (se muestra el emoji)
+//  - emoji / vacío -> sin imagen (se muestra el ícono por defecto)
 export function imagenProducto(producto) {
   const img = producto?.imagen
   if (!img) return ''
   if (/^\d+$/.test(img)) return `/productos/${img}.jpg`
+  if (/^[\w.-]+\.(jpe?g|png|webp|avif|gif|svg)$/i.test(img)) return `/productos/${img}`
   if (/^https?:\/\//.test(img)) return img
   if (img.startsWith('/')) return img
   return ''

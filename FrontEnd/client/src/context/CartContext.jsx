@@ -22,32 +22,35 @@ export function CartProvider({ children }) {
     localStorage.setItem(CLAVE, JSON.stringify(items))
   }, [items])
 
+  // Sin efectos dentro del updater: calcula desde el estado actual.
+  // Los eventos no son reentrantes en este flujo, así que el valor
+  // devuelto es fiable (llamar dos veces en el mismo tick no duplica).
   const agregar = (producto, cantidad = 1) => {
-    let agregado = false
-    setItems((actuales) => {
-      const existente = actuales.find((i) => i.producto_id === producto.id)
-      if (existente) {
-        const max = producto.stock ?? existente.stock
-        const nueva = Math.min(existente.cantidad + cantidad, max)
-        if (nueva === existente.cantidad) return actuales
-        agregado = true
-        return actuales.map((i) => (i.producto_id === producto.id ? { ...i, cantidad: nueva } : i))
+    const existente = items.find((i) => i.producto_id === producto.id)
+    const tope = producto.stock ?? existente?.stock ?? 0
+
+    if (existente) {
+      const nueva = Math.min(existente.cantidad + cantidad, tope)
+      if (nueva === existente.cantidad) return false
+      setItems(items.map((i) => (i.producto_id === producto.id ? { ...i, cantidad: nueva } : i)))
+      return true
+    }
+
+    const aAgregar = Math.min(cantidad, tope)
+    if (aAgregar <= 0) return false
+    setItems([
+      ...items,
+      {
+        producto_id: producto.id,
+        nombre: producto.nombre,
+        precio: Number(producto.precio),
+        imagen: producto.imagen || '',
+        categoria: producto.categoria,
+        stock: producto.stock ?? 0,
+        cantidad: aAgregar
       }
-      agregado = true
-      return [
-        ...actuales,
-        {
-          producto_id: producto.id,
-          nombre: producto.nombre,
-          precio: Number(producto.precio),
-          imagen: producto.imagen || '',
-          categoria: producto.categoria,
-          stock: producto.stock ?? 0,
-          cantidad: Math.min(cantidad, producto.stock ?? cantidad)
-        }
-      ]
-    })
-    return agregado
+    ])
+    return true
   }
 
   const cambiarCantidad = (productoId, cantidad) => {

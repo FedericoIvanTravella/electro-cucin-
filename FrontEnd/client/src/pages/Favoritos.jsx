@@ -43,7 +43,7 @@ export default function Favoritos() {
       {!cargando && favoritos.length === 0 && (
         <EstadoVacio
           titulo="Todavía no guardaste favoritos"
-          mensaje="Marcá productos con el corazón ♥ para verlos acá cuando quieras."
+          mensaje="Marcá productos con el corazón para verlos acá cuando quieras."
         >
           <Link to="/productos" className="boton boton--primario boton--grande">
             Ver productos

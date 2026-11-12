@@ -158,7 +158,7 @@ export default function Registro() {
         <ul className="password-req">
           {requisitos.map((r) => (
             <li key={r.texto} className={r.ok ? 'password-req__ok' : ''}>
-              <span aria-hidden="true">{r.ok ? '✓' : '○'}</span> {r.texto}
+              <span aria-hidden="true"><i className={`fi ${r.ok ? 'fi-rr-check' : 'fi-rr-circle'}`} /></span> {r.texto}
             </li>
           ))}
         </ul>

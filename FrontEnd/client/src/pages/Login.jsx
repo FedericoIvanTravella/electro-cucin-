@@ -67,16 +67,20 @@ export default function Login() {
       </form>
 
       <aside className="card auth__lateral">
-        <h2>Cuentas de prueba</h2>
-        <p>
-          Superusuario: <strong>federico</strong> / <strong>admin23</strong>
+        <h2>Cuenta de administrador</h2>
+        <p className="auth__nota">
+          El superusuario se crea en el primer arranque con las variables de entorno{' '}
+          <code>ADMIN_USERNAME</code> y <code>ADMIN_PASSWORD</code> (ver <code>.env.example</code>).
+          Si no se definen, se genera una contraseña aleatoria que se muestra una sola vez por consola.
         </p>
         <p className="auth__nota">
           Desde el panel del superusuario podés crear y editar productos, actualizar el stock,
           gestionar clientes y ver el registro de ventas.
         </p>
         <div className="auth__beneficio">
-          <span aria-hidden="true">👵</span>
+          <span aria-hidden="true">
+            <i className="fi fi-rr-person-walking-with-cane" />
+          </span>
           <p>
             Si tu cuenta tiene 65 años o más, al ingresar se aplica un <strong>30% de descuento</strong> en
             todas tus compras.

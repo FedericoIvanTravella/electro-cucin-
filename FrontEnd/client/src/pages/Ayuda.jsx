@@ -2,11 +2,11 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 
 const pasosCompra = [
-  { icono: '🛍️', texto: 'Elegí tus productos en el catálogo y agregalos al carrito.' },
-  { icono: '🔐', texto: 'Iniciá sesión o registrate para continuar con el pago.' },
-  { icono: '📍', texto: 'Completá la dirección donde querés recibir el paquete.' },
-  { icono: '💳', texto: 'Paginá con tarjeta en hasta 12 cuotas (entorno de prueba).' },
-  { icono: '📦', texto: 'Recibí tu pedido y revisá la caja apenas llegue.' }
+  { icono: 'fi-rr-shopping-bag', texto: 'Elegí tus productos en el catálogo y agregalos al carrito.' },
+  { icono: 'fi-rr-lock', texto: 'Iniciá sesión o registrate para continuar con el pago.' },
+  { icono: 'fi-rr-map-marker', texto: 'Completá la dirección donde querés recibir el paquete.' },
+  { icono: 'fi-rr-credit-card', texto: 'Paginá con tarjeta en hasta 12 cuotas (entorno de prueba).' },
+  { icono: 'fi-rr-box', texto: 'Recibí tu pedido y revisá la caja apenas llegue.' }
 ]
 
 const faqPedido = [
@@ -105,7 +105,7 @@ export default function Ayuda() {
       <div className="ayuda__avisos">
         <div className="card ayuda__aviso">
           <span className="ayuda__aviso-icono" aria-hidden="true">
-            🛒
+            <i className="fi fi-rr-shopping-cart" />
           </span>
           <div>
             <h3>¿Tenés dudas sobre tu compra?</h3>
@@ -114,7 +114,7 @@ export default function Ayuda() {
         </div>
         <div className="card ayuda__aviso">
           <span className="ayuda__aviso-icono" aria-hidden="true">
-            📦
+            <i className="fi fi-rr-box" />
           </span>
           <div>
             <h3>¿Necesitás ayuda con tu paquete?</h3>
@@ -129,7 +129,7 @@ export default function Ayuda() {
           {pasosCompra.map((paso) => (
             <li key={paso.texto} className="card ayuda__paso">
               <span className="ayuda__paso-icono" aria-hidden="true">
-                {paso.icono}
+                <i className={`fi ${paso.icono}`} />
               </span>
               <p>{paso.texto}</p>
             </li>
@@ -141,7 +141,7 @@ export default function Ayuda() {
         <h2 className="h2-seccion">Preguntas frecuentes</h2>
         <div className="ayuda__faq">
           <div className="card ayuda__grupo">
-            <h3>💳 Sobre tu pedido y el pago</h3>
+            <h3><i className="fi fi-rr-credit-card" aria-hidden="true" /> Sobre tu pedido y el pago</h3>
             {faqPedido.map((faq) => (
               <details key={faq.pregunta} className="faq">
                 <summary>{faq.pregunta}</summary>
@@ -150,7 +150,7 @@ export default function Ayuda() {
             ))}
           </div>
           <div className="card ayuda__grupo">
-            <h3>📦 Sobre el paquete que recibiste</h3>
+            <h3><i className="fi fi-rr-box" aria-hidden="true" /> Sobre el paquete que recibiste</h3>
             {faqPaquete.map((faq) => (
               <details key={faq.pregunta} className="faq">
                 <summary>{faq.pregunta}</summary>
@@ -166,10 +166,10 @@ export default function Ayuda() {
         <div className="ayuda__contacto">
           <div className="card">
             <h3>Centro de ayuda</h3>
-            <p className="ayuda__contacto-item">📞 0800-123-4567</p>
-            <p className="ayuda__contacto-item">✉️ ayuda@electrocucine.com</p>
-            <p className="ayuda__contacto-item">🕘 Lunes a sábados de 9 a 20 h</p>
-            <p className="ayuda__contacto-item">📍 Av. Siempreviva 742, CABA</p>
+            <p className="ayuda__contacto-item"><i className="fi fi-rr-phone-call" aria-hidden="true" /> 0800-123-4567</p>
+            <p className="ayuda__contacto-item"><i className="fi fi-rr-envelope" aria-hidden="true" /> ayuda@electrocucine.com</p>
+            <p className="ayuda__contacto-item"><i className="fi fi-rr-clock" aria-hidden="true" /> Lunes a sábados de 9 a 20 h</p>
+            <p className="ayuda__contacto-item"><i className="fi fi-rr-map-marker" aria-hidden="true" /> Av. Siempreviva 742, CABA</p>
           </div>
 
           <div className="card">

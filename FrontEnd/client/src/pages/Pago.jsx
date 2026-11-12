@@ -31,7 +31,7 @@ export default function Pago() {
     return (
       <div className="pago-exitoso card">
         <span className="pago-exitoso__icono" aria-hidden="true">
-          ✅
+          <i className="fi fi-rr-check" />
         </span>
         <h1>¡Pago aprobado!</h1>
         <p>
@@ -64,7 +64,7 @@ export default function Pago() {
           </div>
           {venta.direccion_envio && (
             <div className="ticket__linea ticket__linea--envio">
-              <span>📦 Envío a:</span>
+              <span><i className="fi fi-rr-box" aria-hidden="true" /> Envío a:</span>
               <span className="ticket__envio-texto">{venta.direccion_envio}</span>
             </div>
           )}

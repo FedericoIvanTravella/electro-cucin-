@@ -173,7 +173,7 @@ export default function ProductosAdmin() {
                       {imagenProducto(p) ? (
                         <img src={imagenProducto(p)} alt="" className="celda-producto__thumb" />
                       ) : (
-                        <span aria-hidden="true">{p.imagen || '🍽️'}</span>
+                        <i className="fi fi-rr-utensils" aria-hidden="true" />
                       )}
                       <div>
                         <strong>{p.nombre}</strong>
@@ -300,11 +300,11 @@ export default function ProductosAdmin() {
 
             <div className="fila-campos">
               <label className="campo">
-                <span>Imagen (número de archivo, URL o emoji)</span>
+                <span>Imagen (archivo del servidor o URL; ej: 42.jpg, 6.svg)</span>
                 <input
                   value={form.datos.imagen}
                   onChange={(e) => actualizar('imagen', e.target.value)}
-                  placeholder="ej: 42 · https://… · 🍳"
+                  placeholder="ej: 42 · 42.jpg · 6.svg · https://…"
                 />
               </label>
               <label className="check check--primaria">
@@ -322,14 +322,16 @@ export default function ProductosAdmin() {
                 <span>Imágenes disponibles en el servidor:</span>
                 <div className="selector-imagenes__lista">
                   {imagenes.map((archivo) => {
-                    const numero = archivo.replace(/\.[^.]+$/, '')
-                    const activa = String(form.datos.imagen) === String(numero)
+                    const sinExtension = archivo.replace(/\.[^.]+$/, '')
+                    const activa =
+                      String(form.datos.imagen) === String(archivo) ||
+                      String(form.datos.imagen) === String(sinExtension)
                     return (
                       <button
                         key={archivo}
                         type="button"
                         className={`chip chip--boton ${activa ? 'chip--primario' : ''}`}
-                        onClick={() => actualizar('imagen', activa ? '' : numero)}
+                        onClick={() => actualizar('imagen', activa ? '' : archivo)}
                         title={`Usar ${archivo}`}
                       >
                         {archivo}

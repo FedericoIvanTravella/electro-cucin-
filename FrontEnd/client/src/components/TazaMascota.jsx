@@ -51,9 +51,10 @@ export default function TazaMascota({ codigo, estado = 'neutra', size = 240 }) {
           {codigo}
         </text>
       ) : (
-        <text className="mascota__numero mascota__numero--mini" x="120" y="156" textAnchor="middle">
-          ☕
-        </text>
+        <g className="mascota__cafe-mini" stroke="currentColor" strokeWidth="5" fill="none" strokeLinecap="round" strokeLinejoin="round" transform="translate(120 150)">
+          <path d="M-18 -14 h36 v12 a15 15 0 0 1 -15 12 h-6 a15 15 0 0 1 -15 -12 z" />
+          <path d="M18 -10 h6 a7 7 0 0 1 0 14 h-6" />
+        </g>
       )}
 
       {/* Borde superior + café */}

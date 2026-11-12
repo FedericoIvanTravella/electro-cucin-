@@ -23,14 +23,14 @@ export default function ResumenAdmin() {
   }
 
   const tarjetas = [
-    { etiqueta: 'Ingresos', valor: dinero(stats.ingresos), icono: '💰' },
-    { etiqueta: 'Ventas completadas', valor: stats.cantidad_ventas, icono: '🧾' },
-    { etiqueta: 'Unidades vendidas', valor: stats.unidades_vendidas, icono: '📦' },
-    { etiqueta: 'Productos activos', valor: stats.productos, icono: '🏷️' },
-    { etiqueta: 'Stock bajo (≤ 5)', valor: stats.stock_bajo, icono: '⚠️', alerta: stats.stock_bajo > 0 },
-    { etiqueta: 'Clientes registrados', valor: stats.clientes, icono: '👥' },
-    { etiqueta: 'Usuarios del sitio', valor: stats.usuarios, icono: '🧑‍🤝‍🧑' },
-    { etiqueta: 'Ventas con 30% 65+', valor: stats.ventas_con_descuento, icono: '👵' }
+    { etiqueta: 'Ingresos', valor: dinero(stats.ingresos), icono: 'fi-rr-sack-dollar' },
+    { etiqueta: 'Ventas completadas', valor: stats.cantidad_ventas, icono: 'fi-rr-receipt' },
+    { etiqueta: 'Unidades vendidas', valor: stats.unidades_vendidas, icono: 'fi-rr-box' },
+    { etiqueta: 'Productos activos', valor: stats.productos, icono: 'fi-rr-tags' },
+    { etiqueta: 'Stock bajo (≤ 5)', valor: stats.stock_bajo, icono: 'fi-rr-triangle-warning', alerta: stats.stock_bajo > 0 },
+    { etiqueta: 'Clientes registrados', valor: stats.clientes, icono: 'fi-rr-users-alt' },
+    { etiqueta: 'Usuarios del sitio', valor: stats.usuarios, icono: 'fi-rr-users' },
+    { etiqueta: 'Ventas con 30% 65+', valor: stats.ventas_con_descuento, icono: 'fi-rr-person-walking-with-cane' }
   ]
 
   return (
@@ -41,7 +41,7 @@ export default function ResumenAdmin() {
         {tarjetas.map((t) => (
           <article key={t.etiqueta} className={`card tarjeta-stat ${t.alerta ? 'tarjeta-stat--alerta' : ''}`}>
             <span className="tarjeta-stat__icono" aria-hidden="true">
-              {t.icono}
+              <i className={`fi ${t.icono}`} />
             </span>
             <div>
               <p className="tarjeta-stat__valor">{t.valor}</p>

@@ -23,13 +23,20 @@ export default function Productos() {
   const [ladoAbierto, setLadoAbierto] = useState(false)
 
   useEffect(() => {
-    api('/productos')
+    const controlador = new AbortController()
+    api('/productos', { signal: controlador.signal })
       .then((data) => {
         setProductos(data.productos)
         setError('')
       })
-      .catch((e) => setError(e.message))
-      .finally(() => setCargando(false))
+      .catch((e) => {
+        if (controlador.signal.aborted) return
+        setError(e.message)
+      })
+      .finally(() => {
+        if (!controlador.signal.aborted) setCargando(false)
+      })
+    return () => controlador.abort()
   }, [])
 
   const categorias = useMemo(() => {
@@ -124,7 +131,7 @@ export default function Productos() {
           className="boton boton--fantasma filtros-movil"
           onClick={() => setLadoAbierto((v) => !v)}
         >
-          ☰ Filtros
+          <i className="fi fi-rr-menu-burger" aria-hidden="true" /> Filtros
         </button>
       </div>
 

@@ -94,5 +94,3 @@ Imagen todo-en-uno: compila el frontend, instala deps de producción del backend
 ## Imágenes y créditos
 - **Íconos**: [Flaticon UIcons](https://www.flaticon.com/uicons) vía el paquete oficial `@flaticon/flaticon-uicons` (uso gratuito con atribución, incluida en el footer del sitio).
 ## Estado de la base de datos local
-
-El seed no toca datos existentes. Si tu base venía de una versión anterior con `federico / admin23`, **cambiale la contraseña** cuanto antes (esa cuenta ya no se crea en instalaciones nuevas). Las sesiones viejas se invalidan solas tras el hasheo de tokens (hay que volver a iniciar sesión).

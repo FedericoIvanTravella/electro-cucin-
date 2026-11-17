@@ -17,7 +17,9 @@ function notificarVueltaSiRestock(productoAntes, stockNuevo) {
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-const CARPETA_IMAGENES = path.join(__dirname, '..', '..', 'public', 'productos')
+// Las fotos viven en FrontEnd/client/public/productos (vite las sirve en '/'
+// en dev y las incluye en 'dist' para producción/demos sin backend).
+const CARPETA_IMAGENES = path.join(__dirname, '..', '..', '..', 'FrontEnd', 'client', 'public', 'productos')
 
 const router = Router()
 

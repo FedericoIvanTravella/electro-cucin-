@@ -108,10 +108,17 @@ Imagen todo-en-uno: compila el frontend, instala deps de producción del backend
 
 ## Imágenes y créditos
 
-- Productos 1–5: fotos en `public/productos/*.jpg`.
-- Productos con foto elegida por el dueño: 7, 8, 10, 11, 13, 23, 31, 40, 82 y 98 (mapa `src/imagenes-reales.json`).
-- El resto no lleva imagen a propósito (se muestra un ícono vectorial por defecto). Podés asignar cualquier imagen desde el panel del superusuario.
+- 37 productos con fotos reales (1–5 + las 32 elegidas por el dueño) en `FrontEnd/client/public/productos/`; el mapa id→archivo es `BackEnd/src/imagenes-reales.json` (reasignable desde el panel del superusuario).
+- El resto no lleva imagen a propósito (se muestra un ícono vectorial por defecto).
 - **Íconos**: [Flaticon UIcons](https://www.flaticon.com/uicons) vía el paquete oficial `@flaticon/flaticon-uicons` (uso gratuito con atribución, incluida en el footer del sitio).
+
+## GitHub Pages (demo estática)
+
+- Con el repo público, cada push a `main` publica una **demo navegable sin backend** en `https://FedericoIvanTravella.github.io/electro-cucin-/` (workflow `.github/workflows/pages.yml`, deploy con GitHub Actions — "Source: GitHub Actions" en Settings → Pages).
+- La demo se compila con `VITE_DEMO=1`: el frontend **no llama a `/api`** y responde desde un snapshot del catálogo (`FrontEnd/client/public/demo/productos.json`, generado con `npm run demo:export` en readonly; no toca la base).
+- En la demo: catálogo y detalle navegables, filtros, comparador, carrito y checkout **simulado**; cupones demo `COCINA10` y `CUCINE5`; sin login, sin pedidos reales ni datos persistidos. Lleva una cinta "Demo de portafolio" arriba de todo.
+- La SPA vive en la subcarpeta `/electro-cucin-/`: el workflow compila con `--base=/electro-cucin-/`, el router toma ese basename y se copia `index.html` como `404.html` para que los deep links (p. ej. `/electro-cucin-/producto/5`) recarguen bien.
+- El sitio completo con backend sigue siendo `npm start` (o la imagen Docker) en el puerto 3001.
 
 ## Ofertas y descuentos
 

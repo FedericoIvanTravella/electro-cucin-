@@ -15,7 +15,7 @@ export default function TarjetaCredito({ numero, titular, vencimiento, cvv }) {
         <span className="tarjeta-visual__chip">
           <span />
         </span>
-        <img src="/logo.png" alt="" className="tarjeta-visual__logo" />
+        <img src={`${import.meta.env.BASE_URL}logo.png`} alt="" className="tarjeta-visual__logo" />
       </div>
 
       <p className="tarjeta-visual__numero">{grupos.join(' ')}</p>

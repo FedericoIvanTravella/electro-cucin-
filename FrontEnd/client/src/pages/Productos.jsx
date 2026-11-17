@@ -669,7 +669,7 @@ export default function Productos() {
                       <i className="fi fi-rr-x" aria-hidden="true" />
                     </button>
                     {p.imagen && (String(p.imagen) === '0' || /\d+/.test(String(p.imagen))) ? (
-                      <img src={`/productos/${String(p.imagen).replace(/[^\d]/g, '') || p.imagen}.jpg`} alt={p.nombre} />
+                      <img src={`${import.meta.env.BASE_URL}productos/${String(p.imagen).replace(/[^\d]/g, '') || p.imagen}.jpg`} alt={p.nombre} />
                     ) : (
                       <span className="comparar-icono" aria-hidden="true"><i className="fi fi-rr-utensils" /></span>
                     )}

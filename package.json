@@ -16,6 +16,7 @@
     "start": "npm --prefix BackEnd start",
     "lint": "npm --prefix BackEnd run lint && npm --prefix FrontEnd/client run lint",
     "test": "npm --prefix BackEnd test",
-    "seed": "node BackEnd/src/seed.js"
+    "seed": "node BackEnd/src/seed.js",
+    "demo:export": "node BackEnd/scripts/exportar-catalogo-demo.mjs"
   }
 }

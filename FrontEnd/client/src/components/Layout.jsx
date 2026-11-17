@@ -17,6 +17,17 @@ const PROMOS = [
   { icono: 'fi-rr-shield-check', texto: '2 años de garantía en todos los productos' }
 ]
 
+// Cinta fina opcional: avisa que es una demo estática sin backend.
+function BarraDemo() {
+  if (import.meta.env.VITE_DEMO !== '1') return null
+  return (
+    <div className="barra-demo" role="status">
+      <i className="fi fi-rr-gift" aria-hidden="true" />
+      <span>Demo de portafolio: catálogo navegable con pedidos simulados. No se envían compras ni datos reales.</span>
+    </div>
+  )
+}
+
 function BarraPromos() {
   // El contenido se repite dos veces para que el bucle sea perfecto.
   const contenido = [...PROMOS, ...PROMOS]
@@ -32,6 +43,8 @@ function BarraPromos() {
     </div>
   )
 }
+
+const BASE = import.meta.env.BASE_URL || '/'
 
 function Navbar() {
   const { usuario, esAdmin, salir, revocarSesiones } = useAuth()
@@ -57,7 +70,7 @@ function Navbar() {
     <header className="navbar">
       <div className="navbar__interior contenedor">
         <Link to="/" className="marca">
-          <img src="/logo.png" alt="Logo Electro Cuciné" className="marca__logo" />
+          <img src={`${BASE}logo.png`} alt="Logo Electro Cuciné" className="marca__logo" />
           <span className="marca__texto">
             Electro <strong>Cuciné</strong>
           </span>
@@ -175,7 +188,7 @@ function Footer() {
     <footer className="footer">
       <div className="contenedor footer__interior">
         <div>
-          <img src="/logo.png" alt="Electro Cuciné" className="footer__logo" />
+          <img src={`${BASE}logo.png`} alt="Electro Cuciné" className="footer__logo" />
           <p className="footer__marca">Electro Cuciné</p>
           <p>Electrodomésticos de cocina para todos los días.</p>
           <div className="footer__social">
@@ -267,6 +280,7 @@ export default function Layout() {
           <Guirnalda />
         </>
       )}
+      <BarraDemo />
       <BarraPromos />
       <Navbar />
       <main className="contenedor main">

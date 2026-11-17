@@ -28,11 +28,12 @@ export function ahorroPorcentaje(precio, precioTachado) {
 //  - emoji / vacío -> sin imagen (se muestra el ícono por defecto)
 export function imagenProducto(producto) {
   const img = producto?.imagen
+  const base = import.meta.env.BASE_URL || '/'
   if (!img) return ''
-  if (/^\d+$/.test(img)) return `/productos/${img}.jpg`
-  if (/^[\w.-]+\.(jpe?g|png|webp|avif|gif|svg)$/i.test(img)) return `/productos/${img}`
+  if (/^\d+$/.test(img)) return `${base}productos/${img}.jpg`
+  if (/^[\w.-]+\.(jpe?g|png|webp|avif|gif|svg)$/i.test(img)) return `${base}productos/${img}`
   if (/^https?:\/\//.test(img)) return img
-  if (img.startsWith('/')) return img
+  if (img.startsWith('/')) return `${base.replace(/\/$/, '')}${img}`
   return ''
 }
 

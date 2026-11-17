@@ -233,7 +233,7 @@ function migrar() {
       const mapa = JSON.parse(fs.readFileSync(rutaMapa, 'utf8'))
       const actualizar = db.prepare('UPDATE productos SET imagen = ? WHERE id = ?')
       for (const [id, archivo] of Object.entries(mapa)) {
-        if (fs.existsSync(path.join(__dirname, '..', 'public', 'productos', archivo))) {
+        if (fs.existsSync(path.join(__dirname, '..', '..', 'FrontEnd', 'client', 'public', 'productos', archivo))) {
           actualizar.run(archivo, Number(id))
         }
       }
@@ -251,7 +251,7 @@ function migrar() {
       const mapa = JSON.parse(fs.readFileSync(rutaMapa, 'utf8'))
       const actualizar = db.prepare('UPDATE productos SET imagen = ? WHERE id = ?')
       for (const [id, archivo] of Object.entries(mapa)) {
-        if (fs.existsSync(path.join(__dirname, '..', 'public', 'productos', archivo))) {
+        if (fs.existsSync(path.join(__dirname, '..', '..', 'FrontEnd', 'client', 'public', 'productos', archivo))) {
           actualizar.run(archivo, Number(id))
         }
       }

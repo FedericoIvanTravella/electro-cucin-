@@ -12,9 +12,12 @@ import { FavoritosProvider } from './context/FavoritosContext.jsx'
 import { TemaProvider } from './context/TemaContext.jsx'
 import { ToastProvider } from './context/ToastContext.jsx'
 
+const BASE_URL = import.meta.env.BASE_URL || '/'
+const BASENAME = BASE_URL.replace(/\/$/, '') || '/'
+
 createRoot(document.getElementById('root')).render(
   <StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename={BASENAME}>
       <TemaProvider>
         <ToastProvider>
           <AuthProvider>
@@ -30,8 +33,8 @@ createRoot(document.getElementById('root')).render(
   </StrictMode>
 )
 
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
+if ('serviceWorker' in navigator && import.meta.env.PROD && import.meta.env.VITE_DEMO !== '1') {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch(() => {})
+    navigator.serviceWorker.register(`${BASE_URL}sw.js`).catch(() => {})
   })
 }

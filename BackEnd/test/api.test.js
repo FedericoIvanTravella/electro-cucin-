@@ -199,6 +199,81 @@ test('email_contacto inválido responde 400', async () => {
   if (res.status !== 400) throw new Error('status ' + res.status)
 })
 
+test('resenas: pide compra previa, alta y listado', async () => {
+  const { cookies } = await login('usuariotest', 'claveSegura123')
+  const csrf = cookies.ec_csrf
+  const cookie = headerCookie(cookies)
+
+  const sinComprar = await request(app)
+    .post('/api/productos/99/resenas')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', csrf)
+    .send({ estrellas: 5, comentario: 'Excelente producto de prueba' })
+  if (sinComprar.status !== 403) throw new Error('no-comprador: ' + sinComprar.status)
+
+  const compra = await request(app)
+    .post('/api/ventas')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', csrf)
+    .send({ items: [{ producto_id: 2, cantidad: 1 }], metodo_pago: 'tarjeta', cuotas: 1 })
+  if (compra.status !== 201) throw new Error('compra: ' + JSON.stringify(compra.body))
+
+  const alta = await request(app)
+    .post('/api/productos/2/resenas')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', csrf)
+    .send({ estrellas: 5, comentario: 'Muy buena licuadora, silenciosa.' })
+  if (alta.status !== 201) throw new Error('reseña: ' + JSON.stringify(alta.body))
+
+  const lista = await request(app).get('/api/productos/2/resenas')
+  if (lista.status !== 200 || lista.body.resumen.cantidad < 1) throw new Error('listado: ' + JSON.stringify(lista.body.resumen))
+  if (lista.body.resumen.promedio !== 5) throw new Error('promedio: ' + lista.body.resumen.promedio)
+})
+
+test('cupon de descuento aplicado a la venta', async () => {
+  const { cookies } = await login('usuariotest', 'claveSegura123')
+  const cookie = headerCookie(cookies)
+
+  const validar = await request(app)
+    .post('/api/cupones/validar')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', cookies.ec_csrf)
+    .send({ codigo: 'CUCINE5', subtotal: 100000 })
+  if (validar.status !== 200 || validar.body.descuento !== 5000) {
+    throw new Error('validar: ' + JSON.stringify(validar.body))
+  }
+
+  const compra = await request(app)
+    .post('/api/ventas')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', cookies.ec_csrf)
+    .send({ items: [{ producto_id: 3, cantidad: 1 }], metodo_pago: 'tarjeta', cupon_codigo: 'CUCINE5' })
+  if (compra.status !== 201) throw new Error('compra: ' + JSON.stringify(compra.body))
+  const v = compra.body.venta
+  if (v.cupon_codigo !== 'CUCINE5' || v.cupon_descuento !== 5000) {
+    throw new Error('cupon no persistido: ' + JSON.stringify({ cupon_codigo: v.cupon_codigo, cupon_descuento: v.cupon_descuento }))
+  }
+
+  const invalido = await request(app)
+    .post('/api/cupones/validar')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', cookies.ec_csrf)
+    .send({ codigo: 'NOEXISTE', subtotal: 1000 })
+  if (invalido.status !== 404) throw new Error('cupon invalido: ' + invalido.status)
+})
+
+test('export.csv es admin-only y devuelve CSV con BOM', async () => {
+  const cliente = await login('usuariotest', 'claveSegura123')
+  const prohibido = await request(app).get('/api/ventas/export.csv').set('Cookie', headerCookie(cliente.cookies))
+  if (prohibido.status !== 403) throw new Error('cliente: ' + prohibido.status)
+
+  const admin = await login('admin', 'claveAdmin123')
+  const ok = await request(app).get('/api/ventas/export.csv').set('Cookie', headerCookie(admin.cookies))
+  if (ok.status !== 200) throw new Error('admin: ' + ok.status)
+  if (!String(ok.headers['content-type']).includes('text/csv')) throw new Error('content-type: ' + ok.headers['content-type'])
+  if (!ok.text.includes('N°') || !ok.text.includes('Total')) throw new Error('falta cabecera')
+})
+
 test('GET /api/stats requiere rol admin', async () => {
   const { cookies } = await login('usuariotest', 'claveSegura123')
   const res = await request(app).get('/api/stats').set('Cookie', headerCookie(cookies))

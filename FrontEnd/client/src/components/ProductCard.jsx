@@ -4,6 +4,7 @@ import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { useToast } from '../context/ToastContext'
 import Lightbox from './Lightbox'
+import Stars from './Stars'
 import { ahorroPorcentaje, cuota, dinero, imagenProducto } from '../lib/format'
 
 export default function ProductCard({ producto, destacado = false }) {
@@ -80,6 +81,11 @@ export default function ProductCard({ producto, destacado = false }) {
           <Link to={`/producto/${producto.id}`}>{producto.nombre}</Link>
         </h3>
         <p className="producto__descripcion">{producto.descripcion || 'Electrodoméstico de cocina.'}</p>
+        {Number(producto.cantidad_resenas) > 0 && (
+          <p className="producto__rating">
+            <Stars promedio={producto.promedio_resenas} cantidad={producto.cantidad_resenas} />
+          </p>
+        )}
 
         <div className="producto__precios">
           {descuento > 0 && <p className="producto__listado">{dinero(producto.precio_tachado)}</p>}

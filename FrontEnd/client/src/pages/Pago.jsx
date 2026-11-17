@@ -27,6 +27,10 @@ export default function Pago() {
   const [error, setError] = useState('')
   const [procesando, setProcesando] = useState(false)
   const [venta, setVenta] = useState(null)
+  const [cuponInput, setCuponInput] = useState('')
+  const [cuponAplicado, setCuponAplicado] = useState(null)
+  const [cuponError, setCuponError] = useState('')
+  const [aplicandoCupon, setAplicandoCupon] = useState(false)
 
   if (venta) {
     return (
@@ -99,6 +103,30 @@ export default function Pago() {
 
   const actualizar = (campo, valor) => setForm((f) => ({ ...f, [campo]: valor }))
 
+  const totalFinal = cuponAplicado ? Math.max(0, totales.total - cuponAplicado.descuento) : totales.total
+
+  const aplicarCupon = async () => {
+    const codigo = cuponInput.trim().toUpperCase()
+    if (!codigo) {
+      setCuponError('Ingresá un código.')
+      return
+    }
+    setAplicandoCupon(true)
+    setCuponError('')
+    try {
+      const data = await api('/cupones/validar', { method: 'POST', body: { codigo, subtotal: totales.subtotal } })
+      setCuponAplicado({ ...data.cupon, descuento: data.descuento, codigo: data.cupon.codigo })
+      setCuponInput('')
+    } catch (err) {
+      setCuponError(err?.message || 'Cupón no válido.')
+      setCuponAplicado(null)
+    } finally {
+      setAplicandoCupon(false)
+    }
+  }
+
+  const quitarCupon = () => setCuponAplicado(null)
+
   const direccionEnvio = () =>
     [form.calle.trim(), form.ciudad.trim(), form.cp.trim() && `CP ${form.cp.trim()}`, form.provincia.trim()]
       .filter(Boolean)
@@ -138,7 +166,8 @@ export default function Pago() {
           metodo_pago: 'tarjeta',
           cuotas: Number(form.cuotas),
           direccion_envio: direccionEnvio(),
-          email_contacto: form.email.trim()
+          email_contacto: form.email.trim(),
+          cupon_codigo: cuponAplicado?.codigo || ''
         }
       })
       setVenta(data.venta)
@@ -276,7 +305,7 @@ export default function Pago() {
         </div>
 
         <button type="submit" className="boton boton--primario boton--grande boton--bloque" disabled={procesando}>
-          {procesando ? 'Procesando pago…' : `Pagar ${dinero(totales.total)}`}
+          {procesando ? 'Procesando pago…' : `Pagar ${dinero(totalFinal)}`}
         </button>
       </form>
 
@@ -300,9 +329,42 @@ export default function Pago() {
             <span>- {dinero(totales.descuento)}</span>
           </div>
         )}
+        {cuponAplicado && (
+          <div className="resumen-linea resumen-linea--descuento">
+            <span>
+              Cupón {cuponAplicado.codigo}{' '}
+              <button type="button" className="resumen-linea__quitar" onClick={quitarCupon} aria-label="Quitar cupón">
+                <i className="fi fi-rr-x" aria-hidden="true" />
+              </button>
+            </span>
+            <span>- {dinero(cuponAplicado.descuento)}</span>
+          </div>
+        )}
+        <div className="cupon">
+          <input
+            type="text"
+            placeholder="Código de descuento (ej: COCINA10)"
+            value={cuponInput}
+            onChange={(e) => {
+              setCuponInput(e.target.value.toUpperCase())
+              setCuponError('')
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                aplicarCupon()
+              }
+            }}
+            aria-label="Código de descuento"
+          />
+          <button type="button" className="boton boton--secundario boton--chico" onClick={aplicarCupon} disabled={aplicandoCupon || !cuponInput.trim()}>
+            {aplicandoCupon ? '…' : 'Aplicar'}
+          </button>
+        </div>
+        {cuponError && <p className="alerta alerta--error alerta--compacta">{cuponError}</p>}
         <div className="resumen-linea resumen-linea--total">
           <span>Total</span>
-          <span>{dinero(totales.total)}</span>
+          <span>{dinero(totalFinal)}</span>
         </div>
         <small className="pago__nota">
           El descuento para mayores de 65 años se valida con tu fecha de nacimiento registrada.

@@ -1,14 +1,48 @@
 import { useEffect, useState } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import EstadoVacio from '../components/EstadoVacio'
 import RutaEntrega from '../components/RutaEntrega'
+import { useCart } from '../context/CartContext'
+import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
 import { dinero, fechaHora } from '../lib/format'
 
 export default function MisCompras() {
+  const navigate = useNavigate()
+  const { vaciar, agregar } = useCart()
+  const { mostrar } = useToast()
   const [ventas, setVentas] = useState([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState('')
+  const [repitiendo, setRepitiendo] = useState(null)
+
+  const repetirCompra = async (venta) => {
+    setRepitiendo(venta.id)
+    try {
+      vaciar()
+      let agregados = 0
+      for (const item of venta.items) {
+        if (!item.producto_id) continue
+        try {
+          const data = await api(`/productos/${item.producto_id}`)
+          const p = data.producto
+          if (p && p.activo && p.stock > 0) {
+            agregar(p, Math.min(item.cantidad, p.stock))
+            agregados += 1
+          }
+        } catch {
+          // producto inexistente: se saltea
+        }
+      }
+      mostrar(
+        agregados > 0 ? `Pedido #${venta.id} cargado en el carrito (${agregados} ${agregados === 1 ? 'producto' : 'productos'}).` : 'No queda stock de esos productos.',
+        agregados > 0 ? 'exito' : 'error'
+      )
+      if (agregados > 0) navigate('/carrito')
+    } finally {
+      setRepitiendo(null)
+    }
+  }
 
   useEffect(() => {
     api('/ventas/mias')
@@ -71,7 +105,22 @@ export default function MisCompras() {
                   Descuento {venta.descuento_pct}%: - {dinero(venta.descuento_monto)}
                 </span>
               )}
+              {Number(venta.cupon_descuento) > 0 && (
+                <span className="chip chip--exito">
+                  Cupón {venta.cupon_codigo}: - {dinero(venta.cupon_descuento)}
+                </span>
+              )}
               <strong>Total: {dinero(venta.total)}</strong>
+              {venta.estado === 'completada' && (
+                <button
+                  type="button"
+                  className="boton boton--fantasma boton--chico"
+                  onClick={() => repetirCompra(venta)}
+                  disabled={repitiendo === venta.id}
+                >
+                  <i className="fi fi-rr-refresh" aria-hidden="true" /> {repitiendo === venta.id ? 'Cargando…' : 'Repetir compra'}
+                </button>
+              )}
             </footer>
             {venta.estado !== 'anulada' && <RutaEntrega compacto />}
           </article>

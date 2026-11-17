@@ -2,6 +2,7 @@ import { Router } from 'express'
 import { db, transaction, tieneDescuento, PORCENTAJE_DESCUENTO, registrarAuditoria } from '../db.js'
 import { requerirAuth, requerirAdmin } from '../auth.js'
 import { enviarConfirmacionCompra } from '../correo.js'
+import { calcularDescuentoCupon } from './cupones.js'
 
 const router = Router()
 
@@ -63,7 +64,7 @@ function paginacion(query, porDefecto = 50, maximo = 200) {
 }
 
 router.post('/', requerirAuth, async (req, res) => {
-  const { items, metodo_pago = 'tarjeta', cuotas = 1, cliente_id = null, direccion_envio = '', email_contacto = '' } = req.body || {}
+  const { items, metodo_pago = 'tarjeta', cuotas = 1, cliente_id = null, direccion_envio = '', email_contacto = '', cupon_codigo = '' } = req.body || {}
 
   const correoFinal = String(email_contacto || req.usuario.email || '').trim()
   if (correoFinal && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correoFinal)) {
@@ -109,7 +110,18 @@ router.post('/', requerirAuth, async (req, res) => {
   }
 
   const descuento_monto = Number(((subtotal * descuento_pct) / 100).toFixed(2))
-  const total = Number((subtotal - descuento_monto).toFixed(2))
+  let cuponDescuento = 0
+  let cuponAplicado = ''
+  const codigoCupon = String(cupon_codigo || '').trim().toUpperCase()
+  if (codigoCupon) {
+    const cupon = db.prepare('SELECT * FROM cupones WHERE codigo = ?').get(codigoCupon)
+    if (!cupon || !cupon.activo) {
+      return res.status(400).json({ error: 'El cupón no es válido o está desactivado.' })
+    }
+    cuponDescuento = calcularDescuentoCupon(cupon, subtotal)
+    cuponAplicado = cupon.codigo
+  }
+  const total = Math.max(0, Number((subtotal - descuento_monto - cuponDescuento).toFixed(2)))
 
   if (cliente_id && !db.prepare('SELECT id FROM clientes WHERE id = ?').get(cliente_id)) {
     return res.status(400).json({ error: 'El cliente indicado no existe.' })
@@ -121,8 +133,8 @@ router.post('/', requerirAuth, async (req, res) => {
     ventaId = transaction(() => {
       const venta = db
         .prepare(
-          `INSERT INTO ventas (usuario_id, cliente_id, subtotal, descuento_pct, descuento_monto, total, metodo_pago, direccion_envio, cuotas)
-           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
+          `INSERT INTO ventas (usuario_id, cliente_id, subtotal, descuento_pct, descuento_monto, total, metodo_pago, direccion_envio, cuotas, cupon_codigo, cupon_descuento)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
         )
         .run(
           req.usuario.id,
@@ -133,10 +145,15 @@ router.post('/', requerirAuth, async (req, res) => {
           total,
           metodo,
           String(direccion_envio).slice(0, 500),
-          cuotasNum
+          cuotasNum,
+          cuponAplicado,
+          cuponDescuento
         )
 
       const id = venta.lastInsertRowid
+      if (cuponAplicado) {
+        db.prepare('UPDATE cupones SET usado = usado + 1 WHERE codigo = ?').run(cuponAplicado)
+      }
       const itemStmt = db.prepare(
         'INSERT INTO venta_items (venta_id, producto_id, nombre, precio, cantidad) VALUES (?, ?, ?, ?, ?)'
       )
@@ -162,7 +179,7 @@ router.post('/', requerirAuth, async (req, res) => {
   }
 
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(ventaId)
-  registrarAuditoria(req.usuario, 'venta', `Venta #${venta.id} por $${total}`)
+  registrarAuditoria(req.usuario, 'venta', `Venta #${venta.id} por $${total}${cuponAplicado ? ` cupón ${cuponAplicado}` : ''}`)
   const resultadoCorreo = await enviarConfirmacionCompra(detalleVenta(venta), req.usuario, correoFinal)
   res.status(201).json({ venta: detalleVenta(venta), correo: resultadoCorreo.via !== 'sin-correo' ? resultadoCorreo : null })
 })
@@ -174,6 +191,63 @@ router.get('/mias', requerirAuth, (req, res) => {
     db.prepare('SELECT * FROM ventas WHERE usuario_id = ? ORDER BY fecha DESC LIMIT ? OFFSET ?').all(req.usuario.id, porPagina, offset)
   )
   res.json({ ventas, total, pagina, paginas: Math.max(1, Math.ceil(total / porPagina)) })
+})
+
+router.get('/export.csv', requerirAdmin, (req, res) => {
+  const ventas = db.prepare('SELECT * FROM ventas ORDER BY id DESC').all()
+  const itemsPorVenta = new Map()
+  if (ventas.length > 0) {
+    const placeholders = ventas.map(() => '?').join(',')
+    const ids = ventas.map((v) => v.id)
+    for (const item of db.prepare(`SELECT venta_id, nombre, cantidad FROM venta_items WHERE venta_id IN (${placeholders})`).all(...ids)) {
+      if (!itemsPorVenta.has(item.venta_id)) itemsPorVenta.set(item.venta_id, [])
+      itemsPorVenta.get(item.venta_id).push(`${item.cantidad}x ${item.nombre}`)
+    }
+  }
+
+  const usuarioIds = [...new Set(ventas.map((v) => v.usuario_id).filter(Boolean))]
+  const usuarios = new Map()
+  if (usuarioIds.length) {
+    const placeholders = usuarioIds.map(() => '?').join(',')
+    for (const u of db.prepare(`SELECT id, username, email, nombre FROM usuarios WHERE id IN (${placeholders})`).all(...usuarioIds)) {
+      usuarios.set(u.id, u)
+    }
+  }
+
+  const esc = (valor) => {
+    const texto = String(valor ?? '')
+    return /[";\n\r]/.test(texto) ? `"${texto.replace(/"/g, '""')}"` : texto
+  }
+  const cabecera = ['N°', 'Fecha', 'Usuario', 'Nombre', 'Email', 'Items', 'Cupón', 'Subtotal', 'Descuento 65+', 'Desc. cupón', 'Total', 'Método', 'Cuotas', 'Estado', 'Dirección']
+  const lineas = [cabecera.map(esc).join(';')]
+  for (const v of ventas) {
+    const u = v.usuario_id ? usuarios.get(v.usuario_id) : null
+    lineas.push(
+      [
+        v.id,
+        v.fecha,
+        u?.username || 'usuario eliminado',
+        u?.nombre || '',
+        u?.email || '',
+        (itemsPorVenta.get(v.id) || []).join(' / '),
+        v.cupon_codigo || '',
+        Number(v.subtotal).toFixed(2),
+        Number(v.descuento_monto).toFixed(2),
+        Number(v.cupon_descuento || 0).toFixed(2),
+        Number(v.total).toFixed(2),
+        v.metodo_pago,
+        v.cuotas ?? 1,
+        v.estado,
+        v.direccion_envio
+      ].map(esc).join(';')
+    )
+  }
+
+  const hoy = new Date()
+  const nombre = `ventas-${hoy.getFullYear()}${String(hoy.getMonth() + 1).padStart(2, '0')}${String(hoy.getDate()).padStart(2, '0')}.csv`
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+  res.setHeader('Content-Disposition', `attachment; filename="${nombre}"`)
+  res.send('\uFEFF' + lineas.join('\r\n'))
 })
 
 router.get('/', requerirAdmin, (req, res) => {

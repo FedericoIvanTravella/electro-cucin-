@@ -68,6 +68,9 @@ export default function VentasAdmin() {
           {total > ventas.length ? `${ventas.length} de ${total} ventas` : `${ventas.length} ventas`} ·{' '}
           {dinero(totalCompletadas)} en ingresos completados
         </p>
+        <a className="boton boton--fantasma boton--chico" href="/api/ventas/export.csv" download>
+          <i className="fi fi-rr-file-csv" aria-hidden="true" /> Exportar CSV
+        </a>
       </div>
 
       {cargando ? (

@@ -3,7 +3,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { db, registrarAuditoria } from '../db.js'
-import { requerirAdmin, obtenerUsuarioOpcional } from '../auth.js'
+import { requerirAdmin, requerirAuth, obtenerUsuarioOpcional } from '../auth.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -77,7 +77,12 @@ function listarProductos(req, res, incluirOcultos) {
 
   const where = filtros.length ? `WHERE ${filtros.join(' AND ')}` : ''
   const productos = db
-    .prepare(`SELECT * FROM productos ${where} ORDER BY nombre`)
+    .prepare(
+      `SELECT p.*,
+              COALESCE((SELECT AVG(r.estrellas) FROM resenas r WHERE r.producto_id = p.id), 0) AS promedio_resenas,
+              (SELECT COUNT(*) FROM resenas r WHERE r.producto_id = p.id) AS cantidad_resenas
+       FROM productos p ${where} ORDER BY p.nombre`
+    )
     .all(...params)
 
   res.json({ productos, categorias: CATEGORIAS })
@@ -102,7 +107,14 @@ router.get('/imagenes', requerirAdmin, (req, res) => {
 })
 
 router.get('/:id', (req, res) => {
-  const producto = db.prepare('SELECT * FROM productos WHERE id = ?').get(req.params.id)
+  const producto = db
+    .prepare(
+      `SELECT p.*,
+              COALESCE((SELECT AVG(r.estrellas) FROM resenas r WHERE r.producto_id = p.id), 0) AS promedio_resenas,
+              (SELECT COUNT(*) FROM resenas r WHERE r.producto_id = p.id) AS cantidad_resenas
+       FROM productos p WHERE p.id = ?`
+    )
+    .get(req.params.id)
   if (!producto) return res.status(404).json({ error: 'Producto no encontrado.' })
   if (!producto.activo) {
     const usuario = obtenerUsuarioOpcional(req)
@@ -111,6 +123,74 @@ router.get('/:id', (req, res) => {
     }
   }
   res.json({ producto })
+})
+
+router.get('/:id/resenas', (req, res) => {
+  const existe = db.prepare('SELECT id FROM productos WHERE id = ?').get(req.params.id)
+  if (!existe) return res.status(404).json({ error: 'Producto no encontrado.' })
+
+  const resenas = db
+    .prepare(
+      `SELECT r.id, r.estrellas, r.comentario, r.fecha, r.updated_at,
+              u.id AS usuario_id, u.nombre AS usuario_nombre, u.username AS usuario_username
+       FROM resenas r
+       JOIN usuarios u ON u.id = r.usuario_id
+       WHERE r.producto_id = ?
+       ORDER BY r.updated_at DESC`
+    )
+    .all(req.params.id)
+
+  const resumen = db
+    .prepare(
+      `SELECT COALESCE(AVG(estrellas), 0) AS promedio, COUNT(*) AS cantidad,
+              COALESCE(SUM(CASE WHEN estrellas = 5 THEN 1 ELSE 0 END), 0) AS cinco,
+              COALESCE(SUM(CASE WHEN estrellas = 4 THEN 1 ELSE 0 END), 0) AS cuatro,
+              COALESCE(SUM(CASE WHEN estrellas = 3 THEN 1 ELSE 0 END), 0) AS tres,
+              COALESCE(SUM(CASE WHEN estrellas = 2 THEN 1 ELSE 0 END), 0) AS dos,
+              COALESCE(SUM(CASE WHEN estrellas = 1 THEN 1 ELSE 0 END), 0) AS uno
+       FROM resenas WHERE producto_id = ?`
+    )
+    .get(req.params.id)
+
+  res.json({ resenas, resumen: { ...resumen, promedio: Number(Number(resumen.promedio).toFixed(1)) } })
+})
+
+router.post('/:id/resenas', requerirAuth, (req, res) => {
+  const producto = db.prepare('SELECT id FROM productos WHERE id = ? AND activo = 1').get(req.params.id)
+  if (!producto) return res.status(404).json({ error: 'Producto no encontrado.' })
+
+  const compro = db
+    .prepare(
+      `SELECT COUNT(*) AS n FROM venta_items vi
+       JOIN ventas v ON v.id = vi.venta_id AND v.estado = 'completada'
+       WHERE vi.producto_id = ? AND v.usuario_id = ?`
+    )
+    .get(req.params.id, req.usuario.id).n > 0
+  if (!compro) {
+    return res.status(403).json({ error: 'Solo los compradores pueden valorar este producto.' })
+  }
+
+  const estrellas = Number(req.body?.estrellas)
+  if (!Number.isInteger(estrellas) || estrellas < 1 || estrellas > 5) {
+    return res.status(400).json({ error: 'Las estrellas deben ser un entero entre 1 y 5.' })
+  }
+  const comentario = String(req.body?.comentario ?? '').trim().slice(0, 500)
+
+  db
+    .prepare(
+      `INSERT INTO resenas (producto_id, usuario_id, estrellas, comentario)
+       VALUES (?, ?, ?, ?)
+       ON CONFLICT (producto_id, usuario_id)
+       DO UPDATE SET estrellas = excluded.estrellas, comentario = excluded.comentario,
+                     updated_at = datetime('now', 'localtime')`
+    )
+    .run(req.params.id, req.usuario.id, estrellas, comentario)
+
+  const mia = db
+    .prepare('SELECT id, estrellas, comentario, fecha FROM resenas WHERE producto_id = ? AND usuario_id = ?')
+    .get(req.params.id, req.usuario.id)
+
+  res.status(201).json({ resena: mia })
 })
 
 router.post('/', requerirAdmin, (req, res) => {

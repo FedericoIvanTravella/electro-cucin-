@@ -3,13 +3,14 @@ import { Link, useNavigate, useParams } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import Revelar from '../components/Revelar'
 import Lightbox from '../components/Lightbox'
+import Stars from '../components/Stars'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
-import { ahorroPorcentaje, cuota, dinero, imagenProducto } from '../lib/format'
+import { ahorroPorcentaje, cuota, dinero, fecha, imagenProducto } from '../lib/format'
 
 // Página de detalle de producto, al estilo MercadoLibre:
 // galería, precio con descuento, cuotas, stock, cantidad, comprar,
@@ -28,6 +29,14 @@ export default function Producto() {
   const [error, setError] = useState('')
   const [cantidad, setCantidad] = useState(1)
   const [zoom, setZoom] = useState(false)
+  const [resenas, setResenas] = useState([])
+  const [resumen, setResumen] = useState(null)
+  const [compro, setCompro] = useState(null)
+  const [miEstrellas, setMiEstrellas] = useState(0)
+  const [miComentario, setMiComentario] = useState('')
+  const [enviandoResena, setEnviandoResena] = useState(false)
+  const [errorResena, setErrorResena] = useState('')
+  const [resenaEnviada, setResenaEnviada] = useState(false)
 
   useEffect(() => {
     const controlador = new AbortController()
@@ -57,6 +66,57 @@ export default function Producto() {
 
     return () => controlador.abort()
   }, [id])
+
+  useEffect(() => {
+    if (!producto) return
+    const controlador = new AbortController()
+    api(`/productos/${producto.id}/resenas`, { signal: controlador.signal })
+      .then((data) => {
+        setResenas(data.resenas || [])
+        setResumen(data.resumen || null)
+        const mia = usuario ? data.resenas.find((r) => r.usuario_id === usuario.id) : null
+        if (mia) {
+          setMiEstrellas(mia.estrellas)
+          setMiComentario(mia.comentario || '')
+        }
+      })
+      .catch(() => {})
+    if (usuario) {
+      api('/ventas/mias?por_pagina=100', { signal: controlador.signal })
+        .then((data) => {
+          const comproEste = (data.ventas || []).some((v) => (v.items || []).some((i) => i.producto_id === producto.id))
+          setCompro(comproEste)
+        })
+        .catch(() => setCompro(false))
+    }
+    return () => controlador.abort()
+  }, [producto, usuario])
+
+  const enviarResena = async (e) => {
+    e.preventDefault()
+    if (!miEstrellas) {
+      setErrorResena('Elegí cuántas estrellas.')
+      return
+    }
+    setEnviandoResena(true)
+    setErrorResena('')
+    try {
+      await api(`/productos/${producto.id}/resenas`, {
+        method: 'POST',
+        body: { estrellas: miEstrellas, comentario: miComentario }
+      })
+      const data = await api(`/productos/${producto.id}/resenas`)
+      setResenas(data.resenas || [])
+      setResumen(data.resumen || null)
+      setResenaEnviada(true)
+      mostrar('¡Gracias! Tu reseña fue publicada.', 'exito')
+      setTimeout(() => setResenaEnviada(false), 2500)
+    } catch (err) {
+      setErrorResena(err?.message || 'No se pudo publicar la reseña.')
+    } finally {
+      setEnviandoResena(false)
+    }
+  }
 
   if (cargando) return <GrillaSkeleton cantidad={1} />
   if (error || !producto) {
@@ -279,6 +339,99 @@ export default function Producto() {
             “Mis compras”
           </li>
         </ul>
+      </section>
+
+      {/* ---------- Reseñas de compradores ---------- */}
+      <section className="card pdp-resenas" id="resenas">
+        <h2>Reseñas de compradores</h2>
+        <div className="resenas__cuerpo">
+          <div className="resenas__resumen">
+            <p className="resenas__promedio">{resumen ? resumen.promedio.toFixed(1) : '—'}</p>
+            <Stars promedio={resumen?.promedio || 0} className="estrellitas--grande" />
+            <p className="resenas__cantidad">
+              {resumen?.cantidad ? `${resumen.cantidad} ${resumen.cantidad === 1 ? 'reseña' : 'reseñas'}` : 'Nadie reseñó todavía'}
+            </p>
+          </div>
+          <div className="resenas__barras" aria-hidden="true">
+            {[['cinco', 5], ['cuatro', 4], ['tres', 3], ['dos', 2], ['uno', 1]].map(([clave, n]) => {
+              const cantidad = resumen?.[clave] || 0
+              const pct = resumen?.cantidad ? (cantidad / resumen.cantidad) * 100 : 0
+              return (
+                <div key={clave} className="resenas__fila">
+                  <span className="resenas__fila-num">
+                    {n} <i className="fi fi-sr-star" />
+                  </span>
+                  <div className="resenas__pista">
+                    <div className="resenas__relleno" style={{ width: `${pct}%` }} />
+                  </div>
+                  <span className="resenas__fila-cant">{cantidad}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {usuario && compro && (
+          <form className="resenas__form" onSubmit={enviarResena}>
+            <p className="resenas__form-titulo">¿Qué te pareció este producto?</p>
+            <div className="resenas__stars-input" role="radiogroup" aria-label="Estrellas">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  className={`resenas__star-btn ${n <= miEstrellas ? 'resenas__star-btn--on' : ''}`}
+                  onClick={() => setMiEstrellas(n)}
+                  aria-label={`${n} estrellas`}
+                  aria-pressed={n <= miEstrellas}
+                >
+                  <i className={`fi ${n <= miEstrellas ? 'fi-sr-star' : 'fi-rr-star'}`} aria-hidden="true" />
+                </button>
+              ))}
+            </div>
+            <textarea
+              className="resenas__textarea"
+              rows="3"
+              maxLength={500}
+              placeholder="Contanos tu experiencia (opcional)…"
+              value={miComentario}
+              onChange={(e) => setMiComentario(e.target.value)}
+            />
+            {errorResena && <p className="alerta alerta--error">{errorResena}</p>}
+            <button type="submit" className="boton boton--primario boton--chico" disabled={enviandoResena}>
+              {resenaEnviada ? <><i className="fi fi-rr-check" aria-hidden="true" /> ¡Publicada!</> : enviandoResena ? 'Publicando…' : 'Publicar reseña'}
+            </button>
+          </form>
+        )}
+        {usuario && compro === false && (
+          <p className="resenas__aviso"><i className="fi fi-rr-info" aria-hidden="true" /> Solo los compradores pueden valorar este producto.</p>
+        )}
+        {!usuario && (
+          <p className="resenas__aviso">
+            <i className="fi fi-rr-info" aria-hidden="true" /> <Link to="/login">Iniciá sesión</Link> y comprá para dejar tu reseña.
+          </p>
+        )}
+
+        {resenas.length > 0 ? (
+          <ul className="resenas__lista">
+            {resenas.map((r) => (
+              <li key={r.id} className="resena">
+                <div className="resena__avatar" aria-hidden="true">
+                  {(r.usuario_nombre || r.usuario_username || '?').charAt(0).toUpperCase()}
+                </div>
+                <div className="resena__cuerpo">
+                  <div className="resena__encabezado">
+                    <strong>{r.usuario_nombre || r.usuario_username}</strong>
+                    <Stars promedio={r.estrellas} />
+                    <span className="resena__fecha">{fecha(r.fecha)}</span>
+                  </div>
+                  {r.comentario && <p className="resena__comentario">{r.comentario}</p>}
+                </div>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="aviso aviso--minimo">Todavía no hay reseñas. Cuando compres este producto vas a poder ser el primero.</p>
+        )}
       </section>
 
       {/* ---------- Relacionados ---------- */}

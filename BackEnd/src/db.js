@@ -103,12 +103,33 @@ db.exec(`
     fecha TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
   );
 
+  CREATE TABLE IF NOT EXISTS resenas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    producto_id INTEGER NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    estrellas INTEGER NOT NULL CHECK (estrellas BETWEEN 1 AND 5),
+    comentario TEXT DEFAULT '',
+    fecha TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    updated_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (producto_id, usuario_id)
+  );
+
+  CREATE TABLE IF NOT EXISTS cupones (
+    codigo TEXT PRIMARY KEY,
+    tipo TEXT NOT NULL CHECK (tipo IN ('porcentaje', 'fijo')),
+    valor REAL NOT NULL CHECK (valor > 0),
+    activo INTEGER NOT NULL DEFAULT 1,
+    usado INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+  );
+
   CREATE TABLE IF NOT EXISTS meta (
     clave TEXT PRIMARY KEY,
     valor TEXT NOT NULL
   );
 
   CREATE INDEX IF NOT EXISTS idx_sesiones_expira ON sesiones (expira_en);
+  CREATE INDEX IF NOT EXISTS idx_resenas_producto ON resenas (producto_id);
   CREATE INDEX IF NOT EXISTS idx_venta_items_venta ON venta_items (venta_id);
   CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas (fecha);
   CREATE INDEX IF NOT EXISTS idx_auditoria_fecha ON auditoria (fecha);
@@ -133,6 +154,12 @@ function migrar() {
   }
   if (!columnasVentas.includes('cuotas')) {
     db.exec('ALTER TABLE ventas ADD COLUMN cuotas INTEGER NOT NULL DEFAULT 1')
+  }
+  if (!columnasVentas.includes('cupon_codigo')) {
+    db.exec("ALTER TABLE ventas ADD COLUMN cupon_codigo TEXT DEFAULT ''")
+  }
+  if (!columnasVentas.includes('cupon_descuento')) {
+    db.exec('ALTER TABLE ventas ADD COLUMN cupon_descuento REAL NOT NULL DEFAULT 0')
   }
 
   

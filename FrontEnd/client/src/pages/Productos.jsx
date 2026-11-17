@@ -5,7 +5,7 @@ import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import EstadoVacio from '../components/EstadoVacio'
 import { api } from '../lib/api'
-import { ahorroPorcentaje } from '../lib/format'
+import { ahorroPorcentaje, dinero } from '../lib/format'
 
 const INICIAL = { busqueda: '', categorias: [], min: '', max: '', soloStock: false, conDescuento: false }
 const POR_PAGINA = 18
@@ -22,6 +22,8 @@ export default function Productos() {
   const [orden, setOrden] = useState('relevancia')
   const [pagina, setPagina] = useState(1)
   const [ladoAbierto, setLadoAbierto] = useState(false)
+  const [indiceSugerencia, setIndiceSugerencia] = useState(-1)
+  const [sugerenciasAbiertas, setSugerenciasAbiertas] = useState(false)
 
   useEffect(() => {
     const controlador = new AbortController()
@@ -39,6 +41,14 @@ export default function Productos() {
       })
     return () => controlador.abort()
   }, [])
+
+  const sugerencias = useMemo(() => {
+    const texto = filtros.busqueda.trim().toLowerCase()
+    if (texto.length < 2) return []
+    return productos
+      .filter((p) => `${p.nombre} ${p.descripcion} ${p.categoria}`.toLowerCase().includes(texto))
+      .slice(0, 8)
+  }, [filtros.busqueda, productos])
 
   const categorias = useMemo(() => {
     const mapa = new Map()
@@ -151,12 +161,67 @@ export default function Productos() {
 
           <div className="grupo-filtro">
             <h4>Buscar</h4>
-            <input
-              type="search"
-              placeholder="Batidora, cafetera…"
-              value={filtros.busqueda}
-              onChange={(e) => cambiarFiltro({ busqueda: e.target.value })}
-            />
+            <div className="buscador-autocomplete">
+              <input
+                type="search"
+                placeholder="Batidora, cafetera…"
+                value={filtros.busqueda}
+                autoComplete="off"
+                role="combobox"
+                aria-expanded={sugerenciasAbiertas && sugerencias.length > 0}
+                aria-controls="sugerencias-productos"
+                aria-autocomplete="list"
+                onChange={(e) => {
+                  cambiarFiltro({ busqueda: e.target.value })
+                  setSugerenciasAbiertas(true)
+                  setIndiceSugerencia(-1)
+                }}
+                onFocus={() => setSugerenciasAbiertas(true)}
+                onBlur={() => setTimeout(() => setSugerenciasAbiertas(false), 150)}
+                onKeyDown={(e) => {
+                  if (!sugerenciasAbiertas || sugerencias.length === 0) return
+                  if (e.key === 'ArrowDown') {
+                    e.preventDefault()
+                    setIndiceSugerencia((i) => Math.min(sugerencias.length - 1, i + 1))
+                  } else if (e.key === 'ArrowUp') {
+                    e.preventDefault()
+                    setIndiceSugerencia((i) => Math.max(0, i - 1))
+                  } else if (e.key === 'Enter' && indiceSugerencia >= 0) {
+                    e.preventDefault()
+                    const elegido = sugerencias[indiceSugerencia]
+                    cambiarFiltro({ busqueda: elegido.nombre })
+                    setSugerenciasAbiertas(false)
+                    setPagina(1)
+                  } else if (e.key === 'Escape') {
+                    setSugerenciasAbiertas(false)
+                  }
+                }}
+              />
+              {sugerenciasAbiertas && sugerencias.length > 0 && (
+                <ul className="sugerencias" id="sugerencias-productos" role="listbox">
+                  {sugerencias.map((s, i) => (
+                    <li key={s.id} role="option" aria-selected={i === indiceSugerencia}>
+                      <button
+                        type="button"
+                        className={`sugerencia ${i === indiceSugerencia ? 'sugerencia--activa' : ''}`}
+                        onMouseDown={(e) => {
+                          e.preventDefault()
+                          cambiarFiltro({ busqueda: s.nombre })
+                          setSugerenciasAbiertas(false)
+                          setPagina(1)
+                        }}
+                        onMouseEnter={() => setIndiceSugerencia(i)}
+                      >
+                        <span className="sugerencia__nombre">{s.nombre}</span>
+                        <span className="sugerencia__meta">
+                          {s.categoria} · {dinero(s.precio)}
+                        </span>
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
           </div>
 
           <div className="grupo-filtro">

@@ -51,6 +51,13 @@ export default function Producto() {
     api(`/productos/${id}`, { signal: controlador.signal })
       .then((data) => {
         setProducto(data.producto)
+        try {
+          const vista = { id: data.producto.id, nombre: data.producto.nombre, precio: data.producto.precio, imagen: data.producto.imagen, categoria: data.producto.categoria, stock: data.producto.stock, descripcion: data.producto.descripcion, precio_tachado: data.producto.precio_tachado }
+          const vistos = JSON.parse(localStorage.getItem('ec_vistos') || '[]').filter((v) => v.id !== vista.id)
+          localStorage.setItem('ec_vistos', JSON.stringify([vista, ...vistos].slice(0, 6)))
+        } catch {
+          void 0
+        }
         return api(`/productos?categoria=${encodeURIComponent(data.producto.categoria)}&soloStock=1`, {
           signal: controlador.signal
         })

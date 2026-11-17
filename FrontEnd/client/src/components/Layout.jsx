@@ -233,8 +233,8 @@ function Footer() {
         </div>
       </div>
       <p className="footer__legal">
-        <Link to="/ayuda">Términos y condiciones</Link> · <Link to="/ayuda">Privacidad</Link> ·{' '}
-        <Link to="/ayuda">Devoluciones</Link><br />
+        <Link to="/terminos">Términos y condiciones</Link> · <Link to="/privacidad">Privacidad</Link> ·{' '}
+        <Link to="/devoluciones">Devoluciones</Link><br />
         © {new Date().getFullYear()} Electro Cuciné · Proyecto académico · Íconos por{' '}
         <a href="https://www.flaticon.com" target="_blank" rel="noreferrer">
           Flaticon

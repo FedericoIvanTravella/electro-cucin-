@@ -4444,3 +4444,134 @@ textarea:focus {
 [data-tema='oscuro'] .hero__producto-img {
   background: #ffffff;
 }
+
+.legal {
+  max-width: 920px;
+  margin: 1rem auto;
+  padding: 1rem 1rem 3rem;
+}
+
+.legal__cabecera {
+  margin-bottom: 1.5rem;
+}
+
+.legal__titulo {
+  margin: 0 0 0.35rem;
+  font-size: clamp(1.7rem, 3.4vw, 2.3rem);
+}
+
+.legal__actualizado {
+  color: var(--texto-sec);
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.legal__seccion {
+  padding: 1.1rem 1.3rem;
+  margin-bottom: 1rem;
+}
+
+.legal__seccion h2 {
+  margin: 0 0 0.45rem;
+  font-size: 1.1rem;
+  color: var(--azul);
+}
+
+.legal__seccion p {
+  margin: 0;
+  color: var(--tinta);
+  line-height: 1.55;
+}
+
+.legal__pie {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+}
+
+/* ================================================================
+   Highlights del mes (admin)
+   ================================================================ */
+.highlights__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
+.highlight {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+}
+
+.highlight__icono {
+  flex: none;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--azul-claro);
+  color: var(--azul);
+  font-size: 1.2rem;
+}
+
+.highlight__icono--estrella {
+  background: #fff3d6;
+  color: #f5a623;
+}
+
+.highlight__icono--top {
+  background: #e7f6ef;
+  color: var(--exito);
+}
+
+.highlight--positivo .highlight__icono {
+  background: var(--exito-claro);
+  color: var(--exito);
+}
+
+.highlight--negativo .highlight__icono {
+  background: var(--rojo-claro);
+  color: var(--rojo);
+}
+
+.highlight__valor {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: var(--tinta);
+  line-height: 1.25;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.highlight__etiqueta {
+  margin: 0.2rem 0 0;
+  font-size: 0.72rem;
+  color: var(--texto-sec);
+  line-height: 1.25;
+}
+
+/* ================================================================
+   Badge TOP ranking en cards
+   ================================================================ */
+.producto__flag.top-rank {
+  top: auto;
+  bottom: 0.6rem;
+  left: 0.6rem;
+  right: auto;
+  background: #f5a623;
+  color: #3a2400;
+  border: 1px solid #d78d15;
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+}

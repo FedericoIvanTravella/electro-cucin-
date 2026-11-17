@@ -7,7 +7,7 @@ import Lightbox from './Lightbox'
 import Stars from './Stars'
 import { ahorroPorcentaje, cuota, dinero, imagenProducto } from '../lib/format'
 
-export default function ProductCard({ producto, destacado = false }) {
+export default function ProductCard({ producto, destacado = false, topRank = 0 }) {
   const { agregar } = useCart()
   const { esFavorito, alternar } = useFavoritos()
   const { mostrar } = useToast()
@@ -74,6 +74,7 @@ export default function ProductCard({ producto, destacado = false }) {
 
         <span className="producto__categoria">{producto.categoria}</span>
         {descuento > 0 && <span className="producto__flag">{descuento}% OFF</span>}
+        {topRank > 0 && <span className="producto__flag top-rank" title="Producto más vendido">TOP {topRank} u.</span>}
       </div>
 
       <div className="producto__cuerpo">

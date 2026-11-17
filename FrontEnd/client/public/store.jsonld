@@ -1,0 +1,17 @@
+{
+  "@context": "https://schema.org",
+  "@type": "Store",
+  "name": "Electro Cuciné",
+  "image": "/logo.png",
+  "description": "Venta online de electrodomésticos de cocina con envío a todo el país.",
+  "address": {
+    "@type": "PostalAddress",
+    "streetAddress": "Av. Siempreviva 742",
+    "addressLocality": "CABA",
+    "postalCode": "C1066",
+    "addressCountry": "AR"
+  },
+  "openingHours": "Mo-Sa 09:00-20:00",
+  "telephone": "0800-123-4567",
+  "url": "/"
+}

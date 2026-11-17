@@ -394,13 +394,64 @@ export function analitica() {
   const stockBajo = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock BETWEEN 1 AND 5').get().n
   const stockOk = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock > 5').get().n
 
+  const topProducto = db
+    .prepare(
+      `SELECT vi.nombre AS nombre, COALESCE(SUM(vi.cantidad), 0) AS unidades
+       FROM venta_items vi JOIN ventas v ON v.id = vi.venta_id AND v.estado != 'anulada'
+       GROUP BY vi.nombre ORDER BY unidades DESC LIMIT 1`
+    )
+    .get() || { nombre: null, unidades: 0 }
+
+  const estrella = db
+    .prepare(
+      `SELECT p.categoria AS categoria, COALESCE(SUM(vi.precio * vi.cantidad), 0) AS ingresos
+       FROM venta_items vi JOIN ventas v ON v.id = vi.venta_id AND v.estado != 'anulada'
+       JOIN productos p ON p.id = vi.producto_id
+       GROUP BY p.categoria ORDER BY ingresos DESC LIMIT 1`
+    )
+    .get()
+
+  const mesActual = db
+    .prepare(
+      `SELECT COALESCE(SUM(total), 0) AS total, COUNT(*) AS cantidad
+       FROM ventas WHERE estado != 'anulada' AND fecha >= datetime('now', 'localtime', '-30 days', 'start of day')`
+    )
+    .get()
+
+  const mesAnterior = db
+    .prepare(
+      `SELECT COALESCE(SUM(total), 0) AS total, COUNT(*) AS cantidad
+       FROM ventas WHERE estado != 'anulada'
+         AND fecha >= datetime('now', 'localtime', '-60 days', 'start of day')
+         AND fecha < datetime('now', 'localtime', '-30 days', 'start of day')`
+    )
+    .get()
+
+  const ticketPromedio =
+    mesActual.cantidad > 0 ? Number((Number(mesActual.total) / mesActual.cantidad).toFixed(2)) : 0
+
+  const variacionPct =
+    Number(mesAnterior.total) > 0
+      ? Number((((Number(mesActual.total) - Number(mesAnterior.total)) / Number(mesAnterior.total)) * 100).toFixed(1))
+      : null
+
   return {
     porCategoria,
     catalogoPorCategoria,
     ventasPorEstado,
     topProductos,
     ventasPorDia,
-    stock: { sinStock, stockBajo, stockOk }
+    stock: { sinStock, stockBajo, stockOk },
+    topProducto,
+    categoriaEstrella: estrella ? { categoria: estrella.categoria, ingresos: Number(estrella.ingresos) } : null,
+    comparativa: {
+      mesActual: Number(mesActual.total),
+      mesAnterior: Number(mesAnterior.total),
+      ventasMesActual: mesActual.cantidad,
+      ventasMesAnterior: mesAnterior.cantidad,
+      ticketPromedio,
+      variacionPct
+    }
   }
 }
 

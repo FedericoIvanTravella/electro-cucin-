@@ -116,6 +116,25 @@ router.get('/imagenes', requerirAdmin, (req, res) => {
   res.json({ imagenes: archivos, ruta: '/productos' })
 })
 
+router.get('/populares', (req, res) => {
+  const productos = db
+    .prepare(
+      `SELECT p.*, COALESCE(SUM(vi.cantidad), 0) AS unidades_vendidas
+       FROM productos p
+       JOIN venta_items vi ON vi.producto_id = p.id
+       JOIN ventas v ON v.id = vi.venta_id AND v.estado != 'anulada'
+       WHERE p.activo = 1
+       GROUP BY p.id
+       ORDER BY unidades_vendidas DESC
+       LIMIT 6`
+    )
+    .all()
+  const idsPopulares = productos.map((p) => p.id)
+  const todos = db.prepare('SELECT * FROM productos WHERE activo = 1 ORDER BY id').all()
+  const vistos = idsPopulares.length >= 6 ? [] : todos.filter((p) => !idsPopulares.includes(p.id)).slice(0, 6 - idsPopulares.length)
+  res.json({ productos: [...productos, ...vistos].slice(0, 6) })
+})
+
 router.get('/:id', (req, res) => {
   const producto = db
     .prepare(

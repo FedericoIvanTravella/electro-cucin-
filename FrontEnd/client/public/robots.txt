@@ -1,0 +1,14 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin
+Disallow: /api
+Disallow: /carrito
+Disallow: /pago
+Disallow: /mis-compras
+Disallow: /login
+Disallow: /registro
+Disallow: /favoritos
+
+# Una vez que desplegues, agregá aquí tu dominio:
+# Sitemap: https://tudominio.com/sitemap.xml

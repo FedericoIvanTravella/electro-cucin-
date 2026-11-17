@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 630" role="img" aria-label="Electro Cuciné — Electrodomésticos de cocina">
+  <defs>
+    <linearGradient id="glow" cx="85%" cy="20%" r="65%">
+      <stop offset="0" stop-color="#ff7a3c" stop-opacity="0.65"/>
+      <stop offset="0.55" stop-color="#f2542d" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="glow2" cx="12%" cy="90%" r="55%">
+      <stop offset="0" stop-color="#ffc857" stop-opacity="0.35"/>
+      <stop offset="0.6" stop-color="#ffc857" stop-opacity="0"/>
+    </linearGradient>
+    <linearGradient id="pincel" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#171310"/>
+      <stop offset="1" stop-color="#26201b"/>
+    </linearGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#pincel)"/>
+  <rect width="1200" height="630" fill="url(#glow)"/>
+  <rect width="1200" height="630" fill="url(#glow2)"/>
+
+  <circle cx="1010" cy="-40" r="170" fill="#ff7a3c" opacity="0.1"/>
+  <circle cx="80" cy="720" r="210" fill="#ffc857" opacity="0.07"/>
+
+  <text x="90" y="225" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="116" fill="#f2542d" letter-spacing="-2">Electro</text>
+  <text x="90" y="345" font-family="Arial Black, Arial, Helvetica, sans-serif" font-weight="900" font-size="116" fill="#f6f2ec" letter-spacing="-2">Cuciné</text>
+
+  <rect x="90" y="375" width="128" height="10" fill="#f2542d" rx="5"/>
+
+  <text x="90" y="442" font-family="Arial, Helvetica, sans-serif" font-weight="600" font-size="27" fill="#d9cec2">Electrodomésticos de cocina para todos los días.</text>
+
+  <g font-family="Arial, Helvetica, sans-serif" font-weight="800" font-size="17" letter-spacing="1.5">
+    <rect x="90" y="490" width="310" height="44" rx="22" fill="#f2542d"/>
+    <text x="120" y="519" fill="#ffffff">2 AÑOS DE GARANTÍA</text>
+
+    <rect x="425" y="490" width="300" height="44" rx="22" fill="#f2542d" opacity="0.82"/>
+    <text x="455" y="519" fill="#ffffff">12 CUOTAS SIN INTERÉS</text>
+
+    <rect x="750" y="490" width="360" height="44" rx="22" fill="#ffc857"/>
+    <text x="790" y="519" fill="#171310">30% OFF · 65+</text>
+  </g>
+
+  <text x="90" y="45" font-family="Arial, Helvetica, sans-serif" font-weight="700" font-size="16" letter-spacing="6" fill="#6e645a">ELECTRO CUCINÉ</text>
+</svg>

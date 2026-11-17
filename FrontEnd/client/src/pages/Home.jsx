@@ -6,7 +6,7 @@ import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
 import { api } from '../lib/api'
-import { dinero, imagenProducto, ahorroPorcentaje, tieneImagen } from '../lib/format'
+import { dinero, imagenProducto, ahorroPorcentaje } from '../lib/format'
 
 const beneficios = [
   { icono: 'fi-rr-shipping-fast', titulo: 'Envío sin cargo', texto: 'En compras superiores a $150.000 en todo el país.' },
@@ -25,26 +25,26 @@ const categorias = [
 export default function Home() {
   const { usuario } = useAuth()
   const [destacados, setDestacados] = useState([])
+  const [recientes, setRecientes] = useState([])
   const [cargando, setCargando] = useState(true)
 
   useEffect(() => {
     const controlador = new AbortController()
-    api('/productos?soloStock=1', { signal: controlador.signal })
+    api('/productos/populares', { signal: controlador.signal })
       .then((data) => {
-        // Primero los que tienen foto (la vidriera luce más), ordenados
-        // por la fuerza de su oferta; si no hay fotos, por id.
-        const ordenados = [...data.productos].sort(
-          (a, b) => Number(tieneImagen(b)) - Number(tieneImagen(a)) || ahorroPorcentaje(b.precio, b.precio_tachado) - ahorroPorcentaje(a.precio, a.precio_tachado) || a.id - b.id
-        )
-        setDestacados(ordenados.slice(0, 4))
+        setDestacados((data.productos || []).slice(0, 4))
       })
       .catch(() => {
         if (controlador.signal.aborted) return
         setDestacados([])
       })
-      .finally(() => {
-        if (!controlador.signal.aborted) setCargando(false)
-      })
+    try {
+      const vistos = JSON.parse(localStorage.getItem('ec_vistos') || '[]')
+      if (Array.isArray(vistos)) setRecientes(vistos)
+    } catch {
+      setRecientes([])
+    }
+    setCargando(false)
     return () => controlador.abort()
   }, [])
 
@@ -171,7 +171,7 @@ export default function Home() {
         <div className="seccion__cabecera">
           <div>
             <h2>Destacados de la semana</h2>
-            <p className="seccion__bajada">Los favoritos de nuestros clientes, listos para tu cocina.</p>
+            <p className="seccion__bajada">Los más vendidos por nuestros clientes, listos para tu cocina.</p>
           </div>
           <Link to="/productos" className="boton boton--fantasma">
             Ver catálogo completo
@@ -184,12 +184,30 @@ export default function Home() {
           <div className="grilla-productos">
             {destacados.map((p, i) => (
               <Revelar key={p.id} delay={i * 90} className="revelar--item">
-                <ProductCard producto={p} destacado />
+                <ProductCard producto={p} destacado topRank={p.unidades_vendidas || 0} />
               </Revelar>
             ))}
           </div>
         )}
       </Revelar>
+
+      {recientes.length > 0 && (
+        <Revelar as="section" className="seccion">
+          <div className="seccion__cabecera">
+            <div>
+              <h2>Vistos recientemente</h2>
+              <p className="seccion__bajada">Lo que te llamó la atención, guardado para cuando vuelvas.</p>
+            </div>
+          </div>
+          <div className="grilla-productos">
+            {recientes.slice(0, 4).map((p, i) => (
+              <Revelar key={p.id} delay={i * 80} className="revelar--item">
+                <ProductCard producto={p} />
+              </Revelar>
+            ))}
+          </div>
+        </Revelar>
+      )}
 
       <Revelar as="section" className="seccion">
         <div className="seccion__cabecera">

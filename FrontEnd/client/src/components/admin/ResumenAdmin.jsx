@@ -60,6 +60,55 @@ export default function ResumenAdmin() {
       </div>
 
       {analitica && (
+        <section className="highlights">
+          <h2 className="h2-seccion">Destaques del mes</h2>
+          <div className="highlights__grid">
+            <article className="card highlight">
+              <span className="highlight__icono"><i className="fi fi-rr-receipt" aria-hidden="true" /></span>
+              <div>
+                <p className="highlight__valor">{dinero(analitica.comparativa?.ticketPromedio ?? 0)}</p>
+                <p className="highlight__etiqueta">Ticket promedio</p>
+              </div>
+            </article>
+            <article className="card highlight">
+              <span className="highlight__icono highlight__icono--estrella"><i className="fi fi-sr-star" aria-hidden="true" /></span>
+              <div>
+                <p className="highlight__valor">{analitica.categoriaEstrella?.categoria ?? '—'}</p>
+                <p className="highlight__etiqueta">
+                  Categoría estrella · {analitica.categoriaEstrella ? dinero(analitica.categoriaEstrella.ingresos) : 'sin datos'}
+                </p>
+              </div>
+            </article>
+            <article className="card highlight">
+              <span className="highlight__icono highlight__icono--top"><i className="fi fi-rr-box" aria-hidden="true" /></span>
+              <div>
+                <p className="highlight__valor">{analitica.topProducto?.nombre ?? '—'}</p>
+                <p className="highlight__etiqueta">
+                  Producto top · {analitica.topProducto?.unidades ?? 0} unidades
+                </p>
+              </div>
+            </article>
+            <article className={`card highlight ${analitica.comparativa?.variacionPct == null ? '' : analitica.comparativa.variacionPct >= 0 ? 'highlight--positivo' : 'highlight--negativo'}`}>
+              <span className="highlight__icono">
+                <i className={`fi ${(analitica.comparativa?.variacionPct ?? 0) >= 0 ? 'fi-rr-arrow-trend-up' : 'fi-rr-arrow-trend-down'}`} aria-hidden="true" />
+              </span>
+              <div>
+                <p className="highlight__valor">
+                  {analitica.comparativa?.variacionPct == null
+                    ? '—'
+                    : `${analitica.comparativa.variacionPct >= 0 ? '+' : ''}${analitica.comparativa.variacionPct}%`}
+                </p>
+                <p className="highlight__etiqueta">
+                  vs mes anterior · {dinero(analitica.comparativa?.mesActual ?? 0)} <br />
+                  ({analitica.comparativa?.ventasMesActual ?? 0} ventas)
+                </p>
+              </div>
+            </article>
+          </div>
+        </section>
+      )}
+
+      {analitica && (
         <section className="analitica">
           <h2 className="h2-seccion">Analítica</h2>
           <div className="analitica__grilla">

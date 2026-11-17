@@ -13,6 +13,7 @@ import Login from './pages/Login.jsx'
 import Registro from './pages/Registro.jsx'
 import MisCompras from './pages/MisCompras.jsx'
 import Ayuda from './pages/Ayuda.jsx'
+import Legal from './pages/Legal.jsx'
 import Admin from './pages/Admin.jsx'
 import ErrorCodigo from './pages/ErrorCodigo.jsx'
 import NotFound from './pages/NotFound.jsx'
@@ -52,6 +53,9 @@ export default function App() {
           <Route path="/producto/:id" element={<Producto />} />
           <Route path="/favoritos" element={<Favoritos />} />
           <Route path="/ayuda" element={<Ayuda />} />
+          <Route path="/terminos" element={<Legal />} />
+          <Route path="/privacidad" element={<Legal />} />
+          <Route path="/devoluciones" element={<Legal />} />
           <Route path="/carrito" element={<Carrito />} />
           <Route
             path="/pago"

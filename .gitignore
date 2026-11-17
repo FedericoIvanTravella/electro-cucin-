@@ -3,6 +3,7 @@ node_modules/
 
 # Base de datos SQLite (datos locales y WAL, no van al repo)
 BackEnd/data/
+/data/
 *.db
 *.db-shm
 *.db-wal

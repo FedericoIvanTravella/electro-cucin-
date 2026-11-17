@@ -39,7 +39,7 @@ El superusuario se crea **en el primer arranque** desde variables de entorno (ve
 
 ## Funcionalidades extra
 
-- **Correo de confirmación de compra**: tras pagar, se envía el detalle del pedido (ítems, totales, descuento 65+, cupón, dirección, entrega 24–48 h). Sin SMTP configurado se escribe en `data/outbox/*.json` (modo dev); con `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` se envía de verdad (ver `.env.example`).
+- **Correo de confirmación de compra**: tras pagar, se envía el detalle del pedido (ítems, totales, descuento 65+, cupón, dirección, entrega 24–48 h). Sin SMTP configurado se escribe en `BackEnd/data/outbox/*.json` (modo dev); con `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` se envía de verdad (ver `.env.example`).
 - **Reseñas con estrellas**: solo compradores (con venta completada del producto) pueden valorar 1–5 estrellas con comentario; promedio real visible en cards y en el detalle (reemplaza el 4.8 fake anterior).
 - **Cupones de descuento**: `COCINA10` (−10%) y `CUCINE5` (−$5.000) seedeados; se aplican en el pago y quedan registrados en la venta. Admin puede verlos en Auditoría (acción "cupon").
 - **Exportar ventas a CSV**: en el panel superusuario → Registro de ventas → "Exportar CSV" (UTF-8 con BOM, separador `;`, ideal para Excel).
@@ -78,7 +78,7 @@ Ver **`.env.example`**. Lo esencial:
 - `ADMIN_USERNAME` / `ADMIN_PASSWORD` / `ADMIN_NOMBRE` / `ADMIN_EMAIL` (creación del superusuario la **primera** vez)
 - `TRUST_PROXY=1` si hay proxy inverso (para IPs reales en el rate limit)
 - `EC_DB_PATH` (ruta de la base; los tests usan `:memory:`)
-- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` / `SMTP_SECURE=1` (correo real; sin ellos se usa outbox JSON en `data/outbox/`)
+- `SMTP_HOST` / `SMTP_PORT` / `SMTP_USER` / `SMTP_PASS` / `SMTP_FROM` / `SMTP_SECURE=1` (correo real; sin ellos se usa outbox JSON en `BackEnd/data/outbox/`)
 
 El backend carga `.env` (raíz del repo y/o `BackEnd/.env`) **sin dependencias** usando `process.loadEnvFile`; las variables ya presentes en el entorno tienen prioridad.
 

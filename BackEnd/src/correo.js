@@ -4,7 +4,7 @@ import { fileURLToPath } from 'node:url'
 import nodemailer from 'nodemailer'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const OUTBOX = process.env.EC_OUTBOX_DIR || path.join(__dirname, '..', '..', 'data', 'outbox')
+const OUTBOX = process.env.EC_OUTBOX_DIR || path.join(__dirname, '..', 'data', 'outbox')
 
 async function enviarCorreo({ para, asunto, html, texto }) {
   const host = process.env.SMTP_HOST

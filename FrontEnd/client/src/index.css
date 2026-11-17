@@ -5036,3 +5036,161 @@ textarea:focus {
     max-height: 80px;
   }
 }
+
+/* ================================================================
+   Tema NAVIDEÑO — bosque oscuro, dorado y rojo festivo
+   ================================================================ */
+[data-tema='navideño'] {
+  --fondo: #0d271e;
+  --superficie: #163a2e;
+  --borde: #264d3e;
+  --tinta: #f4eedd;
+  --texto-sec: #b7c6b5;
+  --gris-claro: #1e4434;
+  --marino: #f4eedd;
+  --marino-oscuro: #08190f;
+  --marca: #264d3e;
+  --azul: #e3422a;
+  --azul-hover: #ff5740;
+  --azul-claro: #3a201b;
+  --acento: #ffd166;
+  --rojo: #e3422a;
+  --rojo-claro: #3a1e16;
+  --exito: #43d675;
+  --exito-claro: #123a24;
+  --sombra: 0 6px 22px rgba(0, 0, 0, 0.5);
+}
+
+/* Nieve en pantalla completa */
+.nieve-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: 80;
+  pointer-events: none;
+}
+
+/* Twinkle de las luces de la guirnalda */
+@keyframes bulboBrilla {
+  0%, 100% { opacity: 0.5; }
+  12% { opacity: 1; }
+  45% { opacity: 0.65; }
+  65% { opacity: 1; }
+}
+
+.guirnalda {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 95;
+  pointer-events: none;
+  overflow: visible;
+}
+
+.guirnalda__cable {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.guirnalda__luz {
+  position: absolute;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.guirnalda__cuelgue {
+  width: 2px;
+  background: #14201a;
+}
+
+.guirnalda__bulbo {
+  width: 0.7rem;
+  height: 0.95rem;
+  border-radius: 999px 999px 40% 40%;
+  animation: bulboBrilla 1.5s ease-in-out infinite alternate;
+}
+
+/* Botón de navidad con brillo activo */
+.tema-boton--navidad {
+  position: relative;
+}
+.tema-boton--navidad.tema-boton--activo {
+  background: radial-gradient(circle at center, #ffd166 0%, #e3422a 100%);
+  box-shadow: 0 0 16px rgba(255, 209, 102, 0.75);
+  animation: navidadPulsa 1.6s ease-in-out infinite;
+}
+.tema-boton--navidad.tema-boton--activo .fi {
+  color: #1a1206;
+}
+
+@keyframes navidadPulsa {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 209, 102, 0.5); }
+  50% { box-shadow: 0 0 22px rgba(255, 209, 102, 0.9), 0 0 38px rgba(227, 66, 42, 0.4); }
+}
+
+[data-tema='navideño'] .navbar {
+  background: rgba(13, 39, 30, 0.88);
+  border-bottom: 2px solid #ffd166;
+  box-shadow: 0 4px 24px rgba(255, 209, 102, 0.18);
+}
+
+[data-tema='navideño'] .marca {
+  color: #f4eedd;
+}
+
+[data-tema='navideño'] .navbar__nav a {
+  color: #f4eedd;
+}
+
+[data-tema='navideño'] .navbar__nav a:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+[data-tema='navideño'] .navbar__nav a.activo {
+  background: #264d3e;
+  color: #ffd166;
+}
+
+[data-tema='navideño'] .tema-boton {
+  background: #1e4434;
+  border-color: #264d3e;
+  color: #f4eedd;
+}
+
+[data-tema='navideño'] .promos {
+  background: #08190f;
+  color: #ffd166;
+}
+
+[data-tema='navideño'] .producto__media {
+  background: linear-gradient(180deg, #1e4434 0%, #0d271e 100%);
+  border-bottom: 1px solid #ffd166;
+}
+
+[data-tema='navideño'] .boton--primario {
+  background: linear-gradient(180deg, #ff5740 0%, #e3422a 100%);
+  box-shadow: 0 6px 18px rgba(227, 66, 42, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+}
+
+[data-tema='navideño'] .hero {
+  border: 2px solid #ffd166;
+  box-shadow: 0 24px 50px rgba(0, 0, 0, 0.6), inset 0 0 70px rgba(255, 209, 102, 0.12);
+}
+
+[data-tema='navideño'] .hero__etiqueta {
+  background: linear-gradient(90deg, #ffd166, #f4eedd);
+  color: #3a2400;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .guirnalda__bulbo,
+  .tema-boton--navidad.tema-boton--activo {
+    animation: none;
+  }
+}

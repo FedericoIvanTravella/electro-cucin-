@@ -5,6 +5,8 @@ import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { useTema } from '../context/TemaContext'
 import { useToast } from '../context/ToastContext'
+import Nieve from './Nieve'
+import Guirnalda from './Guirnalda'
 import { api } from '../lib/api'
 
 // Barra superior: cinta de beneficios deslizante (marquee infinito).
@@ -35,7 +37,7 @@ function Navbar() {
   const { usuario, esAdmin, salir, revocarSesiones } = useAuth()
   const { totales } = useCart()
   const { cantidad: favs } = useFavoritos()
-  const { tema, alternar } = useTema()
+  const { tema, alternar, alternarNavideño } = useTema()
   const [abierto, setAbierto] = useState(false)
   const ubicacion = useLocation()
 
@@ -80,6 +82,17 @@ function Navbar() {
         </nav>
 
         <div className="navbar__acciones">
+          <button
+            type="button"
+            className={`tema-boton tema-boton--navidad ${tema === 'navideño' ? 'tema-boton--activo' : ''}`}
+            onClick={alternarNavideño}
+            aria-label={tema === 'navideño' ? 'Desactivar modo navideño' : 'Activar modo navideño'}
+            title={tema === 'navideño' ? 'Desactivar modo navideño' : 'Modo navideño'}
+            aria-pressed={tema === 'navideño'}
+          >
+            <i className="fi fi-rr-tree" aria-hidden="true" />
+          </button>
+
           <button
             type="button"
             className="tema-boton"
@@ -245,8 +258,15 @@ function Footer() {
 }
 
 export default function Layout() {
+  const { tema } = useTema()
   return (
     <div className="app">
+      {tema === 'navideño' && (
+        <>
+          <Nieve />
+          <Guirnalda />
+        </>
+      )}
       <BarraPromos />
       <Navbar />
       <main className="contenedor main">

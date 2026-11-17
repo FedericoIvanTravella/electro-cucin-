@@ -3,19 +3,30 @@ import { createContext, useCallback, useContext, useEffect, useState } from 'rea
 
 const TemaContext = createContext(null)
 const CLAVE = 'ec_tema'
+const TEMAS = ['claro', 'oscuro', 'navideño']
 
-// Tema claro/oscuro persistido en localStorage y aplicado en <html data-tema>.
 export function TemaProvider({ children }) {
-  const [tema, setTema] = useState(() => localStorage.getItem(CLAVE) || 'claro')
+  const [tema, setTema] = useState(() => {
+    const guardado = localStorage.getItem(CLAVE)
+    return TEMAS.includes(guardado) ? guardado : 'claro'
+  })
 
   useEffect(() => {
     document.documentElement.setAttribute('data-tema', tema)
     localStorage.setItem(CLAVE, tema)
   }, [tema])
 
-  const alternar = useCallback(() => setTema((t) => (t === 'oscuro' ? 'claro' : 'oscuro')), [])
+  const alternar = useCallback(
+    () => setTema((t) => (t === 'oscuro' ? 'claro' : 'oscuro')),
+    []
+  )
 
-  return <TemaContext.Provider value={{ tema, alternar }}>{children}</TemaContext.Provider>
+  const alternarNavideño = useCallback(
+    () => setTema((t) => (t === 'navideño' ? 'claro' : 'navideño')),
+    []
+  )
+
+  return <TemaContext.Provider value={{ tema, alternar, alternarNavideño }}>{children}</TemaContext.Provider>
 }
 
 export function useTema() {

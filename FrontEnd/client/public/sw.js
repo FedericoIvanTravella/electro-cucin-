@@ -1,4 +1,4 @@
-const CACHE = 'ec-v1'
+const CACHE = 'ec-v2'
 const PRECACHE = ['/', '/index.html', '/logo.png', '/manifest.webmanifest']
 
 self.addEventListener('install', (event) => {
@@ -11,7 +11,13 @@ self.addEventListener('install', (event) => {
 })
 
 self.addEventListener('activate', (event) => {
-  event.waitUntil(self.clients.claim())
+  // Limpia los caches de versiones anteriores para no servir builds viejos.
+  event.waitUntil(
+    caches
+      .keys()
+      .then((keys) => Promise.all(keys.filter((k) => k !== CACHE).map((k) => caches.delete(k))))
+      .then(() => self.clients.claim())
+  )
 })
 
 self.addEventListener('fetch', (event) => {
@@ -21,19 +27,54 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
   if (url.pathname.startsWith('/api/')) return
 
-  event.respondWith(
-    caches.match(request).then(
-      (hit) =>
-        hit ||
-        fetch(request)
-          .then((res) => {
+  // Navegaciones (HTML): network-first para tomar siempre el último build.
+  // Si no hay red, cae a la copia cacheada.
+  if (request.mode === 'navigate' || request.destination === 'document') {
+    event.respondWith(
+      fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const copia = res.clone()
+            caches.open(CACHE).then((cache) => cache.put('/index.html', copia))
+          }
+          return res
+        })
+        .catch(() => caches.match('/index.html'))
+    )
+    return
+  }
+
+  // Assets hasheados (/assets/): inmutables → cache-first.
+  if (url.pathname.startsWith('/assets/')) {
+    event.respondWith(
+      caches.match(request).then(
+        (hit) =>
+          hit ||
+          fetch(request).then((res) => {
             if (res.ok) {
               const copia = res.clone()
               caches.open(CACHE).then((cache) => cache.put(request, copia))
             }
             return res
           })
-          .catch(() => caches.match('/index.html'))
+      )
     )
+    return
+  }
+
+  // Resto: stale-while-revalidate.
+  event.respondWith(
+    caches.match(request).then((hit) => {
+      const revalidate = fetch(request)
+        .then((res) => {
+          if (res.ok) {
+            const copia = res.clone()
+            caches.open(CACHE).then((cache) => cache.put(request, copia))
+          }
+          return res
+        })
+        .catch(() => hit)
+      return hit || revalidate
+    })
   )
 })

@@ -116,7 +116,7 @@ Imagen todo-en-uno: compila el frontend, instala deps de producción del backend
 
 - Con el repo público, cada push a `main` publica una **demo navegable sin backend** en `https://FedericoIvanTravella.github.io/electro-cucin-/` (workflow `.github/workflows/pages.yml`, deploy con GitHub Actions — "Source: GitHub Actions" en Settings → Pages).
 - La demo se compila con `VITE_DEMO=1`: el frontend **no llama a `/api`** y responde desde un snapshot del catálogo (`FrontEnd/client/public/demo/productos.json`, generado con `npm run demo:export` en readonly; no toca la base).
-- En la demo: catálogo y detalle navegables, filtros, comparador, carrito y checkout **simulado**; cupones demo `COCINA10` y `CUCINE5`; sin login, sin pedidos reales ni datos persistidos. Lleva una cinta "Demo de portafolio" arriba de todo.
+- En la demo: catálogo y detalle navegables, filtros, comparador, carrito y checkout **simulado**; cupones demo `COCINA10` y `CUCINE5`; la sesión entra como "Cliente Demo" para poder recorrer login, pago y Mis compras; nada se persiste ni se envía. Lleva una cinta "Demo de portafolio" arriba de todo.
 - La SPA vive en la subcarpeta `/electro-cucin-/`: el workflow compila con `--base=/electro-cucin-/`, el router toma ese basename y se copia `index.html` como `404.html` para que los deep links (p. ej. `/electro-cucin-/producto/5`) recarguen bien.
 - El sitio completo con backend sigue siendo `npm start` (o la imagen Docker) en el puerto 3001.
 

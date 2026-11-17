@@ -64,6 +64,12 @@ export default function Pago() {
               <span>- {dinero(venta.descuento_monto)}</span>
             </div>
           )}
+          {Number(venta.cupon_descuento) > 0 && (
+            <div className="ticket__linea ticket__linea--descuento">
+              <span>Cupón {venta.cupon_codigo}</span>
+              <span>- {dinero(venta.cupon_descuento)}</span>
+            </div>
+          )}
           <div className="ticket__linea ticket__linea--total">
             <span>Total pagado</span>
             <span>{dinero(venta.total)}</span>

@@ -15,6 +15,17 @@ function leerCookie(nombre) {
 // ---------------------------------------------------------------
 let demoCache = null
 
+// Usuario virtual: la demo autentica a todos como invitado VIP para poder
+// recorrer login, pago y "mis compras" sin backend.
+const DEMO_USER = {
+  id: 999,
+  nombre: 'Cliente Demo',
+  username: 'demo',
+  email: 'demo@electrocucine.com',
+  rol: 'cliente',
+  descuento: { activo: false }
+}
+
 async function cargarDemo() {
   if (demoCache) return demoCache
   const res = await fetch(`${import.meta.env.BASE_URL}demo/productos.json`)
@@ -60,7 +71,7 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
     if (matchDetalle && matchDetalle[2]) {
       return { resenas: demo.resenas.filter((r) => String(r.producto_id) === matchDetalle[1]) }
     }
-    if (ruta === '/auth/me') return { usuario: null }
+    if (ruta === '/auth/me') return { usuario: DEMO_USER }
     if (ruta === '/ventas/mias') return { ventas: [] }
     if (ruta === '/newsletter') return { ok: true }
   }
@@ -93,6 +104,11 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
         }
       })
       const subtotal = lineas.reduce((suma, l) => suma + l.precio * l.cantidad, 0)
+      const cuponCodigo = String(body?.cupon_codigo || '').trim().toUpperCase()
+      let cuponDescuento = 0
+      if (cuponCodigo === 'COCINA10') cuponDescuento = Math.round(subtotal * 0.1 * 100) / 100
+      else if (cuponCodigo === 'CUCINE5') cuponDescuento = Math.min(5000, subtotal)
+      const total = Math.max(0, Number((subtotal - cuponDescuento).toFixed(2)))
       return {
         venta: {
           id: Math.floor(hoy.getTime() / 1000),
@@ -101,7 +117,9 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
           subtotal,
           descuento_pct: 0,
           descuento_monto: 0,
-          total: subtotal,
+          cupon_codigo: cuponDescuento > 0 ? cuponCodigo : '',
+          cupon_descuento: cuponDescuento,
+          total,
           direccion_envio: body?.direccion_envio || '',
           cuotas: Number(body?.cuotas || 1),
           demo: true
@@ -110,8 +128,8 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
     }
     if (ruta === '/newsletter') return { ok: true }
     if (ruta === '/avisos') return { ok: true }
-    if (ruta === '/auth/login' || ruta === '/auth/register') {
-      throw errorStatus('La demo no tiene cuentas: entrá con cualquier dato o seguí navegando como invitado.', 401)
+    if (ruta === '/auth/login' || ruta === '/auth/register' || ruta === '/auth/logout' || ruta === '/auth/revocar-sesiones') {
+      return { usuario: DEMO_USER, ok: true }
     }
   }
 

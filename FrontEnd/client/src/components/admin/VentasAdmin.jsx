@@ -33,6 +33,22 @@ export default function VentasAdmin() {
     cargar(estado)
   }
 
+  const cambiarEstado = async (venta, destino) => {
+    setError('')
+    setMensaje('')
+    try {
+      const d = await api(`/ventas/${venta.id}/estado`, { method: 'PATCH', body: { estado: destino } })
+      if (d.correo?.enviado) {
+        setMensaje(`Venta #${venta.id} marcada como ${destino}. Se envió el aviso al comprador.`)
+      } else {
+        setMensaje(`Venta #${venta.id} marcada como ${destino}.`)
+      }
+      cargar(estadoFiltro)
+    } catch (err) {
+      setError(err.message)
+    }
+  }
+
   const anular = async (venta) => {
     if (!confirm(`¿Anular la venta #${venta.id}? Se restituirá el stock de los productos.`)) return
     try {
@@ -53,7 +69,7 @@ export default function VentasAdmin() {
 
       <div className="barra-acciones">
         <div className="filtro-chips">
-          {['', 'completada', 'anulada'].map((f) => (
+          {['', 'completada', 'en_camino', 'entregado', 'anulada'].map((f) => (
             <button
               key={f}
               type="button"
@@ -142,11 +158,23 @@ export default function VentasAdmin() {
                       <p className="venta__metodo"><i className="fi fi-rr-box" aria-hidden="true" /> Envío a: {v.direccion_envio}</p>
                     )}
                   </div>
-                  {v.estado === 'completada' && (
-                    <button type="button" className="boton boton--peligro" onClick={() => anular(v)}>
-                      Anular venta
-                    </button>
-                  )}
+                  <div className="venta__acciones">
+                    {v.estado === 'completada' && (
+                      <button type="button" className="boton boton--secundario boton--chico" onClick={() => cambiarEstado(v, 'en_camino')}>
+                        <i className="fi fi-rr-truck-moving" aria-hidden="true" /> Marcar en camino
+                      </button>
+                    )}
+                    {v.estado === 'en_camino' && (
+                      <button type="button" className="boton boton--secundario boton--chico" onClick={() => cambiarEstado(v, 'entregado')}>
+                        <i className="fi fi-rr-box-check" aria-hidden="true" /> Marcar entregado
+                      </button>
+                    )}
+                    {v.estado === 'completada' && (
+                      <button type="button" className="boton boton--peligro" onClick={() => anular(v)}>
+                        Anular venta
+                      </button>
+                    )}
+                  </div>
                 </div>
               )}
             </article>

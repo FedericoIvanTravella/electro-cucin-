@@ -1,0 +1,20 @@
+{
+  "name": "Electro Cuciné",
+  "short_name": "Electro Cuciné",
+  "description": "Electrodomésticos de cocina con envío a todo el país, 12 cuotas sin interés, 2 años de garantía y 30% de descuento para mayores de 65.",
+  "lang": "es-AR",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#f2542d",
+  "orientation": "portrait",
+  "categories": ["shopping"],
+  "icons": [
+    {
+      "src": "/logo.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

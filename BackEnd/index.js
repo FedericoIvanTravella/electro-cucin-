@@ -13,6 +13,7 @@ import productosRoutes from './src/routes/productos.js'
 import clientesRoutes from './src/routes/clientes.js'
 import ventasRoutes, { estadisticas, analitica } from './src/routes/ventas.js'
 import cuponesRoutes from './src/routes/cupones.js'
+import leadsRoutes from './src/routes/leads.js'
 import { requerirAdmin, COOKIE_CSRF } from './src/auth.js'
 import { generarCsrf, purgarIntentosViejos } from './src/seguridad.js'
 
@@ -114,7 +115,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/productos', productosRoutes) 
 app.use('/api/clientes', clientesRoutes) 
 app.use('/api/ventas', ventasRoutes)
-app.use('/api/cupones', cuponesRoutes) 
+app.use('/api/cupones', cuponesRoutes)
+app.use('/api', leadsRoutes) 
 
 app.get('/api/stats', requerirAdmin, (req, res) => {
   res.json({ stats: estadisticas(), analitica: analitica() })

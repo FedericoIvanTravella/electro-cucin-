@@ -103,3 +103,64 @@ export async function enviarConfirmacionCompra(venta, usuario, correo) {
   const asunto = `¡Gracias por tu compra! Pedido #${venta.id} — Electro Cuciné`
   return enviarCorreo({ para: correo, asunto, html: htmlCompra(venta, usuario, correo), texto: textoCompra(venta, usuario, correo) })
 }
+
+function marcoBase(contenidoHtml, pieExtra = '') {
+  return `<!doctype html><html lang="es"><body style="margin:0;background:#f6f2ec;font-family:Arial,Helvetica,sans-serif;color:#26201b;">
+  <table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="max-width:560px;margin:0 auto;background:#ffffff;">
+    <tr><td style="background:#171310;padding:18px 24px;"><span style="color:#f6f2ec;font-size:20px;font-weight:800;">Electro <strong style="color:#f2542d;">Cuciné</strong></span></td></tr>
+    <tr><td style="padding:24px;">${contenidoHtml}</td></tr>
+    <tr><td style="background:#f4efe6;padding:14px 24px;font-size:12px;color:#6e645a;border-top:1px solid #eee;">Electro Cuciné · Av. Siempreviva 742 · 0800-123-4567 · ayuda@electrocucine.com${pieExtra ? '<br/>' + pieExtra : ''}</td></tr>
+  </table>
+</body></html>`
+}
+
+export async function enviarAvisoClienteStock(producto, correo) {
+  if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { enviado: false, via: 'sin-correo' }
+  const base = process.env.SITE_URL || 'http://localhost:3001'
+  const contenido = `
+    <h1 style="margin:0 0 6px;font-size:22px;">¡Volvió el stock!</h1>
+    <p style="margin:0 0 16px;color:#6e645a;">El producto que tenías en la mira ya está disponible otra vez:</p>
+    <p style="margin:0 0 4px;font-size:16px;font-weight:800;">${producto.nombre}</p>
+    <p style="margin:0 0 16px;color:#6e645a;">Precio: $${Number(producto.precio).toLocaleString('es-AR')} — Stock: ${producto.stock} unidades</p>
+    <a href="${base}/producto/${producto.id}" style="display:inline-block;background:#f2542d;color:#ffffff;text-decoration:none;font-weight:800;padding:12px 22px;border-radius:10px;">Ver el producto</a>`
+  const texto = `¡Volvió el stock!\n${producto.nombre} — $${Number(producto.precio).toLocaleString('es-AR')} — Stock: ${producto.stock} unidades\n${base}/producto/${producto.id}`
+  return enviarCorreo({ para: correo, asunto: `¡Volvió ${producto.nombre}! — Electro Cuciné`, html: marcoBase(contenido), texto })
+}
+
+export async function enviarAvisoPocoStockAdmin(producto, stockActual, ventaId) {
+  const destinatario = process.env.ADMIN_ALERT_EMAIL || process.env.SMTP_USER
+  if (!destinatario) return { enviado: false, via: 'sin-admin-email' }
+  const contenido = `
+    <h1 style="margin:0 0 6px;font-size:20px;">Poco stock: ${producto.nombre}</h1>
+    <p style="margin:0 0 12px;color:#6e645a;">Tras la venta <strong>#${ventaId}</strong>, el producto quedó con <strong>${stockActual}</strong> ${stockActual === 1 ? 'unidad' : 'unidades'}.</p>
+    <p style="margin:0;">Podés reponerlo desde el panel del superusuario (Productos y stock).</p>`
+  const texto = `Poco stock: ${producto.nombre}\nQuedan ${stockActual} unidades tras la venta #${ventaId}.`
+  return enviarCorreo({ para: destinatario, asunto: `[Poco stock] ${producto.nombre} (${stockActual} u.) — Electro Cuciné`, html: marcoBase(contenido), texto })
+}
+
+export async function enviarEstadoPedido(venta, usuario, estadoNuevo) {
+  const correo = usuario?.email
+  if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { enviado: false, via: 'sin-correo' }
+  const estados = {
+    en_camino: {
+      titulo: 'Tu pedido está en camino',
+      color: '#0ea5e9',
+      texto: `Tu pedido <strong>#${venta.id}</strong> ya está en camino al domicilio: ${venta.direccion_envio || '(sin dirección cargada)'}.`,
+      asunto: `Pedido #${venta.id} en camino — Electro Cuciné`
+    },
+    entregado: {
+      titulo: '¡Tu pedido fue entregado!',
+      color: '#00a650',
+      texto: `Tu pedido <strong>#${venta.id}</strong> fue entregado. Esperamos que disfrutes tu compra.`,
+      asunto: `Pedido #${venta.id} entregado — Electro Cuciné`
+    }
+  }
+  const info = estados[estadoNuevo]
+  if (!info) return { enviado: false, via: 'estado-desconocido' }
+  const contenido = `
+    <h1 style="margin:0 0 6px;font-size:22px;color:${info.color};">${info.titulo}</h1>
+    <p style="margin:0 0 12px;color:#6e645a;">${info.texto}</p>
+    <p style="margin:0;color:#6e645a;font-size:13px;">Podés ver el estado de tu pedido en cualquier momento ingresando a <strong>Mis compras</strong>.</p>`
+  const texto = `${info.titulo}\n${info.texto.replace(/<[^>]+>/g, '')}`
+  return enviarCorreo({ para: correo, asunto: info.asunto, html: marcoBase(contenido), texto })
+}

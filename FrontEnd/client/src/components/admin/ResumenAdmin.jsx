@@ -37,7 +37,8 @@ export default function ResumenAdmin() {
     { etiqueta: 'Stock bajo (≤ 5)', valor: stats.stock_bajo, icono: 'fi-rr-triangle-warning', alerta: stats.stock_bajo > 0 },
     { etiqueta: 'Clientes registrados', valor: stats.clientes, icono: 'fi-rr-users-alt' },
     { etiqueta: 'Usuarios del sitio', valor: stats.usuarios, icono: 'fi-rr-users' },
-    { etiqueta: 'Ventas con 30% 65+', valor: stats.ventas_con_descuento, icono: 'fi-rr-person-walking-with-cane' }
+    { etiqueta: 'Ventas con 30% 65+', valor: stats.ventas_con_descuento, icono: 'fi-rr-person-walking-with-cane' },
+    { etiqueta: 'Suscriptores newsletter', valor: stats.newsletter ?? 0, icono: 'fi-rr-envelope' }
   ]
 
   return (

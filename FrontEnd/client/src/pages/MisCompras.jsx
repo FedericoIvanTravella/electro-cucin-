@@ -86,7 +86,7 @@ export default function MisCompras() {
                 )}
               </div>
               <span className={`chip ${venta.estado === 'anulada' ? 'chip--peligro' : 'chip--exito'}`}>
-                {venta.estado}
+                {venta.estado === 'completada' ? 'Completada' : venta.estado === 'en_camino' ? 'En camino' : venta.estado === 'entregado' ? 'Entregado' : venta.estado}
               </span>
             </header>
             <ul className="compra__items">
@@ -122,7 +122,13 @@ export default function MisCompras() {
                 </button>
               )}
             </footer>
-            {venta.estado !== 'anulada' && <RutaEntrega compacto />}
+            {venta.estado === 'completada' && <RutaEntrega compacto />}
+            {venta.estado === 'en_camino' && <RutaEntrega compacto />}
+            {venta.estado === 'entregado' && (
+              <p className="alerta alerta--exito compra__entregada">
+                <i className="fi fi-rr-check" aria-hidden="true" /> Tu pedido fue entregado. ¡Gracias por tu compra!
+              </p>
+            )}
           </article>
         ))}
       </div>

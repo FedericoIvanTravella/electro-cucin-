@@ -8,6 +8,9 @@ process.env.EC_DB_PATH = ':memory:'
 process.env.ADMIN_USERNAME = 'admin'
 process.env.ADMIN_PASSWORD = 'claveAdmin123'
 process.env.NODE_ENV = 'test'
+process.env.SMTP_HOST = ''
+process.env.SMTP_USER = ''
+process.env.SMTP_PASS = ''
 const OUTBOX = fs.mkdtempSync(path.join(os.tmpdir(), 'ec-outbox-'))
 process.env.EC_OUTBOX_DIR = OUTBOX
 
@@ -260,6 +263,192 @@ test('cupon de descuento aplicado a la venta', async () => {
     .set('X-CSRF-Token', cookies.ec_csrf)
     .send({ codigo: 'NOEXISTE', subtotal: 1000 })
   if (invalido.status !== 404) throw new Error('cupon invalido: ' + invalido.status)
+})
+
+test('newsletter: suscripción idempotente', async () => {
+  const csrf = await obtenerCsrf()
+  const correo = 'suscr@test.com'
+  const alta = await request(app)
+    .post('/api/newsletter')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ email: correo })
+  if (alta.status !== 201) throw new Error('alta: ' + alta.status)
+
+  const repetido = await request(app)
+    .post('/api/newsletter')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ email: correo })
+  if (repetido.status !== 200) throw new Error('repetido: ' + repetido.status)
+
+  const invalido = await request(app)
+    .post('/api/newsletter')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ email: 'no-es-mail' })
+  if (invalido.status !== 400) throw new Error('invalido: ' + invalido.status)
+})
+
+test('avisos de vuelta de stock: se agenda y luego se avisa al restaurar', async () => {
+  const admin = await login('admin', 'claveAdmin123')
+  const cookieAdmin = headerCookie(admin.cookies)
+
+  const ponerCero = await request(app)
+    .patch('/api/productos/4/stock')
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ stock: 0 })
+  if (ponerCero.status !== 200) throw new Error('stock 0: ' + ponerCero.status)
+
+  const csrf = await obtenerCsrf()
+  const avisar = await request(app)
+    .post('/api/avisos')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ producto_id: 4, email: 'aviso@test.com' })
+  if (avisar.status !== 201) throw new Error('aviso: ' + JSON.stringify(avisar.body))
+
+  const restaurar = await request(app)
+    .patch('/api/productos/4/stock')
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ stock: 9 })
+  if (restaurar.status !== 200) throw new Error('stock 9: ' + restaurar.status)
+
+  const archivos = fs.readdirSync(OUTBOX).filter((f) => f.endsWith('.json'))
+  const mails = archivos.map((f) => JSON.parse(fs.readFileSync(path.join(OUTBOX, f), 'utf8')))
+  const avisoMail = mails.find((m) => m.para === 'aviso@test.com')
+  if (!avisoMail) throw new Error('no se encontró el correo de aviso de vuelta de stock')
+  if (!avisoMail.asunto.includes('Volvió')) throw new Error('asunto inesperado: ' + avisoMail.asunto)
+})
+
+test('cupones admin: crear, usos_max agotable, desactivar y eliminar', async () => {
+  const admin = await login('admin', 'claveAdmin123')
+  const cookieAdmin = headerCookie(admin.cookies)
+
+  const crear = await request(app)
+    .post('/api/cupones')
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ codigo: 'USO1', tipo: 'porcentaje', valor: 15, usos_max: 1 })
+  if (crear.status !== 201) throw new Error('crear: ' + JSON.stringify(crear.body))
+
+  const duplicado = await request(app)
+    .post('/api/cupones')
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ codigo: 'USO1', tipo: 'fijo', valor: 1000 })
+  if (duplicado.status !== 409) throw new Error('duplicado: ' + duplicado.status)
+
+  const lista = await request(app).get('/api/cupones').set('Cookie', cookieAdmin)
+  if (!lista.body.cupones.some((c) => c.codigo === 'USO1')) throw new Error('no aparece en listado')
+
+  const comprador = await login('compradormail', 'claveSegura123')
+  const cookieComprador = headerCookie(comprador.cookies)
+  const csrfComprador = comprador.cookies.ec_csrf
+
+  const validarPrimero = await request(app)
+    .post('/api/cupones/validar')
+    .set('Cookie', cookieComprador)
+    .set('X-CSRF-Token', csrfComprador)
+    .send({ codigo: 'USO1', subtotal: 100000 })
+  if (validarPrimero.status !== 200) throw new Error('validar USO1: ' + JSON.stringify(validarPrimero.body))
+
+  const compra = await request(app)
+    .post('/api/ventas')
+    .set('Cookie', cookieComprador)
+    .set('X-CSRF-Token', csrfComprador)
+    .send({ items: [{ producto_id: 5, cantidad: 1 }], metodo_pago: 'tarjeta', cupon_codigo: 'USO1' })
+  if (compra.status !== 201) throw new Error('compra con USO1: ' + JSON.stringify(compra.body))
+
+  const validarAgotado = await request(app)
+    .post('/api/cupones/validar')
+    .set('Cookie', cookieComprador)
+    .set('X-CSRF-Token', csrfComprador)
+    .send({ codigo: 'USO1', subtotal: 100000 })
+  if (validarAgotado.status !== 404) throw new Error('USO1 agotado: ' + validarAgotado.status)
+
+  const borrar = await request(app)
+    .delete('/api/cupones/USO1')
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+  if (borrar.status !== 200) throw new Error('borrar: ' + borrar.status)
+})
+
+test('estado de venta: completada -> en_camino -> entregado y mails', async () => {
+  const { cookies } = await login('compradormail', 'claveSegura123')
+  const compra = await request(app)
+    .post('/api/ventas')
+    .set('Cookie', headerCookie(cookies))
+    .set('X-CSRF-Token', cookies.ec_csrf)
+    .send({ items: [{ producto_id: 6, cantidad: 1 }], metodo_pago: 'tarjeta', cuotas: 1 })
+  if (compra.status !== 201) throw new Error('compra: ' + JSON.stringify(compra.body))
+  const ventaId = compra.body.venta.id
+
+  const admin = await login('admin', 'claveAdmin123')
+  const cookieAdmin = headerCookie(admin.cookies)
+
+  const invalida = await request(app)
+    .patch(`/api/ventas/${ventaId}/estado`)
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ estado: 'entregado' })
+  if (invalida.status !== 400) throw new Error('salto invalido: ' + invalida.status)
+
+  const camino = await request(app)
+    .patch(`/api/ventas/${ventaId}/estado`)
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ estado: 'en_camino' })
+  if (camino.status !== 200 || camino.body.venta.estado !== 'en_camino') {
+    throw new Error('en_camino: ' + JSON.stringify(camino.body))
+  }
+
+  const entregado = await request(app)
+    .patch(`/api/ventas/${ventaId}/estado`)
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ estado: 'entregado' })
+  if (entregado.status !== 200 || entregado.body.venta.estado !== 'entregado') {
+    throw new Error('entregado: ' + JSON.stringify(entregado.body))
+  }
+
+  const archivos = fs.readdirSync(OUTBOX).filter((f) => f.endsWith('.json'))
+  const mails = archivos.map((f) => JSON.parse(fs.readFileSync(path.join(OUTBOX, f), 'utf8')))
+  const caminoMail = mails.find((m) => m.para === 'comprador@test.com' && m.asunto.includes('en camino'))
+  const entregadoMail = mails.find((m) => m.para === 'comprador@test.com' && m.asunto.includes('entregado'))
+  if (!caminoMail || !entregadoMail) {
+    throw new Error('faltan mails de estado: ' + mails.map((m) => m.asunto).join(' | '))
+  }
+})
+
+test('cupón con usos_max agotado ya no se puede aplicar en la venta', async () => {
+  const admin = await login('admin', 'claveAdmin123')
+  const cookieAdmin = headerCookie(admin.cookies)
+  await request(app)
+    .post('/api/cupones')
+    .set('Cookie', cookieAdmin)
+    .set('X-CSRF-Token', admin.cookies.ec_csrf)
+    .send({ codigo: 'USOMAX', tipo: 'porcentaje', valor: 10, usos_max: 1 })
+
+  const comprador = await login('compradormail', 'claveSegura123')
+  const cookieComprador = headerCookie(comprador.cookies)
+  const csrfComprador = comprador.cookies.ec_csrf
+
+  const compra1 = await request(app)
+    .post('/api/ventas')
+    .set('Cookie', cookieComprador)
+    .set('X-CSRF-Token', csrfComprador)
+    .send({ items: [{ producto_id: 7, cantidad: 1 }], metodo_pago: 'tarjeta', cupon_codigo: 'USOMAX' })
+  if (compra1.status !== 201) throw new Error('primera compra: ' + JSON.stringify(compra1.body))
+
+  const compra2 = await request(app)
+    .post('/api/ventas')
+    .set('Cookie', cookieComprador)
+    .set('X-CSRF-Token', csrfComprador)
+    .send({ items: [{ producto_id: 7, cantidad: 1 }], metodo_pago: 'tarjeta', cupon_codigo: 'USOMAX' })
+  if (compra2.status !== 400) throw new Error('segunda compra con cupón agotado: ' + compra2.status)
 })
 
 test('export.csv es admin-only y devuelve CSV con BOM', async () => {

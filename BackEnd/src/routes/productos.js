@@ -4,6 +4,16 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { db, registrarAuditoria } from '../db.js'
 import { requerirAdmin, requerirAuth, obtenerUsuarioOpcional } from '../auth.js'
+import { enviarAvisoClienteStock } from '../correo.js'
+
+function notificarVueltaSiRestock(productoAntes, stockNuevo) {
+  if (!productoAntes || !(productoAntes.stock <= 0) || stockNuevo <= 0) return
+  const avisos = db.prepare('SELECT email FROM avisos_stock WHERE producto_id = ?').all(productoAntes.id)
+  for (const { email } of avisos) {
+    enviarAvisoClienteStock({ ...productoAntes, stock: stockNuevo }, email).catch(() => {})
+  }
+  db.prepare('DELETE FROM avisos_stock WHERE producto_id = ?').run(productoAntes.id)
+}
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -225,6 +235,7 @@ router.put('/:id', requerirAdmin, (req, res) => {
   const { errores, datos } = validarProducto({ ...actual, ...(req.body || {}) })
   if (errores.length) return res.status(400).json({ error: errores.join(' ') })
 
+  notificarVueltaSiRestock(actual, Number(datos.stock ?? 0))
   db.prepare(
     `UPDATE productos SET nombre = ?, categoria = ?, descripcion = ?, precio = ?, precio_tachado = ?,
       stock = ?, imagen = ?, activo = ?, updated_at = datetime('now', 'localtime') WHERE id = ?`
@@ -269,6 +280,7 @@ router.patch('/:id/stock', requerirAdmin, (req, res) => {
     return res.status(400).json({ error: 'Enviá "stock" o "ajuste".' })
   }
 
+  notificarVueltaSiRestock(producto, nuevoStock)
   db.prepare(
     "UPDATE productos SET stock = ?, updated_at = datetime('now', 'localtime') WHERE id = ?"
   ).run(nuevoStock, req.params.id)

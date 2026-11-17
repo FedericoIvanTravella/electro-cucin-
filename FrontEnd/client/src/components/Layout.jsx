@@ -4,6 +4,8 @@ import { useAuth } from '../context/AuthContext'
 import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { useTema } from '../context/TemaContext'
+import { useToast } from '../context/ToastContext'
+import { api } from '../lib/api'
 
 // Barra superior: cinta de beneficios deslizante (marquee infinito).
 const PROMOS = [
@@ -136,6 +138,26 @@ function Navbar() {
 }
 
 function Footer() {
+  const { mostrar } = useToast()
+  const [emailNewsletter, setEmailNewsletter] = useState('')
+  const [suscribiendo, setSuscribiendo] = useState(false)
+
+  const enviarNewsletter = async (e) => {
+    e.preventDefault()
+    const correo = emailNewsletter.trim()
+    if (!correo) return
+    setSuscribiendo(true)
+    try {
+      const data = await api('/newsletter', { method: 'POST', body: { email: correo } })
+      mostrar(data?.mensaje || '¡Gracias por suscribirte!', 'exito')
+      setEmailNewsletter('')
+    } catch (error) {
+      mostrar(error?.message || 'No pudimos suscribirte. Probá de nuevo.', 'error')
+    } finally {
+      setSuscribiendo(false)
+    }
+  }
+
   return (
     <footer className="footer">
       <div className="contenedor footer__interior">
@@ -192,6 +214,23 @@ function Footer() {
           </ul>
           <p className="footer__nota">Hasta 12 cuotas sin interés.</p>
         </div>
+        <div>
+          <p className="footer__titulo">Newsletter</p>
+          <p>Recibí ofertas y novedades antes que nadie.</p>
+          <form className="footer__newsletter" onSubmit={enviarNewsletter}>
+            <input
+              type="email"
+              required
+              value={emailNewsletter}
+              onChange={(e) => setEmailNewsletter(e.target.value)}
+              placeholder="tu@correo.com"
+              aria-label="Correo para el newsletter"
+            />
+            <button type="submit" className="boton boton--primario boton--chico" disabled={suscribiendo}>
+              {suscribiendo ? 'Enviando…' : 'Suscribirme'}
+            </button>
+          </form>
+        </div>
       </div>
       <p className="footer__legal">
         <Link to="/ayuda">Términos y condiciones</Link> · <Link to="/ayuda">Privacidad</Link> ·{' '}
@@ -214,6 +253,16 @@ export default function Layout() {
         <Outlet />
       </main>
       <Footer />
+      <a
+        href="https://wa.me/5490800123456?text=Hola%2C%20vengo%20de%20Electro%20Cucin%C3%A9.%20Quiero%20consultar%20por%20un%20producto."
+        className="whatsapp-fab"
+        aria-label="Consultar por WhatsApp"
+        title="Consultar por WhatsApp"
+        target="_blank"
+        rel="noreferrer"
+      >
+        <i className="fi fi-brands-whatsapp" aria-hidden="true" />
+      </a>
     </div>
   )
 }

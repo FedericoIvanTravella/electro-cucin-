@@ -123,6 +123,20 @@ db.exec(`
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
   );
 
+  CREATE TABLE IF NOT EXISTS avisos_stock (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    producto_id INTEGER NOT NULL REFERENCES productos(id) ON DELETE CASCADE,
+    email TEXT NOT NULL,
+    creado TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    UNIQUE (producto_id, email)
+  );
+
+  CREATE TABLE IF NOT EXISTS newsletter (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email TEXT NOT NULL UNIQUE,
+    creado TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+  );
+
   CREATE TABLE IF NOT EXISTS meta (
     clave TEXT PRIMARY KEY,
     valor TEXT NOT NULL
@@ -130,6 +144,7 @@ db.exec(`
 
   CREATE INDEX IF NOT EXISTS idx_sesiones_expira ON sesiones (expira_en);
   CREATE INDEX IF NOT EXISTS idx_resenas_producto ON resenas (producto_id);
+  CREATE INDEX IF NOT EXISTS idx_avisos_producto ON avisos_stock (producto_id);
   CREATE INDEX IF NOT EXISTS idx_venta_items_venta ON venta_items (venta_id);
   CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas (fecha);
   CREATE INDEX IF NOT EXISTS idx_auditoria_fecha ON auditoria (fecha);
@@ -160,6 +175,10 @@ function migrar() {
   }
   if (!columnasVentas.includes('cupon_descuento')) {
     db.exec('ALTER TABLE ventas ADD COLUMN cupon_descuento REAL NOT NULL DEFAULT 0')
+  }
+  const columnasCupones = db.prepare('PRAGMA table_info(cupones)').all().map((c) => c.name)
+  if (!columnasCupones.includes('usos_max')) {
+    db.exec('ALTER TABLE cupones ADD COLUMN usos_max INTEGER')
   }
 
   

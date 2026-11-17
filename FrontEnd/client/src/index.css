@@ -4298,3 +4298,149 @@ textarea:focus {
   font-size: 0.8rem;
   margin: 0.3rem 0 0;
 }
+
+/* ================================================================
+   Botón flotante de WhatsApp
+   ================================================================ */
+.whatsapp-fab {
+  position: fixed;
+  right: 1.1rem;
+  bottom: 1.1rem;
+  z-index: 90;
+  width: 3.4rem;
+  height: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #25d366;
+  color: #ffffff;
+  border-radius: 999px;
+  font-size: 1.8rem;
+  box-shadow: 0 8px 22px rgba(37, 211, 102, 0.45);
+  text-decoration: none;
+  animation: fabFlota 2.6s ease-in-out infinite;
+  transition: transform 0.15s ease;
+}
+
+.whatsapp-fab::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 999px;
+  border: 2px solid rgba(37, 211, 102, 0.6);
+  animation: fabOnda 2.2s ease-out infinite;
+}
+
+.whatsapp-fab:hover {
+  background: #128c50;
+  color: #ffffff;
+}
+
+@keyframes fabFlota {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@keyframes fabOnda {
+  0% { transform: scale(1); opacity: 0.8; }
+  100% { transform: scale(1.6); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .whatsapp-fab,
+  .whatsapp-fab::after {
+    animation: none;
+  }
+}
+
+/* ================================================================
+   Newsletter en el footer
+   ================================================================ */
+.footer__newsletter {
+  display: flex;
+  gap: 0.4rem;
+  margin-top: 0.35rem;
+  max-width: 260px;
+}
+
+.footer__newsletter input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.08);
+  color: #f6f2ec;
+  padding: 0.45rem 0.6rem;
+  font: inherit;
+  font-size: 0.85rem;
+}
+
+.footer__newsletter input::placeholder {
+  color: #a89e8f;
+}
+
+.footer__newsletter input:focus {
+  outline: 2px solid var(--acento);
+  border-color: transparent;
+}
+
+/* ================================================================
+   Aviso de vuelta de stock (PDP)
+   ================================================================ */
+.pdp-sinstock-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.pdp-aviso-form {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.pdp-aviso-form input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--borde);
+  border-radius: 10px;
+  padding: 0.6rem 0.75rem;
+  font: inherit;
+  background: var(--superficie);
+  color: var(--texto);
+}
+
+.pdp-aviso-form input:focus {
+  outline: 2px solid var(--azul);
+  border-color: transparent;
+}
+
+/* ================================================================
+   Admin: cupones y acciones de venta
+   ================================================================ */
+.cupones-form form,
+.cupones-form {
+  margin-bottom: 1rem;
+}
+
+.cupones-form h2 {
+  margin-top: 0;
+  font-size: 1.15rem;
+}
+
+.venta__acciones {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+.compra__entregada {
+  margin: 0.5rem 0 0;
+}
+[data-tema='oscuro'] .hero__producto {
+  background: #ffffff;
+  border-color: #e8e1d2;
+}
+[data-tema='oscuro'] .hero__producto-img {
+  background: #ffffff;
+}

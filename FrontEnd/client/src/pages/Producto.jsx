@@ -37,6 +37,9 @@ export default function Producto() {
   const [enviandoResena, setEnviandoResena] = useState(false)
   const [errorResena, setErrorResena] = useState('')
   const [resenaEnviada, setResenaEnviada] = useState(false)
+  const [avisoEmail, setAvisoEmail] = useState('')
+  const [avisoCargando, setAvisoCargando] = useState(false)
+  const [avisoMensaje, setAvisoMensaje] = useState('')
 
   useEffect(() => {
     const controlador = new AbortController()
@@ -91,6 +94,22 @@ export default function Producto() {
     }
     return () => controlador.abort()
   }, [producto, usuario])
+
+  const enviarAviso = async (e) => {
+    e.preventDefault()
+    const correo = (avisoEmail || usuario?.email || '').trim()
+    if (!correo || !producto) return
+    setAvisoCargando(true)
+    setAvisoMensaje('')
+    try {
+      const data = await api('/avisos', { method: 'POST', body: { producto_id: producto.id, email: correo } })
+      setAvisoMensaje(data?.mensaje || 'Aviso registrado.')
+    } catch (err) {
+      setAvisoMensaje(err?.message || 'No pudimos guardar tu correo.')
+    } finally {
+      setAvisoCargando(false)
+    }
+  }
 
   const enviarResena = async (e) => {
     e.preventDefault()
@@ -288,10 +307,32 @@ export default function Producto() {
           )}
 
           {sinStock ? (
-            <p className="pdp-sinstock">
-              <i className="fi fi-rr-triangle-warning" aria-hidden="true" /> Sin stock por el
-              momento. Volvé a consultar pronto.
-            </p>
+            <div className="pdp-sinstock-box">
+              <p className="pdp-sinstock">
+                <i className="fi fi-rr-triangle-warning" aria-hidden="true" /> Sin stock por el
+                momento. Volvé a consultar pronto o dejanos tu correo y te avisamos cuando vuelva.
+              </p>
+              {avisoMensaje ? (
+                <p className="alerta alerta--exito"><i className="fi fi-rr-check" aria-hidden="true" /> {avisoMensaje}</p>
+              ) : (
+                <form className="pdp-aviso-form" onSubmit={enviarAviso}>
+                  <input
+                    type="email"
+                    required
+                    value={avisoEmail || usuario?.email || ''}
+                    onChange={(e) => {
+                      setAvisoEmail(e.target.value)
+                      setAvisoMensaje('')
+                    }}
+                    placeholder="tu@correo.com"
+                    aria-label="Correo para aviso de stock"
+                  />
+                  <button type="submit" className="boton boton--primario" disabled={avisoCargando}>
+                    <i className="fi fi-rr-bell" aria-hidden="true" /> {avisoCargando ? 'Guardando…' : 'Avisame cuando vuelva'}
+                  </button>
+                </form>
+              )}
+            </div>
           ) : (
             <div className="pdp-acciones">
               <button

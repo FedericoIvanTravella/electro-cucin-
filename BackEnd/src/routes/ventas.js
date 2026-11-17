@@ -2,7 +2,8 @@ import { Router } from 'express'
 import { db, transaction, tieneDescuento, PORCENTAJE_DESCUENTO, registrarAuditoria } from '../db.js'
 import { requerirAuth, requerirAdmin } from '../auth.js'
 import { enviarConfirmacionCompra } from '../correo.js'
-import { calcularDescuentoCupon } from './cupones.js'
+import { calcularDescuentoCupon, cuponDisponible } from './cupones.js'
+import { enviarAvisoPocoStockAdmin, enviarEstadoPedido } from '../correo.js'
 
 const router = Router()
 
@@ -115,8 +116,8 @@ router.post('/', requerirAuth, async (req, res) => {
   const codigoCupon = String(cupon_codigo || '').trim().toUpperCase()
   if (codigoCupon) {
     const cupon = db.prepare('SELECT * FROM cupones WHERE codigo = ?').get(codigoCupon)
-    if (!cupon || !cupon.activo) {
-      return res.status(400).json({ error: 'El cupón no es válido o está desactivado.' })
+    if (!cuponDisponible(cupon)) {
+      return res.status(400).json({ error: 'El cupón no es válido, está desactivado o no le quedan usos.' })
     }
     cuponDescuento = calcularDescuentoCupon(cupon, subtotal)
     cuponAplicado = cupon.codigo
@@ -180,6 +181,12 @@ router.post('/', requerirAuth, async (req, res) => {
 
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(ventaId)
   registrarAuditoria(req.usuario, 'venta', `Venta #${venta.id} por $${total}${cuponAplicado ? ` cupón ${cuponAplicado}` : ''}`)
+  for (const { producto, cantidad } of lineas) {
+    const stockDespues = producto.stock - cantidad
+    if (producto.stock > 5 && stockDespues <= 5) {
+      enviarAvisoPocoStockAdmin(producto, stockDespues, venta.id).catch(() => {})
+    }
+  }
   const resultadoCorreo = await enviarConfirmacionCompra(detalleVenta(venta), req.usuario, correoFinal)
   res.status(201).json({ venta: detalleVenta(venta), correo: resultadoCorreo.via !== 'sin-correo' ? resultadoCorreo : null })
 })
@@ -287,6 +294,31 @@ router.delete('/:id', requerirAdmin, (req, res) => {
   res.json({ venta: detalleVenta(db.prepare('SELECT * FROM ventas WHERE id = ?').get(venta.id)) })
 })
 
+router.patch('/:id/estado', requerirAdmin, async (req, res) => {
+  const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(req.params.id)
+  if (!venta) return res.status(404).json({ error: 'Venta no encontrada.' })
+
+  const destino = String(req.body?.estado || '')
+  const TRANSICIONES = { completada: 'en_camino', en_camino: 'entregado' }
+  const esperado = TRANSICIONES[venta.estado]
+  if (destino !== esperado) {
+    return res.status(400).json({
+      error: esperado
+        ? `No se puede pasar de '${venta.estado}' a '${destino}'. La transición válida es hacia '${esperado}'.`
+        : 'Esta venta no puede cambiar de estado.'
+    })
+  }
+
+  db.prepare('UPDATE ventas SET estado = ? WHERE id = ?').run(destino, venta.id)
+  const usuario = venta.usuario_id
+    ? db.prepare('SELECT id, email, nombre FROM usuarios WHERE id = ?').get(venta.usuario_id)
+    : null
+  const actualizada = db.prepare('SELECT * FROM ventas WHERE id = ?').get(venta.id)
+  const resultado = await enviarEstadoPedido(detalleVenta(actualizada), usuario, destino)
+  registrarAuditoria(req.usuario, `venta-${destino}`, `Venta #${venta.id} marcada como '${destino}'`)
+  res.json({ venta: detalleVenta(actualizada), correo: resultado.via !== 'sin-correo' ? resultado : null })
+})
+
 export function analitica() {
   const pad = (n) => String(n).padStart(2, '0')
 
@@ -297,7 +329,7 @@ export function analitica() {
               COALESCE(SUM(vi.precio * vi.cantidad), 0) AS ingresos,
               COALESCE(SUM(vi.cantidad), 0) AS unidades
        FROM venta_items vi
-       JOIN ventas v ON v.id = vi.venta_id AND v.estado = 'completada'
+       JOIN ventas v ON v.id = vi.venta_id AND v.estado != 'anulada'
        JOIN productos p ON p.id = vi.producto_id
        GROUP BY p.categoria
        ORDER BY ingresos DESC`
@@ -321,7 +353,7 @@ export function analitica() {
               COALESCE(SUM(vi.cantidad), 0) AS unidades,
               COALESCE(SUM(vi.precio * vi.cantidad), 0) AS ingresos
        FROM venta_items vi
-       JOIN ventas v ON v.id = vi.venta_id AND v.estado = 'completada'
+       JOIN ventas v ON v.id = vi.venta_id AND v.estado != 'anulada'
        GROUP BY vi.nombre
        ORDER BY unidades DESC
        LIMIT 8`
@@ -336,7 +368,7 @@ export function analitica() {
               COUNT(*) AS cantidad,
               COALESCE(SUM(descuento_monto), 0) AS descuentos
        FROM ventas
-       WHERE estado = 'completada' AND fecha >= datetime('now', 'localtime', '-13 days', 'start of day')
+       WHERE estado != 'anulada' AND fecha >= datetime('now', 'localtime', '-13 days', 'start of day')
        GROUP BY date(fecha)`
     )
     .all()
@@ -378,11 +410,11 @@ export function estadisticas() {
       `SELECT COALESCE(SUM(total), 0) AS ingresos,
               COUNT(*) AS cantidad_ventas,
               COALESCE(SUM(CASE WHEN descuento_pct > 0 THEN 1 ELSE 0 END), 0) AS ventas_con_descuento
-       FROM ventas WHERE estado = 'completada'`
+       FROM ventas WHERE estado != 'anulada'`
     )
     .get()
   const unidades = db
-    .prepare("SELECT COALESCE(SUM(cantidad), 0) AS n FROM venta_items vi JOIN ventas v ON v.id = vi.venta_id WHERE v.estado = 'completada'")
+    .prepare("SELECT COALESCE(SUM(cantidad), 0) AS n FROM venta_items vi JOIN ventas v ON v.id = vi.venta_id WHERE v.estado != 'anulada'")
     .get().n
 
   return {
@@ -393,7 +425,8 @@ export function estadisticas() {
     stock_bajo: db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock <= 5').get().n,
     clientes: db.prepare('SELECT COUNT(*) AS n FROM clientes').get().n,
     usuarios: db.prepare('SELECT COUNT(*) AS n FROM usuarios').get().n,
-    ventas_con_descuento: resumen.ventas_con_descuento
+    ventas_con_descuento: resumen.ventas_con_descuento,
+    newsletter: db.prepare('SELECT COUNT(*) AS n FROM newsletter').get().n
   }
 }
 

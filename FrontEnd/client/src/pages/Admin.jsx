@@ -5,12 +5,14 @@ import ProductosAdmin from '../components/admin/ProductosAdmin.jsx'
 import ClientesAdmin from '../components/admin/ClientesAdmin.jsx'
 import VentasAdmin from '../components/admin/VentasAdmin.jsx'
 import AuditoriaAdmin from '../components/admin/AuditoriaAdmin.jsx'
+import CuponesAdmin from '../components/admin/CuponesAdmin.jsx'
 
 const vistas = [
   { id: 'resumen', nombre: 'Resumen', icono: 'fi-rr-chart-pie' },
   { id: 'productos', nombre: 'Productos y stock', icono: 'fi-rr-box' },
   { id: 'clientes', nombre: 'Clientes', icono: 'fi-rr-users-alt' },
   { id: 'ventas', nombre: 'Registro de ventas', icono: 'fi-rr-receipt' },
+  { id: 'cupones', nombre: 'Cupones', icono: 'fi-rr-ticket' },
   { id: 'auditoria', nombre: 'Auditoría', icono: 'fi-rr-shield-check' }
 ]
 
@@ -47,6 +49,7 @@ export default function Admin() {
         {vista === 'productos' && <ProductosAdmin />}
         {vista === 'clientes' && <ClientesAdmin />}
         {vista === 'ventas' && <VentasAdmin />}
+        {vista === 'cupones' && <CuponesAdmin />}
         {vista === 'auditoria' && <AuditoriaAdmin />}
       </div>
     </div>

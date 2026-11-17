@@ -542,26 +542,30 @@ export default function Productos() {
               {paginados.map((p, i) => (
                 <Revelar key={p.id} delay={(i % 6) * 70} className="revelar--item">
                   <div className="comparar-item">
-                    <button
-                      type="button"
-                      className={`comparar-toggle ${comparando.includes(p.id) ? 'comparar-toggle--activo' : ''}`}
-                      onClick={() =>
-                        setComparando((prev) => {
-                          if (prev.includes(p.id)) return prev.filter((id) => id !== p.id)
-                          if (prev.length >= 3) {
-                            mostrar('Solo podés comparar hasta 3 productos.', 'error')
-                            return prev
+                    <ProductCard
+                      producto={p}
+                      mediaExtras={
+                        <button
+                          type="button"
+                          className={`comparar-toggle ${comparando.includes(p.id) ? 'comparar-toggle--activo' : ''}`}
+                          onClick={() =>
+                            setComparando((prev) => {
+                              if (prev.includes(p.id)) return prev.filter((id) => id !== p.id)
+                              if (prev.length >= 3) {
+                                mostrar('Solo podés comparar hasta 3 productos.', 'error')
+                                return prev
+                              }
+                              return [...prev, p.id]
+                            })
                           }
-                          return [...prev, p.id]
-                        })
+                          aria-pressed={comparando.includes(p.id)}
+                          aria-label={comparando.includes(p.id) ? 'Quitar de la comparación' : 'Agregar a la comparación'}
+                          title={comparando.includes(p.id) ? 'Quitar de la comparación' : 'Agregar a la comparación'}
+                        >
+                          <i className="fi fi-rr-columns-3" aria-hidden="true" />
+                        </button>
                       }
-                      aria-pressed={comparando.includes(p.id)}
-                      title={comparando.includes(p.id) ? 'Quitar de la comparación' : 'Agregar a la comparación'}
-                    >
-                      <i className="fi fi-rr-columns-3" aria-hidden="true" />
-                      {comparando.includes(p.id) ? 'Quitar' : 'Comparar'}
-                    </button>
-                    <ProductCard producto={p} />
+                    />
                   </div>
                 </Revelar>
               ))}

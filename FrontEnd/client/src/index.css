@@ -823,19 +823,53 @@ textarea:focus {
   margin: 0;
 }
 
-.producto__stock {
-  font-size: 0.76rem;
-  color: var(--exito);
-  font-weight: 700;
-  margin: 0.5rem 0;
+/* Anillo de carrito: botón circular junto a la imagen (estilo MercadoLibre) */
+.producto__carrito-fab {
+  position: absolute;
+  z-index: 3;
+  right: 0.55rem;
+  bottom: 0.55rem;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 999px;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, #ff6a35 0%, #f2542d 100%);
+  color: #fff;
+  font-size: 1.05rem;
+  cursor: pointer;
+  box-shadow: 0 6px 16px rgba(242, 84, 45, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  transition: transform 0.15s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
-.producto__stock--bajo {
-  color: var(--azul);
+.producto__carrito-fab:hover {
+  transform: scale(1.1);
+  box-shadow: 0 10px 22px rgba(242, 84, 45, 0.55), inset 0 1px 0 rgba(255, 255, 255, 0.35);
 }
 
-.producto__stock--sin {
-  color: var(--rojo);
+.producto__carrito-fab:active {
+  transform: scale(0.96);
+}
+
+.producto__carrito-fab--ok {
+  background: linear-gradient(180deg, #3ecf72 0%, #1fae5c 100%);
+  box-shadow: 0 6px 16px rgba(31, 174, 92, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+}
+
+.producto__carrito-fab:disabled {
+  background: var(--gris-claro);
+  color: var(--texto-sec);
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .producto__carrito-fab {
+    transition: none;
+  }
 }
 
 /* ---------- Filtros barra (panel) ---------- */
@@ -2584,7 +2618,7 @@ textarea:focus {
 .producto__zoom-fab {
   position: absolute;
   right: 0.6rem;
-  bottom: 0.6rem;
+  top: 3.5rem;
   z-index: 2;
   width: 2.2rem;
   height: 2.2rem;
@@ -4835,18 +4869,18 @@ textarea:focus {
 .comparar-toggle {
   position: absolute;
   z-index: 3;
-  bottom: 0.5rem;
-  right: 0.5rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.3rem;
-  padding: 0.3rem 0.55rem;
+  bottom: 0.72rem;
+  right: 4.15rem;
+  width: 2.6rem;
+  height: 2.6rem;
   border-radius: 999px;
   border: 1px solid var(--borde);
-  background: rgba(38, 32, 27, 0.82);
+  background: rgba(38, 32, 27, 0.72);
   color: #f6f2ec;
-  font-size: 0.68rem;
-  font-weight: 700;
+  font-size: 1.05rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   backdrop-filter: blur(6px);

@@ -7,7 +7,7 @@ import Lightbox from './Lightbox'
 import Stars from './Stars'
 import { ahorroPorcentaje, cuota, dinero, imagenProducto } from '../lib/format'
 
-export default function ProductCard({ producto, destacado = false, topRank = 0 }) {
+export default function ProductCard({ producto, destacado = false, topRank = 0, mediaExtras = null }) {
   const { agregar } = useCart()
   const { esFavorito, alternar } = useFavoritos()
   const { mostrar } = useToast()
@@ -75,6 +75,18 @@ export default function ProductCard({ producto, destacado = false, topRank = 0 }
         <span className="producto__categoria">{producto.categoria}</span>
         {descuento > 0 && <span className="producto__flag">{descuento}% OFF</span>}
         {topRank > 0 && <span className="producto__flag top-rank" title="Producto más vendido">TOP {topRank} u.</span>}
+
+        <button
+          type="button"
+          className={`producto__carrito-fab ${agregado ? 'producto__carrito-fab--ok' : ''}`}
+          onClick={sumar}
+          disabled={sinStock}
+          aria-label={sinStock ? 'Sin stock' : `Agregar ${producto.nombre} al carrito`}
+          title={sinStock ? 'Sin stock' : 'Agregar al carrito'}
+        >
+          <i className={`fi ${agregado ? 'fi-rr-check' : 'fi-rr-shopping-cart'}`} aria-hidden="true" />
+        </button>
+        {mediaExtras}
       </div>
 
       <div className="producto__cuerpo">
@@ -98,18 +110,6 @@ export default function ProductCard({ producto, destacado = false, topRank = 0 }
           )}
         </div>
 
-        <p className={`producto__stock ${sinStock ? 'producto__stock--sin' : producto.stock <= 5 ? 'producto__stock--bajo' : ''}`}>
-          {sinStock ? 'Sin stock' : `Stock: ${producto.stock} unidades`}
-        </p>
-
-        <button
-          type="button"
-          className={`boton boton--primario boton--chico boton--bloque ${agregado ? 'boton--exito' : ''}`}
-          onClick={sumar}
-          disabled={sinStock}
-        >
-          {sinStock ? 'Sin stock' : agregado ? <><i className="fi fi-rr-check" aria-hidden="true" /> Agregado al carrito</> : 'Agregar al carrito'}
-        </button>
       </div>
 
       {zoom && <Lightbox src={imagen} alt={producto.nombre} onClose={() => setZoom(false)} />}

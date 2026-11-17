@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import TestimoniosCarrusel from '../components/TestimoniosCarrusel'
+import MascotaAsistente from '../components/MascotaAsistente'
 import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
@@ -232,6 +233,8 @@ export default function Home() {
           {usuario ? 'Comprar ahora' : 'Quiero mi beneficio'}
         </Link>
       </Revelar>
+
+      <MascotaAsistente />
     </div>
   )
 }

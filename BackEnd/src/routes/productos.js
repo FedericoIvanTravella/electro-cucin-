@@ -89,6 +89,7 @@ function listarProductos(req, res, incluirOcultos) {
   const productos = db
     .prepare(
       `SELECT p.*,
+              COALESCE((SELECT SUM(vi.cantidad) FROM venta_items vi JOIN ventas v ON v.id = vi.venta_id AND v.estado != 'anulada' WHERE vi.producto_id = p.id), 0) AS unidades_vendidas,
               COALESCE((SELECT AVG(r.estrellas) FROM resenas r WHERE r.producto_id = p.id), 0) AS promedio_resenas,
               (SELECT COUNT(*) FROM resenas r WHERE r.producto_id = p.id) AS cantidad_resenas
        FROM productos p ${where} ORDER BY p.nombre`
@@ -139,6 +140,7 @@ router.get('/:id', (req, res) => {
   const producto = db
     .prepare(
       `SELECT p.*,
+              COALESCE((SELECT SUM(vi.cantidad) FROM venta_items vi JOIN ventas v ON v.id = vi.venta_id AND v.estado != 'anulada' WHERE vi.producto_id = p.id), 0) AS unidades_vendidas,
               COALESCE((SELECT AVG(r.estrellas) FROM resenas r WHERE r.producto_id = p.id), 0) AS promedio_resenas,
               (SELECT COUNT(*) FROM resenas r WHERE r.producto_id = p.id) AS cantidad_resenas
        FROM productos p WHERE p.id = ?`

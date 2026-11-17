@@ -9,6 +9,18 @@ import { ahorroPorcentaje, dinero } from '../lib/format'
 
 const INICIAL = { busqueda: '', categorias: [], min: '', max: '', soloStock: false, conDescuento: false }
 const POR_PAGINA = 18
+const ICONO_CATEGORIA = {
+  Cocción: 'fi-rr-pot',
+  Preparación: 'fi-rr-blender',
+  Cafetería: 'fi-rr-mug-hot',
+  Limpieza: 'fi-rr-spray-can-sparkles'
+}
+const PRESETS_PRECIO = [
+  { etiqueta: 'Hasta $100 mil', min: '', max: '100000' },
+  { etiqueta: '$100k – $200k', min: '100000', max: '200000' },
+  { etiqueta: '$200k – $400k', min: '200000', max: '400000' },
+  { etiqueta: 'Más de $400k', min: '400000', max: '' }
+]
 
 export default function Productos() {
   const [params] = useSearchParams()
@@ -76,6 +88,8 @@ export default function Productos() {
         (a, b) =>
           ahorroPorcentaje(b.precio, b.precio_tachado) - ahorroPorcentaje(a.precio, a.precio_tachado)
       )
+    } else if (orden === 'mas-vendidos') {
+      copia.sort((a, b) => (b.unidades_vendidas || 0) - (a.unidades_vendidas || 0))
     } else {
       // Relevancia de la vidriera: primero las ofertas más fuertes.
       copia.sort(
@@ -225,22 +239,29 @@ export default function Productos() {
           </div>
 
           <div className="grupo-filtro">
-            <h4>Categoría</h4>
-            {categorias.map(([categoria, cantidad]) => (
-              <label key={categoria} className="checkbox-filtro">
-                <input
-                  type="checkbox"
-                  checked={filtros.categorias.includes(categoria)}
-                  onChange={() => { togglCategoria(categoria); setPagina(1) }}
-                />
-                <span>{categoria}</span>
-                <em>{cantidad}</em>
-              </label>
-            ))}
+            <h4><i className="fi fi-rr-tags" aria-hidden="true" /> Categoría</h4>
+            <div className="cat-chips">
+              {categorias.map(([categoria, cantidad]) => {
+                const activa = filtros.categorias.includes(categoria)
+                return (
+                  <button
+                    key={categoria}
+                    type="button"
+                    className={`chip-categoria ${activa ? 'chip-categoria--activo' : ''}`}
+                    onClick={() => { togglCategoria(categoria); setPagina(1) }}
+                    aria-pressed={activa}
+                  >
+                    <i className={`fi ${ICONO_CATEGORIA[categoria] || 'fi-rr-tag'}`} aria-hidden="true" />
+                    <span className="chip-categoria__nombre">{categoria}</span>
+                    <span className="chip-categoria__cant">{cantidad}</span>
+                  </button>
+                )
+              })}
+            </div>
           </div>
 
           <div className="grupo-filtro">
-            <h4>Precio</h4>
+            <h4><i className="fi fi-rr-money" aria-hidden="true" /> Precio</h4>
             <div className="rango-precio">
               <input
                 type="number"
@@ -248,6 +269,7 @@ export default function Productos() {
                 placeholder="Min"
                 value={filtros.min}
                 onChange={(e) => cambiarFiltro({ min: e.target.value })}
+                aria-label="Precio mínimo"
               />
               <span>–</span>
               <input
@@ -256,27 +278,49 @@ export default function Productos() {
                 placeholder="Max"
                 value={filtros.max}
                 onChange={(e) => cambiarFiltro({ max: e.target.value })}
+                aria-label="Precio máximo"
               />
+            </div>
+            <div className="precio-presets">
+              {PRESETS_PRECIO.map((p) => {
+                const activo = filtros.min === p.min && filtros.max === p.max && (p.max !== '' || p.min !== '')
+                return (
+                  <button
+                    key={p.etiqueta}
+                    type="button"
+                    className={`preset ${activo ? 'preset--activo' : ''}`}
+                    onClick={() => cambiarFiltro({ min: p.min, max: p.max })}
+                  >
+                    {p.etiqueta}
+                  </button>
+                )
+              })}
             </div>
           </div>
 
           <div className="grupo-filtro">
-            <h4>Disponibilidad</h4>
-            <label className="checkbox-filtro">
+            <h4><i className="fi fi-rr-check" aria-hidden="true" /> Disponibilidad</h4>
+            <label className="radio-disponibilidad">
               <input
                 type="checkbox"
                 checked={filtros.soloStock}
                 onChange={(e) => cambiarFiltro({ soloStock: e.target.checked })}
               />
-              <span>Solo en stock</span>
+              <span className="radio-disponibilidad__texto">
+                <i className="fi fi-rr-truck-moving" aria-hidden="true" />
+                Solo en stock
+              </span>
             </label>
-            <label className="checkbox-filtro">
+            <label className="radio-disponibilidad">
               <input
                 type="checkbox"
                 checked={filtros.conDescuento}
                 onChange={(e) => cambiarFiltro({ conDescuento: e.target.checked })}
               />
-              <span>Solo con ofertas</span>
+              <span className="radio-disponibilidad__texto">
+                <i className="fi fi-rr-badge-percent" aria-hidden="true" />
+                Solo con ofertas
+              </span>
             </label>
           </div>
         </aside>
@@ -294,12 +338,107 @@ export default function Productos() {
               <select value={orden} onChange={(e) => { setOrden(e.target.value); setPagina(1) }}>
                 <option value="relevancia">Relevancia</option>
                 <option value="nombre">Nombre (A-Z)</option>
+                <option value="mas-vendidos">Más vendidos</option>
                 <option value="precio-asc">Menor precio</option>
                 <option value="precio-desc">Mayor precio</option>
                 <option value="descuento">Mayor descuento</option>
               </select>
             </label>
           </div>
+
+          <div className="top-chips" aria-label="Filtros rápidos">
+            <button
+              type="button"
+              className={`top-chip ${filtros.conDescuento ? 'top-chip--activo' : ''}`}
+              onClick={() => cambiarFiltro({ conDescuento: !filtros.conDescuento })}
+            >
+              <i className="fi fi-rr-badge-percent" aria-hidden="true" /> Ofertas
+            </button>
+            <button
+              type="button"
+              className={`top-chip ${filtros.soloStock ? 'top-chip--activo' : ''}`}
+              onClick={() => cambiarFiltro({ soloStock: !filtros.soloStock })}
+            >
+              <i className="fi fi-rr-truck-moving" aria-hidden="true" /> Solo en stock
+            </button>
+            <button
+              type="button"
+              className={`top-chip ${orden === 'mas-vendidos' ? 'top-chip--activo' : ''}`}
+              onClick={() => { setOrden('mas-vendidos'); setPagina(1) }}
+            >
+              <i className="fi fi-rr-box" aria-hidden="true" /> Más vendidos
+            </button>
+            <button
+              type="button"
+              className={`top-chip ${orden === 'descuento' ? 'top-chip--activo' : ''}`}
+              onClick={() => { setOrden('descuento'); setPagina(1) }}
+            >
+              <i className="fi fi-rr-percentage" aria-hidden="true" /> Mejor descuento
+            </button>
+            <button
+              type="button"
+              className={`top-chip ${orden === 'precio-asc' ? 'top-chip--activo' : ''}`}
+              onClick={() => { setOrden('precio-asc'); setPagina(1) }}
+            >
+              <i className="fi fi-rr-sort-amount-up" aria-hidden="true" /> Menor precio
+            </button>
+            <button
+              type="button"
+              className={`top-chip ${(filtros.min !== '' || filtros.max !== '') ? 'top-chip--activo' : ''}`}
+              onClick={() => cambiarFiltro({ min: '', max: '100000' })}
+            >
+              <i className="fi fi-rr-money" aria-hidden="true" /> Hasta $100k
+            </button>
+            <button
+              type="button"
+              className="top-chip top-chip--limpiar"
+              onClick={limpiarFiltros}
+              disabled={!activos && orden === 'relevancia'}
+            >
+              <i className="fi fi-rr-refresh" aria-hidden="true" /> Limpiar
+            </button>
+          </div>
+
+          {(filtros.busqueda || filtros.categorias.length > 0 || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento) && (
+            <div className="filtros-activos" aria-label="Filtros activos">
+              <span className="filtros-activos__label">Filtros activos:</span>
+              {filtros.busqueda && (
+                <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ busqueda: '' })}>
+                  “{filtros.busqueda}” <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              )}
+              {filtros.categorias.map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  className="filtro-activo"
+                  onClick={() => cambiarFiltro({ categorias: filtros.categorias.filter((x) => x !== c) })}
+                >
+                  {c} <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              ))}
+              {filtros.min && (
+                <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ min: '' })}>
+                  Desde {dinero(filtros.min)} <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              )}
+              {filtros.max && (
+                <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ max: '' })}>
+                  Hasta {dinero(filtros.max)} <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              )}
+              {filtros.soloStock && (
+                <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ soloStock: false })}>
+                  Solo en stock <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              )}
+              {filtros.conDescuento && (
+                <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ conDescuento: false })}>
+                  Solo con ofertas <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              )}
+            </div>
+          )}
 
           {error && <p className="alerta alerta--error">{error}</p>}
 

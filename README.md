@@ -106,10 +106,6 @@ docker run -p 3001:3001 -v ec-data:/app/BackEnd/data electro-cucine
 
 Imagen todo-en-uno: compila el frontend, instala deps de producción del backend y sirve ambos (API + SPA) en el puerto 3001. Los datos persisten en el volumen `/app/BackEnd/data`.
 
-## CI
-
-GitHub Actions (`.github/workflows/ci.yml`): en cada push/PR a `main` corre lint + tests del backend y lint + build del frontend (Node 24).
-
 ## Imágenes y créditos
 
 - Productos 1–5: fotos en `public/productos/*.jpg`.
@@ -124,8 +120,4 @@ No todos los productos llevan oferta: **cada 3er producto** (id múltiplo de 3) 
 ## Notas de higiene del repo
 
 - `node_modules/`, `BackEnd/data/*.db*` y `dist/` **no** se versionan (antes sí; ver historial inicial).
-- El branch `main` quedó divergente de `origin/main` (dos puntas con contenido casi idéntico); se conservó la versión local. Si hace falta publicar, coordinar `git push --force-with-lease` con el equipo.
 
-## Estado de la base de datos local
-
-El seed no toca datos existentes. Si tu base venía de una versión anterior con `federico / admin23`, **cambiale la contraseña** cuanto antes (esa cuenta ya no se crea en instalaciones nuevas). Las sesiones viejas se invalidan solas tras el hasheo de tokens (hay que volver a iniciar sesión).

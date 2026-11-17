@@ -243,6 +243,22 @@ function migrar() {
 
   
   
+  // v2: re-aplica el mapa completo (agrega las fotos nuevas: 14, 16, 17, 19, 20,
+  // 22, 25, 26, 28, 29, 35, 37, 41, 43, 44, 46, 47, 55, 64, 83, 85, 91).
+  if (leerMeta('imagenes_elegidas_v2') !== '1') {
+    try {
+      const rutaMapa = path.join(__dirname, 'imagenes-reales.json')
+      const mapa = JSON.parse(fs.readFileSync(rutaMapa, 'utf8'))
+      const actualizar = db.prepare('UPDATE productos SET imagen = ? WHERE id = ?')
+      for (const [id, archivo] of Object.entries(mapa)) {
+        if (fs.existsSync(path.join(__dirname, '..', 'public', 'productos', archivo))) {
+          actualizar.run(archivo, Number(id))
+        }
+      }
+      escribirMeta('imagenes_elegidas_v2', '1')
+    } catch { void 0 }
+  }
+
   if (leerMeta('descuentos_mixtos_v1') !== '1') {
     db.exec('UPDATE productos SET precio_tachado = 0 WHERE id % 3 = 0')
     escribirMeta('descuentos_mixtos_v1', '1')

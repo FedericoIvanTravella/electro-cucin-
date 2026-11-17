@@ -41,11 +41,16 @@ El superusuario se crea **en el primer arranque** desde variables de entorno (ve
 
 - **Correo de confirmación de compra**: tras pagar, se envía el detalle del pedido (ítems, totales, descuento 65+, cupón, dirección, entrega 24–48 h). Sin SMTP configurado se escribe en `BackEnd/data/outbox/*.json` (modo dev); con `SMTP_HOST`/`SMTP_PORT`/`SMTP_USER`/`SMTP_PASS`/`SMTP_FROM` se envía de verdad (ver `.env.example`).
 - **Reseñas con estrellas**: solo compradores (con venta completada del producto) pueden valorar 1–5 estrellas con comentario; promedio real visible en cards y en el detalle (reemplaza el 4.8 fake anterior).
-- **Cupones de descuento**: `COCINA10` (−10%) y `CUCINE5` (−$5.000) seedeados; se aplican en el pago y quedan registrados en la venta. Admin puede verlos en Auditoría (acción "cupon").
+- **Cupones de descuento**: `COCINA10` (−10%) y `CUCINE5` (−$5.000) seedeados; se aplican en el pago y quedan registrados en la venta. En el panel superusuario → **Cupones** hay CRUD completo (crear, (des)activar, eliminar, usos máximos).
 - **Exportar ventas a CSV**: en el panel superusuario → Registro de ventas → "Exportar CSV" (UTF-8 con BOM, separador `;`, ideal para Excel).
 - **Repetir compra**: en Mis compras, un clic vacía el carrito y carga los ítems de ese pedido (con stock y precio actual).
 - **Buscador con autosugerencia**: al escribir en el catálogo (mín. 2 letras) aparece un desplegable con coincidencias (teclado: ↑ ↓ Enter, Esc).
 - **Animaciones**: apariciones escalonadas al hacer scroll, marquee de promos, página con fade, botones con press, corazón que hace "pop" al favoritear, camiones animados (mis compras / éxito de pago) y transiciones respetando `prefers-reduced-motion`.
+- **PWA**: `manifest.webmanifest` + service worker — se puede 'Instalar' en el celu/PC y abrir offline (las páginas cacheadas funcionan sin internet).
+- **Estados del pedido con mails automáticos**: el admin puede marcar cada pedido como **en camino** o **entregado** desde el panel; al hacerlo se le envía un mail automático al comprador y se registra en Auditoría.
+- **Alerta de poco stock por mail**: al hacer una venta que deja ≤5 unidades, el admin recibe un aviso por correo con el producto y cantidad.
+- **Aviso de vuelta de stock**: si un producto está agotado, el cliente puede dejar su correo (botón "Avisame cuando vuelva"); cuando el admin reabastece, se le avisa por mail automáticamente.
+- **Newsletter**: form en el footer para suscribirse; la cantidad de suscriptores figura como indicador en el panel admin → Resumen.
 
 ## Estructura
 

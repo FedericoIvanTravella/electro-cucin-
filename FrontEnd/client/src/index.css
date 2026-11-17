@@ -1,40 +1,42 @@
 :root {
-  --fondo: #f2f4f8;
+  --fondo: #f6f2ec;
   --superficie: #ffffff;
-  --borde: #e3e7ef;
-  --tinta: #16233c;
-  --texto-sec: #64738c;
-  --gris-claro: #eef1f6;
-  --marino: #0a2354;
-  --marino-oscuro: #050f29;
-  --marino-suave: #123169;
-  --marca: #0a2354;
+  --borde: #e8e1d2;
+  --tinta: #26201b;
+  --texto-sec: #6e645a;
+  --gris-claro: #efe9dd;
+  --marino: #26201b;
+  --marino-oscuro: #171310;
+  --marino-suave: #3a302a;
+  --marca: #26201b;
   --blanco: #ffffff;
-  --azul: #0f5ec7;
-  --azul-hover: #0b4da5;
-  --azul-claro: #e8f0fc;
+  --azul: #f2542d;
+  --azul-hover: #d13f1b;
+  --azul-claro: #fdeae0;
+  --acento: #ff8b4d;
   --rojo: #d64541;
   --rojo-claro: #fdeeed;
   --exito: #1d8a63;
   --exito-claro: #e7f6ef;
   --radio: 12px;
-  --sombra: 0 4px 18px rgba(10, 35, 84, 0.07);
+  --sombra: 0 4px 18px rgba(38, 32, 27, 0.09);
   --fuente: 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', sans-serif;
 }
 
 /* ---------- Tema oscuro ---------- */
 [data-tema='oscuro'] {
-  --fondo: #0a0f1c;
-  --superficie: #111a2e;
-  --borde: #24324f;
-  --tinta: #e4eaf6;
-  --texto-sec: #93a2be;
-  --gris-claro: #1a2440;
-  --marino: #cfe0ff;
-  --marca: #0e2050;
-  --azul: #57a0ff;
-  --azul-hover: #7cb4ff;
-  --azul-claro: #16294a;
+  --fondo: #141010;
+  --superficie: #1f1a17;
+  --borde: #332a24;
+  --tinta: #ece3d8;
+  --texto-sec: #b3a696;
+  --gris-claro: #2a231e;
+  --marino: #ece3d8;
+  --marino-oscuro: #141010;
+  --marca: #33291f;
+  --azul: #ff6a33;
+  --azul-hover: #ff8b51;
+  --azul-claro: #3a241c;
   --rojo-claro: #3a1e1e;
   --exito-claro: #12352a;
   --sombra: 0 4px 18px rgba(0, 0, 0, 0.45);
@@ -144,7 +146,7 @@ textarea:focus {
   position: sticky;
   top: 0;
   z-index: 50;
-  box-shadow: 0 1px 0 rgba(10, 35, 84, 0.03);
+  box-shadow: 0 1px 0 rgba(38, 32, 27, 0.04);
 }
 
 .navbar__interior {
@@ -717,8 +719,8 @@ textarea:focus {
 }
 
 .producto:hover {
-  border-color: #c9d4e8;
-  box-shadow: 0 8px 24px rgba(10, 35, 84, 0.1);
+  border-color: #d8cbb8;
+  box-shadow: 0 8px 24px rgba(38, 32, 27, 0.14);
   transform: translateY(-2px);
 }
 
@@ -727,7 +729,7 @@ textarea:focus {
   aspect-ratio: 1 / 0.85;
   display: grid;
   place-items: center;
-  background: linear-gradient(180deg, #f9fbfd, var(--gris-claro));
+  background: linear-gradient(180deg, #fdfcf9, var(--gris-claro));
   overflow: hidden;
   border-bottom: 1px solid var(--borde);
 }
@@ -1697,7 +1699,7 @@ textarea:focus {
   flex-direction: column;
   justify-content: space-between;
   overflow: hidden;
-  box-shadow: 0 18px 40px rgba(10, 35, 84, 0.35);
+  box-shadow: 0 18px 40px rgba(38, 32, 27, 0.35);
 }
 
 .tarjeta-visual__brillo {
@@ -1799,8 +1801,8 @@ textarea:focus {
 
 .categoria-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(10, 35, 84, 0.1);
-  border-color: #c9d4e8;
+  box-shadow: 0 8px 24px rgba(38, 32, 27, 0.14);
+  border-color: #d8cbb8;
 }
 
 .categoria-card__icono {
@@ -1868,7 +1870,7 @@ textarea:focus {
 }
 
 .estrellas__vacias {
-  color: #d8dee9;
+  color: #e2ddd2;
 }
 
 .testimonio__texto {
@@ -1986,7 +1988,7 @@ textarea:focus {
 }
 
 .hero h1 span {
-  color: #7fb3f5;
+  color: #ffb27a;
 }
 
 .hero__etiqueta {
@@ -1997,12 +1999,12 @@ textarea:focus {
   font-size: 0.78rem;
   font-weight: 700;
   letter-spacing: 0.06em;
-  color: #cfe0f7;
+  color: #f3e9da;
   margin-bottom: 0.9rem;
 }
 
 .hero__bajada {
-  color: #c3d4ec;
+  color: #d9cec2;
   max-width: 46ch;
 }
 
@@ -2014,12 +2016,12 @@ textarea:focus {
 }
 
 .hero__acciones .boton--primario {
-  background: #3b82f6;
+  background: #ff5a1f;
 }
 
 .hero__acciones .boton--primario:hover {
-  background: #2563eb;
-  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
+  background: #d94e1a;
+  box-shadow: 0 6px 16px rgba(242, 84, 45, 0.45);
 }
 
 .hero__acciones .boton--fantasma {
@@ -2352,7 +2354,7 @@ textarea:focus {
 /* ---------- Barra de promociones ---------- */
 .promos {
   background: var(--marino-oscuro);
-  color: #dbe6ff;
+  color: #f3e9da;
   text-align: center;
   font-size: 0.82rem;
   font-weight: 600;
@@ -2411,7 +2413,7 @@ textarea:focus {
   border-left: 4px solid var(--azul);
   border-radius: 10px;
   padding: 0.7rem 0.9rem;
-  box-shadow: 0 10px 30px rgba(10, 35, 84, 0.18);
+  box-shadow: 0 10px 30px rgba(38, 32, 27, 0.18);
   font-size: 0.88rem;
   color: var(--tinta);
   cursor: pointer;
@@ -2708,7 +2710,7 @@ textarea:focus {
 .mascota {
   display: block;
   height: auto;
-  filter: drop-shadow(0 18px 26px rgba(10, 35, 84, 0.18));
+  filter: drop-shadow(0 18px 26px rgba(38, 32, 27, 0.18));
   animation: mascotaFlota 4.5s ease-in-out infinite;
 }
 
@@ -2825,7 +2827,7 @@ textarea:focus {
   padding: 2.6rem;
   margin: 2rem auto;
   max-width: 900px;
-  box-shadow: 0 18px 50px rgba(10, 35, 84, 0.08);
+  box-shadow: 0 18px 50px rgba(38, 32, 27, 0.1);
 }
 
 .pagina-error__mascota {
@@ -2908,7 +2910,7 @@ textarea:focus {
 .fi--grande { font-size: 1.4em; }
 
 .estrellas .fi { letter-spacing: 0.08em; }
-.estrellas__vacias .fi { color: #d8dee9; }
+.estrellas__vacias .fi { color: #e2ddd2; }
 
 /* ================================================================
    Página de detalle de producto (estilo MercadoLibre)
@@ -3151,7 +3153,7 @@ textarea:focus {
 
 /* ---------- Tema oscuro: detalle de producto legible ---------- */
 [data-tema='oscuro'] .pdp-media {
-  background: linear-gradient(180deg, #ffffff 0%, #eef1f6 100%);
+  background: linear-gradient(180deg, #ffffff 0%, var(--gris-claro) 100%);
 }
 
 [data-tema='oscuro'] .pdp-zoom img {
@@ -3356,7 +3358,7 @@ textarea:focus {
 .barras-h__barra {
   display: block;
   height: 100%;
-  background: linear-gradient(90deg, var(--marca), #2d5aa0);
+  background: linear-gradient(90deg, var(--azul), #ff8b4d);
   border-radius: 999px;
   min-width: 2px;
 }
@@ -3597,8 +3599,8 @@ textarea:focus {
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(227, 231, 239, 0.7);
-  box-shadow: 0 2px 18px rgba(10, 35, 84, 0.06);
+  border-bottom: 1px solid rgba(232, 225, 210, 0.7);
+  box-shadow: 0 2px 18px rgba(38, 32, 27, 0.06);
 }
 
 [data-tema='oscuro'] .navbar {
@@ -3608,12 +3610,12 @@ textarea:focus {
 
 /* ---------- Botón primario con gradiente ---------- */
 .boton--primario {
-  background: linear-gradient(180deg, #2470e0 0%, #0f5ec7 100%);
+  background: linear-gradient(180deg, #ff6a35 0%, #f2542d 100%);
   box-shadow: 0 6px 14px rgba(15, 94, 199, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .boton--primario:hover {
-  background: linear-gradient(180deg, #1f66d4 0%, #0b4da5 100%);
+  background: linear-gradient(180deg, #f2542d 0%, #d13f1b 100%);
   transform: translateY(-2px);
   box-shadow: 0 10px 22px rgba(15, 94, 199, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
@@ -3627,7 +3629,7 @@ textarea:focus {
 .producto:hover {
   border-color: #b9cbe6;
   transform: translateY(-4px);
-  box-shadow: 0 16px 38px rgba(10, 35, 84, 0.16);
+  box-shadow: 0 16px 38px rgba(38, 32, 27, 0.2);
 }
 
 .producto__media-link img,
@@ -3707,7 +3709,7 @@ textarea:focus {
   top: -120px;
   right: -120px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(127, 179, 245, 0.35), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 122, 60, 0.38), transparent 70%);
 }
 
 .hero::after {
@@ -3719,7 +3721,7 @@ textarea:focus {
   bottom: -140px;
   left: 35%;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 209, 102, 0.22), transparent 70%);
+  background: radial-gradient(circle, rgba(255, 170, 90, 0.24), transparent 70%);
 }
 
 .hero__arte .hero__producto {
@@ -3769,7 +3771,7 @@ textarea:focus {
 
 .hero__producto-precio small {
   font-size: 0.7rem;
-  color: #cfe0f7;
+  color: #f3e9da;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -3812,7 +3814,7 @@ textarea:focus {
   justify-content: center;
   border-radius: 999px;
   border: 1px solid rgba(255, 255, 255, 0.25);
-  color: #dbe6ff;
+  color: #f3e9da;
   font-size: 0.95rem;
   transition: background 0.15s, color 0.15s, transform 0.15s, border-color 0.15s;
 }
@@ -3857,7 +3859,7 @@ textarea:focus {
   font-size: 0.72rem;
   font-weight: 700;
   letter-spacing: 0.03em;
-  color: #eaf0fb;
+  color: #f3e9da;
   border: 1px solid rgba(255, 255, 255, 0.28);
   background: rgba(255, 255, 255, 0.06);
   border-radius: 8px;
@@ -3871,7 +3873,7 @@ textarea:focus {
 }
 
 .footer__legal a {
-  color: #cfe0f7;
+  color: #f3e9da;
   text-decoration: none;
 }
 
@@ -3967,7 +3969,7 @@ textarea:focus {
 }
 
 .estrellitas .fi-rr-star {
-  color: #d8dee9;
+  color: #e2ddd2;
 }
 
 .estrellitas__num {
@@ -4099,7 +4101,7 @@ textarea:focus {
   border: none;
   cursor: pointer;
   font-size: 1.6rem;
-  color: #d8dee9;
+  color: #e2ddd2;
   padding: 0.1rem;
   transition: transform 0.15s, color 0.15s;
 }
@@ -4215,7 +4217,7 @@ textarea:focus {
   background: var(--superficie);
   border: 1px solid var(--borde);
   border-radius: 12px;
-  box-shadow: 0 18px 40px rgba(10, 35, 84, 0.18);
+  box-shadow: 0 18px 40px rgba(38, 32, 27, 0.18);
   max-height: 320px;
   overflow-y: auto;
 }

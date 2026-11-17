@@ -41,9 +41,11 @@ function Protegida({ soloAdmin = false, children }) {
 }
 
 export default function App() {
+  const ubicacion = useLocation()
   return (
     <ErrorBoundary>
-      <Routes>
+      <div key={ubicacion.pathname} className="ruta-animada">
+        <Routes>
         <Route element={<Layout />}>
           <Route path="/" element={<Home />} />
           <Route path="/productos" element={<Productos />} />
@@ -80,7 +82,8 @@ export default function App() {
           <Route path="/error/:codigo" element={<ErrorCodigo />} />
           <Route path="*" element={<NotFound />} />
         </Route>
-      </Routes>
+        </Routes>
+      </div>
     </ErrorBoundary>
   )
 }

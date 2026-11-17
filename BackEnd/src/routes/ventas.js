@@ -1,14 +1,13 @@
 import { Router } from 'express'
 import { db, transaction, tieneDescuento, PORCENTAJE_DESCUENTO, registrarAuditoria } from '../db.js'
 import { requerirAuth, requerirAdmin } from '../auth.js'
+import { enviarConfirmacionCompra } from '../correo.js'
 
 const router = Router()
 
-// ---------------------- SECCIÓN: VENTAS ----------------------
 const METODOS_PAGO = ['tarjeta', 'efectivo', 'transferencia', 'mercado_pago']
 const CUOTAS_VALIDAS = [1, 3, 6, 12]
 
-// arma el detalle completo de UNA venta: sus ítems + usuario/cliente.
 function detalleVenta(venta) {
   const items = db.prepare('SELECT * FROM venta_items WHERE venta_id = ?').all(venta.id)
   const usuario = venta.usuario_id
@@ -20,8 +19,6 @@ function detalleVenta(venta) {
   return { ...venta, items, usuario, cliente }
 }
 
-// Versión EN LOTE de detalleVenta: resuelve ítems/usuarios/clientes de N
-// ventas con 3 queries en total (evita el N+1 del panel admin).
 function detalleVentas(ventas) {
   if (ventas.length === 0) return []
   const ids = ventas.map((v) => v.id)
@@ -59,24 +56,24 @@ function detalleVentas(ventas) {
   }))
 }
 
-// Normaliza page/por_pagina con límites seguros.
 function paginacion(query, porDefecto = 50, maximo = 200) {
   const pagina = Math.max(1, Number.parseInt(query.page, 10) || 1)
   const porPagina = Math.min(maximo, Math.max(1, Number.parseInt(query.por_pagina, 10) || porDefecto))
   return { pagina, porPagina, offset: (pagina - 1) * porPagina }
 }
 
-// ---------------------- POST /api/ventas · Registrar una compra ----------------------
-// Requiere sesión. Valida stock, calcula el descuento de 65+, guarda la
-// cabecera + ítems y descuenta el stock, todo dentro de UNA transacción.
-router.post('/', requerirAuth, (req, res) => {
-  const { items, metodo_pago = 'tarjeta', cuotas = 1, cliente_id = null, direccion_envio = '' } = req.body || {}
+router.post('/', requerirAuth, async (req, res) => {
+  const { items, metodo_pago = 'tarjeta', cuotas = 1, cliente_id = null, direccion_envio = '', email_contacto = '' } = req.body || {}
+
+  const correoFinal = String(email_contacto || req.usuario.email || '').trim()
+  if (correoFinal && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correoFinal)) {
+    return res.status(400).json({ error: 'El correo para la confirmación no tiene un formato válido.' })
+  }
 
   if (!Array.isArray(items) || items.length === 0) {
     return res.status(400).json({ error: 'El carrito está vacío.' })
   }
 
-  // --- Método de pago y cuotas: solo valores conocidos ---
   const metodo = METODOS_PAGO.includes(metodo_pago) ? metodo_pago : null
   if (!metodo) {
     return res.status(400).json({ error: `Método de pago inválido. Opciones: ${METODOS_PAGO.join(', ')}.` })
@@ -86,13 +83,11 @@ router.post('/', requerirAuth, (req, res) => {
     return res.status(400).json({ error: `Cuotas inválidas. Opciones: ${CUOTAS_VALIDAS.join(', ')}.` })
   }
 
-  // --- Descuento 65+ y cálculo del subtotal ---
   const descuentoActivo = tieneDescuento(req.usuario)
   const descuento_pct = descuentoActivo ? PORCENTAJE_DESCUENTO : 0
   const lineas = []
   let subtotal = 0
 
-  // Valida cada producto: que exista, esté activo y tenga stock suficiente.
   for (const item of items) {
     const cantidad = Number(item.cantidad)
     const producto = db.prepare('SELECT * FROM productos WHERE id = ? AND activo = 1').get(item.producto_id)
@@ -120,7 +115,7 @@ router.post('/', requerirAuth, (req, res) => {
     return res.status(400).json({ error: 'El cliente indicado no existe.' })
   }
 
-  // --- Insert de cabecera + ítems + descuento de stock (todo o nada) ---
+  
   let ventaId
   try {
     ventaId = transaction(() => {
@@ -145,8 +140,8 @@ router.post('/', requerirAuth, (req, res) => {
       const itemStmt = db.prepare(
         'INSERT INTO venta_items (venta_id, producto_id, nombre, precio, cantidad) VALUES (?, ?, ?, ?, ?)'
       )
-      // UPDATE condicionado: si otro proceso comió el stock entre la validación
-      // y la escritura, .changes === 0 y se aborta toda la transacción.
+      
+      
       const stockStmt = db.prepare('UPDATE productos SET stock = stock - ?, updated_at = datetime(\'now\', \'localtime\') WHERE id = ? AND stock >= ?')
       for (const { producto, cantidad } of lineas) {
         itemStmt.run(id, producto.id, producto.nombre, producto.precio, cantidad)
@@ -168,10 +163,10 @@ router.post('/', requerirAuth, (req, res) => {
 
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(ventaId)
   registrarAuditoria(req.usuario, 'venta', `Venta #${venta.id} por $${total}`)
-  res.status(201).json({ venta: detalleVenta(venta) })
+  const resultadoCorreo = await enviarConfirmacionCompra(detalleVenta(venta), req.usuario, correoFinal)
+  res.status(201).json({ venta: detalleVenta(venta), correo: resultadoCorreo.via !== 'sin-correo' ? resultadoCorreo : null })
 })
 
-// ---------------------- GET /api/ventas/mias · Mis compras (cliente) ----------------------
 router.get('/mias', requerirAuth, (req, res) => {
   const { pagina, porPagina, offset } = paginacion(req.query, 50)
   const total = db.prepare('SELECT COUNT(*) AS n FROM ventas WHERE usuario_id = ?').get(req.usuario.id).n
@@ -181,7 +176,6 @@ router.get('/mias', requerirAuth, (req, res) => {
   res.json({ ventas, total, pagina, paginas: Math.max(1, Math.ceil(total / porPagina)) })
 })
 
-// ---------------------- GET /api/ventas · Todas (admin, filtro por estado + paginación) ----------------------
 router.get('/', requerirAdmin, (req, res) => {
   const { estado = '' } = req.query
   const { pagina, porPagina, offset } = paginacion(req.query, 50)
@@ -194,15 +188,12 @@ router.get('/', requerirAdmin, (req, res) => {
   res.json({ ventas: detalleVentas(filas), total, pagina, paginas: Math.max(1, Math.ceil(total / porPagina)) })
 })
 
-// ---------------------- GET /api/ventas/:id · Detalle de una venta (admin) ----------------------
 router.get('/:id', requerirAdmin, (req, res) => {
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(req.params.id)
   if (!venta) return res.status(404).json({ error: 'Venta no encontrada.' })
   res.json({ venta: detalleVenta(venta) })
 })
 
-// ---------------------- DELETE /api/ventas/:id · Anular (admin) ----------------------
-// "Anula" la venta (estado = 'anulada') y restituye el stock de sus ítems.
 router.delete('/:id', requerirAdmin, (req, res) => {
   const venta = db.prepare('SELECT * FROM ventas WHERE id = ?').get(req.params.id)
   if (!venta) return res.status(404).json({ error: 'Venta no encontrada.' })
@@ -222,13 +213,10 @@ router.delete('/:id', requerirAdmin, (req, res) => {
   res.json({ venta: detalleVenta(db.prepare('SELECT * FROM ventas WHERE id = ?').get(venta.id)) })
 })
 
-// ---------------------- Analítica para el panel del superusuario ----------------------
-// Consolida en UNA llamada todo lo que necesitan los gráficos del panel.
-// Solo cuenta ventas "completada" (las anuladas no suman ingresos ni unidades).
 export function analitica() {
   const pad = (n) => String(n).padStart(2, '0')
 
-  // Ingresos y unidades por categoría
+  
   const porCategoria = db
     .prepare(
       `SELECT p.categoria AS categoria,
@@ -242,17 +230,17 @@ export function analitica() {
     )
     .all()
 
-  // Catálogo activo por categoría (diagnóstico de inventario)
+  
   const catalogoPorCategoria = db
     .prepare('SELECT categoria, COUNT(*) AS cantidad FROM productos WHERE activo = 1 GROUP BY categoria ORDER BY cantidad DESC')
     .all()
 
-  // Ingresos/unidades/cantidad por estado de venta (completada vs anulada)
+  
   const ventasPorEstado = db
     .prepare('SELECT estado, COUNT(*) AS cantidad, COALESCE(SUM(total), 0) AS total FROM ventas GROUP BY estado')
     .all()
 
-  // Top 8 productos por unidades vendidas
+  
   const topProductos = db
     .prepare(
       `SELECT vi.nombre AS nombre,
@@ -266,7 +254,7 @@ export function analitica() {
     )
     .all()
 
-  // Serie de los últimos 14 días (incluye días sin ventas con 0)
+  
   const filas14 = db
     .prepare(
       `SELECT date(fecha) AS dia,
@@ -295,7 +283,7 @@ export function analitica() {
     })
   }
 
-  // Diagnóstico de stock: sano / bajo / sin unidades
+  
   const sinStock = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock = 0').get().n
   const stockBajo = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock BETWEEN 1 AND 5').get().n
   const stockOk = db.prepare('SELECT COUNT(*) AS n FROM productos WHERE activo = 1 AND stock > 5').get().n
@@ -310,9 +298,6 @@ export function analitica() {
   }
 }
 
-// ---------------------- Estadísticas (para el panel del superusuario) ----------------------
-// Calcula TODO en SQL (sin cargar la tabla completa en memoria).
-// Solo suma las ventas "completada" (las anuladas no cuentan).
 export function estadisticas() {
   const resumen = db
     .prepare(
@@ -339,3 +324,4 @@ export function estadisticas() {
 }
 
 export default router
+

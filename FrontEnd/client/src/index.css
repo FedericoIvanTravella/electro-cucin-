@@ -3878,3 +3878,74 @@ textarea:focus {
 .footer__legal a:hover {
   text-decoration: underline;
 }
+.campo__nota {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.76rem;
+  color: var(--texto-sec);
+}
+
+/* ================================================================
+   Microinteracciones y transiciones
+   ================================================================ */
+.ruta-animada {
+  animation: rutaEntrada 0.38s ease both;
+}
+
+@keyframes rutaEntrada {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+
+.boton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.producto__favorito--activo .fi {
+  animation: corazonPop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes corazonPop {
+  0% { transform: scale(0.3) rotate(-14deg); }
+  45% { transform: scale(1.5) rotate(4deg); }
+  70% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+.boton--exito {
+  animation: exitoPop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes exitoPop {
+  0% { transform: scale(0.85); }
+  55% { transform: scale(1.07); }
+  100% { transform: scale(1); }
+}
+
+.admin__contenido > * {
+  animation: contenidoEntrada 0.32s ease both;
+}
+
+@keyframes contenidoEntrada {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+.pago-exitoso__icono {
+  animation: exitoPop 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) 0.15s both;
+}
+
+.vacio__icono {
+  animation: flotar 3.4s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ruta-animada,
+  .admin__contenido > *,
+  .pago-exitoso__icono,
+  .vacio__icono,
+  .producto__favorito--activo .fi,
+  .boton--exito {
+    animation: none;
+  }
+}

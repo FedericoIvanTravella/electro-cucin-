@@ -1,14 +1,3 @@
-// =====================================================================
-// SEED — Datos iniciales (superusuario + catálogo de productos)
-// - Se ejecuta al arrancar el servidor (index.js) y también se puede
-//   forzar con `npm run seed`.
-// - Nunca pisa datos existentes: el catálogo solo se carga si la tabla
-//   productos está vacía.
-// - El superusuario se crea desde variables de entorno:
-//     ADMIN_USERNAME (por defecto "admin")
-//     ADMIN_PASSWORD (si falta, se genera una aleatoria y se muestra UNA vez)
-//     ADMIN_NOMBRE / ADMIN_EMAIL (opcionales)
-// =====================================================================
 import { randomBytes } from 'node:crypto'
 import fs from 'node:fs'
 import path from 'node:path'
@@ -19,8 +8,6 @@ import { productosIniciales } from './catalogo.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
-// Imágenes elegidas por el dueño del proyecto (public/productos/<id>.<ext>).
-// Si el mapa no existe (checkout parcial) se siembra con los defaults.
 const imagenesElegidas = (() => {
   try {
     return JSON.parse(fs.readFileSync(path.join(__dirname, 'imagenes-reales.json'), 'utf8'))
@@ -32,7 +19,7 @@ const imagenesElegidas = (() => {
 const RONDAS_BCRYPT = 10
 
 export function seedInicial() {
-  // --- Superusuario ---
+  
   const username = (process.env.ADMIN_USERNAME || 'admin').trim()
   const nombre = (process.env.ADMIN_NOMBRE || 'Administrador').trim()
   const email = (process.env.ADMIN_EMAIL || '').trim()
@@ -42,7 +29,6 @@ export function seedInicial() {
     let password = process.env.ADMIN_PASSWORD
     let generada = false
     if (!password) {
-      // Contraseña fuerte generada al vuelo (cumple la política letras+números).
       password = randomBytes(12).toString('base64url').replace(/[-_]/g, 'x') + randomBytes(2).toString('hex')
       generada = true
     }
@@ -60,32 +46,32 @@ export function seedInicial() {
       console.log(`[seed] Superusuario creado: ${username}`)
     }
   } else if (admin.username === 'federico') {
-    // La cuenta histórica usaba una contraseña débil ("admin23"): avisar siempre.
+    
     console.warn('[seguridad] La cuenta "federico" proviene de una instalación anterior con una contraseña débil. Cambiala cuanto antes.')
   }
 
-  // --- Catálogo inicial (solo si la tabla productos está vacía) ---
+  
   const cantidad = db.prepare('SELECT COUNT(*) AS n FROM productos').get().n
   if (cantidad === 0) {
     const stmt = db.prepare(
       'INSERT INTO productos (nombre, categoria, descripcion, precio, precio_tachado, stock, imagen) VALUES (?, ?, ?, ?, ?, ?, ?)'
     )
-    // Cada lista es [nombre, categoria, descripcion, precio, stock, precio_tachado].
-    // La imagen: productos elegidos por el dueño del proyecto (mapa
-    // imagenes-reales.json); los 1..5 traen foto propia (<id>.jpg); el resto
-    // sin imagen a propósito (se muestra el ícono por defecto).
+    
+    
+    
+    
     productosIniciales.forEach((p, indice) => {
       const id = indice + 1
       const imagen = imagenesElegidas[id] ?? (id <= 5 ? String(id) : '')
-      const tachado = id % 3 === 0 ? 0 : p[5] // cada 3er producto sin oferta
+      const tachado = id % 3 === 0 ? 0 : p[5]
       stmt.run(p[0], p[1], p[2], p[3], tachado, p[4], imagen)
     })
     console.log(`[seed] ${productosIniciales.length} productos cargados`)
   }
 }
 
-// Ejecución directa: `node src/seed.js`
 if (process.argv[1] && process.argv[1].endsWith('seed.js')) {
   seedInicial()
   console.log('[seed] Listo.')
 }
+

@@ -23,7 +23,7 @@ const FORM_INICIAL = {
 export default function Pago() {
   const { items, totales, vaciar } = useCart()
   const { usuario } = useAuth()
-  const [form, setForm] = useState(FORM_INICIAL)
+  const [form, setForm] = useState({ ...FORM_INICIAL, email: usuario?.email || '' })
   const [error, setError] = useState('')
   const [procesando, setProcesando] = useState(false)
   const [venta, setVenta] = useState(null)
@@ -37,7 +37,7 @@ export default function Pago() {
         <h1>¡Pago aprobado!</h1>
         <p>
           Tu compra <strong>#{venta.id}</strong> fue registrada el {venta.fecha}. Te enviamos el
-          detalle a {usuario?.email || 'tu correo'}.
+          detalle a {form.email.trim() || usuario?.email || 'tu correo'}.
         </p>
         <RutaEntrega />
 
@@ -105,6 +105,9 @@ export default function Pago() {
       .join(', ')
 
   const validar = () => {
+    if (form.email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(form.email.trim())) {
+      return 'El correo para la confirmación no es válido.'
+    }
     if (!form.titular.trim()) return 'Ingresá el nombre del titular de la tarjeta.'
     const numero = form.numero.replace(/\s+/g, '')
     if (!/^\d{16}$/.test(numero)) return 'El número de tarjeta debe tener 16 dígitos.'
@@ -134,7 +137,8 @@ export default function Pago() {
           items: items.map((i) => ({ producto_id: i.producto_id, cantidad: i.cantidad })),
           metodo_pago: 'tarjeta',
           cuotas: Number(form.cuotas),
-          direccion_envio: direccionEnvio()
+          direccion_envio: direccionEnvio(),
+          email_contacto: form.email.trim()
         }
       })
       setVenta(data.venta)
@@ -183,6 +187,18 @@ export default function Pago() {
             placeholder="4111 1111 1111 1111"
             inputMode="numeric"
           />
+        </label>
+
+        <label className="campo">
+          <span>Correo para la confirmación (opcional)</span>
+          <input
+            type="email"
+            value={form.email}
+            onChange={(e) => actualizar('email', e.target.value)}
+            placeholder="tu@correo.com"
+            autoComplete="email"
+          />
+          <small className="campo__nota">Si lo dejás vacío usamos el correo de tu cuenta. Te llega el detalle del pedido.</small>
         </label>
 
         <div className="fila-campos">

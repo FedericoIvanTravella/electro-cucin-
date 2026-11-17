@@ -4,11 +4,8 @@ import { requerirAdmin } from '../auth.js'
 
 const router = Router()
 
-// ---------------------- SECCIÓN: CLIENTES (libreta del superusuario) ----------------------
-// Toda la sección requiere que el usuario logueado sea admin.
 router.use(requerirAdmin)
 
-// Prepara y valida los campos de un cliente (parcial = solo lo enviado).
 function prepararCliente(body, { parcial = false } = {}) {
   const errores = []
   const datos = {}
@@ -20,7 +17,6 @@ function prepararCliente(body, { parcial = false } = {}) {
   for (const campo of ['email', 'telefono', 'direccion', 'notas']) {
     if (body[campo] !== undefined) datos[campo] = String(body[campo] || '').trim()
   }
-  // La fecha de nacimiento es opcional, pero si viene debe ser válida.
   if (body.fecha_nacimiento !== undefined) {
     const fecha = String(body.fecha_nacimiento || '')
     if (fecha && Number.isNaN(new Date(`${fecha}T00:00:00`).getTime())) {
@@ -31,8 +27,6 @@ function prepararCliente(body, { parcial = false } = {}) {
   return { errores, datos }
 }
 
-// ---------------------- GET /api/clientes · Listar ----------------------
-// Con ?q= busca por nombre, email o teléfono. Incluye la edad calculada.
 router.get('/', (req, res) => {
   const { q = '' } = req.query
   const params = []
@@ -48,7 +42,6 @@ router.get('/', (req, res) => {
   res.json({ clientes })
 })
 
-// ---------------------- GET /api/clientes/:id · Detalle + compras del cliente ----------------------
 router.get('/:id', (req, res) => {
   const cliente = db.prepare('SELECT * FROM clientes WHERE id = ?').get(req.params.id)
   if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado.' })
@@ -58,7 +51,6 @@ router.get('/:id', (req, res) => {
   res.json({ cliente: { ...cliente, edad: calcularEdad(cliente.fecha_nacimiento) }, compras })
 })
 
-// ---------------------- POST /api/clientes · Crear ----------------------
 router.post('/', (req, res) => {
   const { errores, datos } = prepararCliente(req.body || {})
   if (errores.length) return res.status(400).json({ error: errores.join(' ') })
@@ -82,7 +74,6 @@ router.post('/', (req, res) => {
   res.status(201).json({ cliente: { ...cliente, edad: calcularEdad(cliente.fecha_nacimiento) } })
 })
 
-// ---------------------- PUT /api/clientes/:id · Actualizar ----------------------
 router.put('/:id', (req, res) => {
   const actual = db.prepare('SELECT * FROM clientes WHERE id = ?').get(req.params.id)
   if (!actual) return res.status(404).json({ error: 'Cliente no encontrado.' })
@@ -108,7 +99,6 @@ router.put('/:id', (req, res) => {
   res.json({ cliente: { ...cliente, edad: calcularEdad(cliente.fecha_nacimiento) } })
 })
 
-// ---------------------- DELETE /api/clientes/:id · Eliminar ----------------------
 router.delete('/:id', (req, res) => {
   const cliente = db.prepare('SELECT * FROM clientes WHERE id = ?').get(req.params.id)
   if (!cliente) return res.status(404).json({ error: 'Cliente no encontrado.' })
@@ -118,3 +108,4 @@ router.delete('/:id', (req, res) => {
 })
 
 export default router
+

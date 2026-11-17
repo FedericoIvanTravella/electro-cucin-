@@ -1,10 +1,4 @@
-// =====================================================================
-// Electro Cuciné · BackEnd — PUNTO DE ENTRADA DEL SERVIDOR
-// Express monta (1) la API REST bajo /api y (2) sirve la app de
-// React ya compilada (carpeta dist del FrontEnd) para producción.
-// Exporta `app` para los tests; solo escucha si se ejecuta directamente.
-// =====================================================================
-import './src/env.js' // PRIMERO: carga .env antes que cualquier módulo lea process.env
+import './src/env.js' 
 import express from 'express'
 import cors from 'cors'
 import helmet from 'helmet'
@@ -24,21 +18,15 @@ import { generarCsrf, purgarIntentosViejos } from './src/seguridad.js'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const esPrincipal = process.argv[1] && import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
 const app = express()
-const PORT = process.env.PORT || 3001 // Puerto por defecto de la API.
+const PORT = process.env.PORT || 3001 
 const esProduccion = process.env.NODE_ENV === 'production'
 
-// Datos iniciales (superusuario desde env + catálogo si está vacío).
 seedInicial()
 
-// Detrás de un proxy/reverse proxy (nginx, IIS, Cloudflare), habilitar con
-// TRUST_PROXY=1 para que req.ip sea la IP real del cliente (rate limit OK).
 if (process.env.TRUST_PROXY === '1') {
   app.set('trust proxy', 1)
 }
 
-// ---------------------- Seguridad de cabeceras ----------------------
-// helmet() agrega headers de protección (CSP, nosniff, etc.) y elimina
-// el header "X-Powered-By" que revelaba que usamos Express.
 app.use(
   helmet({
     contentSecurityPolicy: {
@@ -57,12 +45,6 @@ app.use(
   })
 )
 
-// ---------------------- CORS restringido ----------------------
-// Solo se aplica a /api (los estáticos pasan siempre).
-// Se permite: (1) sin header Origin (mismo sitio, curl),
-// (2) Origin cuyo host coincide con el Host del pedido (mismo origen),
-//     o (3) Origin presente en la lista CORS_ORIGINS (desarrollo, dominios).
-// El resto responde 403.
 const origenesPermitidos = (
   process.env.CORS_ORIGINS ||
   'http://localhost:5173,http://127.0.0.1:5173,http://localhost:3001,http://127.0.0.1:3001'
@@ -71,7 +53,6 @@ const origenesPermitidos = (
   .map((o) => o.trim())
   .filter(Boolean)
 
-// Error específico para que el middleware de errores responda 403 y no 500.
 class OrigenNoPermitido extends Error {
   constructor(origen) {
     super(`Origen no permitido por CORS: ${origen}`)
@@ -85,9 +66,7 @@ const corsRestringido = (req, res, next) =>
       if (!origin) return cb(null, true)
       try {
         if (new URL(origin).host === req.headers.host) return cb(null, true)
-      } catch {
-        // Origin malformado: cae al chequeo de la lista.
-      }
+      } catch { void 0 }
       if (origenesPermitidos.includes(origin)) return cb(null, true)
       cb(new OrigenNoPermitido(origin))
     },
@@ -96,16 +75,9 @@ const corsRestringido = (req, res, next) =>
 
 app.use('/api', corsRestringido)
 
-// ---------------------- Middlewares globales ----------------------
-// express.json(): convierte el body de las peticiones a JSON (límite 100kb).
-// cookieParser(): lee las cookies de la petición en req.cookies.
 app.use(express.json({ limit: '100kb' }))
 app.use(cookieParser())
 
-// ---------------------- Protección CSRF ----------------------
-// Patrón "double submit": nos aseguramos de que siempre exista una cookie
-// CSRF legible por el frontend; en cada petición que modifica datos
-// (POST/PUT/PATCH/DELETE) se exige que el header X-CSRF-Token coincida.
 const BASE_COOKIE_CSRF = { sameSite: 'lax', secure: esProduccion, path: '/', httpOnly: false }
 app.use((req, res, next) => {
   if (!req.cookies?.[COOKIE_CSRF]) {
@@ -123,12 +95,10 @@ function verificarCsrf(req, res, next) {
   next()
 }
 
-// Endpoint de prueba para verificar que la API está viva.
 app.get('/api/saludo', (req, res) => {
   res.json({ mensaje: 'API de Electro Cuciné funcionando' })
 })
 
-// Health check con ping a la base (para monitoreo / Docker).
 app.get('/api/salud', (req, res) => {
   try {
     db.prepare('SELECT 1').get()
@@ -138,21 +108,16 @@ app.get('/api/salud', (req, res) => {
   }
 })
 
-// ---------------------- Rutas de la API ----------------------
-// Cada módulo define su propio enrutador con el prefijo /api/<recurso>.
-// El CSRF solo se exige dentro de /api (no afecta a los archivos estáticos).
 app.use('/api', verificarCsrf)
-app.use('/api/auth', authRoutes) // Registro, login, logout, "quién soy".
-app.use('/api/productos', productosRoutes) // Catálogo, stock e imágenes.
-app.use('/api/clientes', clientesRoutes) // Libreta de clientes (admin).
-app.use('/api/ventas', ventasRoutes) // Ventas, mis compras y anulaciones.
+app.use('/api/auth', authRoutes) 
+app.use('/api/productos', productosRoutes) 
+app.use('/api/clientes', clientesRoutes) 
+app.use('/api/ventas', ventasRoutes) 
 
-// Estadísticas generales + analítica de gráficos para el panel del superusuario (admin).
 app.get('/api/stats', requerirAdmin, (req, res) => {
   res.json({ stats: estadisticas(), analitica: analitica() })
 })
 
-// Registro de auditoría: quién hizo qué acción sensible y cuándo (solo admin).
 app.get('/api/auditoria', requerirAdmin, (req, res) => {
   const registros = db
     .prepare('SELECT * FROM auditoria ORDER BY fecha DESC, id DESC LIMIT 200')
@@ -160,13 +125,10 @@ app.get('/api/auditoria', requerirAdmin, (req, res) => {
   res.json({ registros })
 })
 
-// Cualquier otra ruta /api que no exista responde 404 con JSON.
 app.use('/api', (req, res) => {
   res.status(404).json({ error: 'Ruta no encontrada.' })
 })
 
-// Manejo centralizado de errores: nunca "tire" la app. Respeta el status
-// del error si viene marcado (p. ej. 403 por CORS) y oculta detalles.
 app.use((err, req, res, next) => {
   if (res.headersSent) return next(err)
   const status = Number.isInteger(err?.status) && err.status >= 400 && err.status < 600 ? err.status : 500
@@ -174,10 +136,6 @@ app.use((err, req, res, next) => {
   res.status(status).json({ error: status >= 500 ? 'Error interno del servidor.' : err.message })
 })
 
-// ---------------------- Frontend estático (producción) ----------------------
-// 1) public/  -> archivos que genera el backend (imágenes numeradas de productos).
-// 2) dist/    -> build de React. Si existe, todo lo que no sea /api
-//                resuelve a index.html (SPA con rutas propias de react-router).
 const dist = path.join(__dirname, '..', 'FrontEnd', 'client', 'dist')
 const publico = path.join(__dirname, 'public')
 if (fs.existsSync(publico)) {
@@ -190,9 +148,8 @@ if (fs.existsSync(dist)) {
   })
 }
 
-// ---------------------- Arranque ----------------------
 if (esPrincipal) {
-  // Limpieza de sesiones vencidas al arrancar + cada 6 horas.
+  
   const purgadas = purgarSesionesExpiradas()
   if (purgadas > 0) console.log(`[sesiones] ${purgadas} sesiones vencidas eliminadas`)
   const limpieza = setInterval(() => {

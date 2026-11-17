@@ -1,7 +1,3 @@
-// Catálogo inicial de productos (solo para el seed de bases vacías).
-// [nombre, categoria, descripcion, precio, stock, precio_tachado]
-// El orden define el ID. Los productos 6 a 100 usan imágenes SVG generadas
-// en public/productos/<id>.svg; 1 a 5 tienen foto real (<id>.jpg).
 export const productosIniciales = [
   ['Freidora de aire 5.5L Dual Crisp', 'Cocción', 'Freidora sin aceite de 5.5 litros con canasto doble, 12 programas y pantalla táctil.', 189900, 18, 249900],
   ['Licuadora de mano 700W con vaso y varillas', 'Preparación', 'Minipimer de 700W con vaso graduado de 700ml y accesorios para batir y picar.', 68900, 24, 89900],
@@ -104,4 +100,3 @@ export const productosIniciales = [
   ['Cocina a gas portátil', 'Cocción', 'Hornalla a gas con cartucho, ideal camping y balcones.', 38900, 14, 48900],
   ['Extractor de humos compacto 45cm', 'Limpieza', 'Para espacios chicos, 240 m³/h y filtro lavable.', 159900, 5, 189900]
 ]
-

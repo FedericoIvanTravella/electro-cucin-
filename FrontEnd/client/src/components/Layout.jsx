@@ -17,17 +17,6 @@ const PROMOS = [
   { icono: 'fi-rr-shield-check', texto: '2 años de garantía en todos los productos' }
 ]
 
-// Cinta fina opcional: avisa que es una demo estática sin backend.
-function BarraDemo() {
-  if (import.meta.env.VITE_DEMO !== '1') return null
-  return (
-    <div className="barra-demo" role="status">
-      <i className="fi fi-rr-gift" aria-hidden="true" />
-      <span>Demo de portafolio: catálogo navegable con pedidos simulados. No se envían compras ni datos reales.</span>
-    </div>
-  )
-}
-
 function BarraPromos() {
   // El contenido se repite dos veces para que el bucle sea perfecto.
   const contenido = [...PROMOS, ...PROMOS]
@@ -280,7 +269,6 @@ export default function Layout() {
           <Guirnalda />
         </>
       )}
-      <BarraDemo />
       <BarraPromos />
       <Navbar />
       <main className="contenedor main">

@@ -190,10 +190,10 @@ export default function Pago() {
       <form className="card pago__formulario" onSubmit={pagar}>
         <div className="pago__encabezado">
           <h1>Pago</h1>
-          <span className="chip chip--demo">demo · no se cobra nada</span>
+          <span className="chip chip--seguro"><i className="fi fi-rr-lock" aria-hidden="true" /> Pago seguro</span>
         </div>
         <p className="seccion__bajada">
-          Completá los datos de la tarjeta. Este entorno es ficticio y no procesa cobros reales.
+          Completá los datos de la tarjeta. Nunca almacenamos los números y la operación se procesa de forma segura.
         </p>
 
         <TarjetaCredito

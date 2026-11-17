@@ -435,7 +435,7 @@ textarea:focus {
   color: var(--texto-sec);
 }
 
-.chip--demo {
+.chip--seguro {
   background: var(--azul-claro);
   color: var(--azul);
 }
@@ -5490,19 +5490,4 @@ textarea:focus {
   .mascota-asistente__burbuja {
     animation: none;
   }
-}
-
-/* Cinta "demo" (GitHub Pages sin backend) */
-.barra-demo {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  padding: 0.22rem 0.75rem;
-  background: #26201b;
-  color: #ffd166;
-  font-size: 0.72rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  text-align: center;
 }

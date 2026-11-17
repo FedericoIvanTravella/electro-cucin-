@@ -216,7 +216,7 @@ export default function Home() {
             <h2>Lo que dicen nuestros clientes</h2>
             <p className="seccion__bajada">Miles de cocinas argentinas ya confían en Electro Cuciné.</p>
           </div>
-          <span className="chip chip--demo"><i className="fi fi-sr-star" aria-hidden="true" /> 4.8 / 5 promedio</span>
+          <span className="chip chip--seguro"><i className="fi fi-sr-star" aria-hidden="true" /> 4.8 / 5 promedio</span>
         </div>
         <TestimoniosCarrusel />
       </Revelar>

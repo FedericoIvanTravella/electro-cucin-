@@ -15,13 +15,13 @@ function leerCookie(nombre) {
 // ---------------------------------------------------------------
 let demoCache = null
 
-// Usuario virtual: la demo autentica a todos como invitado VIP para poder
-// recorrer login, pago y "mis compras" sin backend.
+// Usuario virtual: la tienda entra autenticada con una cuenta ficticia para
+// poder recorrer todo el flujo de compra de punta a punta.
 const DEMO_USER = {
   id: 999,
-  nombre: 'Cliente Demo',
-  username: 'demo',
-  email: 'demo@electrocucine.com',
+  nombre: 'Martín Pereyra',
+  username: 'martinpereyra',
+  email: 'martin.pereyra@electrocucine.com',
   rol: 'cliente',
   descuento: { activo: false }
 }

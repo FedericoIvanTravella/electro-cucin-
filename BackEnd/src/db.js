@@ -3,6 +3,7 @@ import { DatabaseSync } from 'node:sqlite'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
+import { subcategorizar } from './catalogo.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const dataDir = path.join(__dirname, '..', 'data')
@@ -50,6 +51,7 @@ db.exec(`
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre TEXT NOT NULL,
     categoria TEXT NOT NULL,
+    subcategoria TEXT DEFAULT '',
     descripcion TEXT DEFAULT '',
     precio REAL NOT NULL,
     precio_tachado REAL NOT NULL DEFAULT 0,
@@ -162,6 +164,17 @@ function migrar() {
   const columnasProductos = db.prepare('PRAGMA table_info(productos)').all().map((c) => c.name)
   if (!columnasProductos.includes('precio_tachado')) {
     db.exec('ALTER TABLE productos ADD COLUMN precio_tachado REAL NOT NULL DEFAULT 0')
+  }
+  if (!columnasProductos.includes('subcategoria')) {
+    db.exec("ALTER TABLE productos ADD COLUMN subcategoria TEXT DEFAULT ''")
+  }
+  if (leerMeta('subcategorias_v2') !== '1') {
+    const filas = db.prepare('SELECT id, nombre FROM productos').all()
+    const asignar = db.prepare('UPDATE productos SET subcategoria = ? WHERE id = ?')
+    for (const { id, nombre } of filas) {
+      asignar.run(subcategorizar(nombre), id)
+    }
+    escribirMeta('subcategorias_v2', '1')
   }
   const columnasVentas = db.prepare('PRAGMA table_info(ventas)').all().map((c) => c.name)
   if (!columnasVentas.includes('direccion_envio')) {

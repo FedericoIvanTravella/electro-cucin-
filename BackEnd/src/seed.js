@@ -4,7 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import bcrypt from 'bcrypt'
 import { db } from './db.js'
-import { productosIniciales } from './catalogo.js'
+import { productosIniciales, subcategorizar } from './catalogo.js'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -62,7 +62,7 @@ export function seedInicial() {
   const cantidad = db.prepare('SELECT COUNT(*) AS n FROM productos').get().n
   if (cantidad === 0) {
     const stmt = db.prepare(
-      'INSERT INTO productos (nombre, categoria, descripcion, precio, precio_tachado, stock, imagen) VALUES (?, ?, ?, ?, ?, ?, ?)'
+      'INSERT INTO productos (nombre, categoria, subcategoria, descripcion, precio, precio_tachado, stock, imagen) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
     )
     
     
@@ -72,7 +72,7 @@ export function seedInicial() {
       const id = indice + 1
       const imagen = imagenesElegidas[id] ?? (id <= 5 ? String(id) : '')
       const tachado = id % 3 === 0 ? 0 : p[5]
-      stmt.run(p[0], p[1], p[2], p[3], tachado, p[4], imagen)
+      stmt.run(p[0], p[1], subcategorizar(p[0]), p[2], p[3], tachado, p[4], imagen)
     })
     console.log(`[seed] ${productosIniciales.length} productos cargados`)
   }

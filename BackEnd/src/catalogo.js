@@ -100,3 +100,53 @@ export const productosIniciales = [
   ['Cocina a gas portátil', 'Cocción', 'Hornalla a gas con cartucho, ideal camping y balcones.', 38900, 14, 48900],
   ['Extractor de humos compacto 45cm', 'Limpieza', 'Para espacios chicos, 240 m³/h y filtro lavable.', 159900, 5, 189900]
 ]
+
+export function subcategorizar(nombre) {
+  const n = String(nombre || '').toLowerCase()
+  const reglas = [
+    // Cocción
+    [/freidora/, 'Freidoras'],
+    [/horno|microondas/, 'Hornos y microondas'],
+    [/olla|multicocina|arrocera|vaporera/, 'Ollas y multicocinas'],
+    [/anafe|cocina de inducción|cocina eléctrica|cocina a gas|cocina solar/, 'Anafes y cocinas'],
+    [/parrilla|grill|plancha|panini/, 'Parrillas, grills y planchas'],
+    [/sandwichera|gofrera/, 'Sandwicheras y gofreras'],
+    [/churrera|crepera|palomitas/, 'Pastelería y snacks'],
+    [/panificadora|máquina para hacer pan/, 'Panificadoras'],
+    // Preparación
+    [/licuadora/, 'Licuadoras y blenders'],
+    [/batidora/, 'Batidoras'],
+    [/procesador|procesadora|picadora|kitchen|robot de cocina|rallador eléctrico/, 'Procesadoras y picadoras'],
+    [/exprimidor|juguer|prensa de jugos/, 'Exprimidoras y jugueras'],
+    [/cortadora|cortador multiuso/, 'Cortadoras'],
+    [/balanza|termómetro/, 'Balanzas y termómetros'],
+    [/selladora|envasadora/, 'Envasadoras al vacío'],
+    [/fideos|pasta/, 'Pastas y fideos'],
+    [/rallador|espiralizador/, 'Ralladores y espiralizadores'],
+    [/yogurtera|heladera/, 'Yogurteras y heladeras'],
+    [/abrelatas|deshidratador/, 'Deshidratadores'],
+    // Cafetería
+    [/espresso/, 'Espresso'],
+    [/cápsulas|capsula/, 'De cápsulas'],
+    [/goteo|filtro/, 'De goteo y filtro'],
+    [/moka|italiana/, 'Italianas (moka)'],
+    [/pava|hervidor/, 'Pavas y hervidores'],
+    [/tostadora/, 'Tostadoras'],
+    [/molinillo/, 'Molinillos'],
+    [/espumador/, 'Espumadores de leche'],
+    [/prensa francesa|prensa de jugos/, 'Prensas francesas y de palanca'],
+    [/filtro de agua|jarra/, 'Jarras filtrantes'],
+    [/cafetera/, 'Cafeteras'],
+    [/sandwichera/, 'Sandwicheras'],
+    [/chocolate/, 'Máquinas de chocolate'],
+    [/express/, 'Café de grano'],
+    // Limpieza
+    [/extractor/, 'Extractores y campanas'],
+    [/lavavajillas/, 'Lavavajillas'],
+    [/purificador/, 'Purificadores']
+  ]
+  for (const [regex, sub] of reglas) {
+    if (regex.test(n)) return sub
+  }
+  return ''
+}

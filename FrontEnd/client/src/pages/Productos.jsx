@@ -4,10 +4,11 @@ import ProductCard from '../components/ProductCard'
 import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import EstadoVacio from '../components/EstadoVacio'
+import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
 import { ahorroPorcentaje, dinero } from '../lib/format'
 
-const INICIAL = { busqueda: '', categorias: [], min: '', max: '', soloStock: false, conDescuento: false }
+const INICIAL = { busqueda: '', categorias: [], subcategorias: [], min: '', max: '', soloStock: false, conDescuento: false, minEstrellas: 0 }
 const POR_PAGINA = 18
 const ICONO_CATEGORIA = {
   Cocción: 'fi-rr-pot',
@@ -32,6 +33,9 @@ export default function Productos() {
     categoriaInicial ? { ...INICIAL, categorias: [categoriaInicial] } : INICIAL
   )
   const [orden, setOrden] = useState('relevancia')
+  const [comparando, setComparando] = useState([])
+  const [compararAbierto, setCompararAbierto] = useState(false)
+  const { mostrar } = useToast()
   const [pagina, setPagina] = useState(1)
   const [ladoAbierto, setLadoAbierto] = useState(false)
   const [indiceSugerencia, setIndiceSugerencia] = useState(-1)
@@ -73,6 +77,8 @@ export default function Productos() {
     let resultado = productos.filter((p) => {
       if (texto && !`${p.nombre} ${p.descripcion} ${p.categoria}`.toLowerCase().includes(texto)) return false
       if (filtros.categorias.length && !filtros.categorias.includes(p.categoria)) return false
+      if (filtros.subcategorias.length && !filtros.subcategorias.includes(p.subcategoria)) return false
+      if (filtros.minEstrellas && Number(p.promedio_resenas || 0) < filtros.minEstrellas) return false
       if (filtros.soloStock && p.stock <= 0) return false
       if (filtros.conDescuento && ahorroPorcentaje(p.precio, p.precio_tachado) === 0) return false
       if (filtros.min !== '' && p.precio < Number(filtros.min)) return false
@@ -101,13 +107,15 @@ export default function Productos() {
     return copia
   }, [productos, filtros, orden])
 
-  const togglCategoria = (c) =>
-    setFiltros((f) => ({
-      ...f,
-      categorias: f.categorias.includes(c)
-        ? f.categorias.filter((x) => x !== c)
-        : [...f.categorias, c]
-    }))
+  const cambiarCategoria = (categoria) => {
+    setFiltros((f) => {
+      const nueva = f.categorias.includes(categoria)
+        ? f.categorias.filter((x) => x !== categoria)
+        : [...f.categorias, categoria]
+      return { ...f, categorias: nueva, subcategorias: [] }
+    })
+    setPagina(1)
+  }
 
   const cambiarFiltro = (parcial) => {
     setFiltros((f) => ({ ...f, ...parcial }))
@@ -119,7 +127,7 @@ export default function Productos() {
     setPagina(1)
   }
 
-  const activos = filtros.busqueda || filtros.categorias.length || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento
+  const activos = filtros.busqueda || filtros.categorias.length || filtros.subcategorias.length || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento || filtros.minEstrellas > 0
 
   const totalPaginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA))
   const paginaActual = Math.min(pagina, totalPaginas)
@@ -131,6 +139,10 @@ export default function Productos() {
     setPagina(nueva)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
+
+  const productosSeleccionados = productos.filter((p) => comparando.includes(p.id))
+
+  const quitarDeComparacion = (id) => setComparando((prev) => prev.filter((x) => x !== id))
 
   const numerosPagina = () => {
     if (totalPaginas <= 7) return Array.from({ length: totalPaginas }, (_, i) => i + 1)
@@ -248,7 +260,7 @@ export default function Productos() {
                     key={categoria}
                     type="button"
                     className={`chip-categoria ${activa ? 'chip-categoria--activo' : ''}`}
-                    onClick={() => { togglCategoria(categoria); setPagina(1) }}
+                    onClick={() => cambiarCategoria(categoria)}
                     aria-pressed={activa}
                   >
                     <i className={`fi ${ICONO_CATEGORIA[categoria] || 'fi-rr-tag'}`} aria-hidden="true" />
@@ -259,6 +271,40 @@ export default function Productos() {
               })}
             </div>
           </div>
+
+          {filtros.categorias.length > 0 && (
+            <div className="grupo-filtro">
+              <h4><i className="fi fi-rr-tags" aria-hidden="true" /> Subcategoría</h4>
+              <div className="cat-chips">
+                {[...new Set(productos.filter((p) => filtros.categorias.includes(p.categoria)).map((p) => p.subcategoria))]
+                  .sort((a, b) => a.localeCompare(b))
+                  .map((sub) => {
+                    const activa = filtros.subcategorias.includes(sub)
+                    const total = productos.filter((p) => filtros.categorias.includes(p.categoria) && p.subcategoria === sub).length
+                    return (
+                      <button
+                        key={sub}
+                        type="button"
+                        className={`chip-categoria chip-categoria--sub ${activa ? 'chip-categoria--activo' : ''}`}
+                        onClick={() => {
+                          setFiltros((f) => ({
+                            ...f,
+                            subcategorias: f.subcategorias.includes(sub)
+                              ? f.subcategorias.filter((x) => x !== sub)
+                              : [...f.subcategorias, sub]
+                          }))
+                          setPagina(1)
+                        }}
+                        aria-pressed={activa}
+                      >
+                        <span className="chip-categoria__nombre">{sub}</span>
+                        <span className="chip-categoria__cant">{total}</span>
+                      </button>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
 
           <div className="grupo-filtro">
             <h4><i className="fi fi-rr-money" aria-hidden="true" /> Precio</h4>
@@ -356,6 +402,22 @@ export default function Productos() {
             </button>
             <button
               type="button"
+              className={`top-chip ${filtros.minEstrellas === 4 ? 'top-chip--activo' : ''}`}
+              onClick={() => cambiarFiltro({ minEstrellas: filtros.minEstrellas === 4 ? 0 : 4 })}
+              title="Solo productos con 4 o más estrellas"
+            >
+              <i className="fi fi-rr-star" aria-hidden="true" /> 4★ o más
+            </button>
+            <button
+              type="button"
+              className={`top-chip ${filtros.minEstrellas === 3 ? 'top-chip--activo' : ''}`}
+              onClick={() => cambiarFiltro({ minEstrellas: filtros.minEstrellas === 3 ? 0 : 3 })}
+              title="Solo productos con 3 o más estrellas"
+            >
+              <i className="fi fi-rr-star" aria-hidden="true" /> 3★ o más
+            </button>
+            <button
+              type="button"
               className={`top-chip ${filtros.soloStock ? 'top-chip--activo' : ''}`}
               onClick={() => cambiarFiltro({ soloStock: !filtros.soloStock })}
             >
@@ -399,7 +461,7 @@ export default function Productos() {
             </button>
           </div>
 
-          {(filtros.busqueda || filtros.categorias.length > 0 || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento) && (
+          {(filtros.busqueda || filtros.categorias.length > 0 || filtros.subcategorias.length > 0 || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento) && (
             <div className="filtros-activos" aria-label="Filtros activos">
               <span className="filtros-activos__label">Filtros activos:</span>
               {filtros.busqueda && (
@@ -412,9 +474,19 @@ export default function Productos() {
                   key={c}
                   type="button"
                   className="filtro-activo"
-                  onClick={() => cambiarFiltro({ categorias: filtros.categorias.filter((x) => x !== c) })}
+                  onClick={() => cambiarFiltro({ categorias: filtros.categorias.filter((x) => x !== c), subcategorias: [] })}
                 >
                   {c} <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              ))}
+              {filtros.subcategorias.map((s) => (
+                <button
+                  key={s}
+                  type="button"
+                  className="filtro-activo"
+                  onClick={() => cambiarFiltro({ subcategorias: filtros.subcategorias.filter((x) => x !== s) })}
+                >
+                  {s} <i className="fi fi-rr-x" aria-hidden="true" />
                 </button>
               ))}
               {filtros.min && (
@@ -435,6 +507,11 @@ export default function Productos() {
               {filtros.conDescuento && (
                 <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ conDescuento: false })}>
                   Solo con ofertas <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              )}
+              {filtros.minEstrellas > 0 && (
+                <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ minEstrellas: 0 })}>
+                  {filtros.minEstrellas}+ estrellas <i className="fi fi-rr-x" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -464,7 +541,28 @@ export default function Productos() {
             <div className="grilla-productos">
               {paginados.map((p, i) => (
                 <Revelar key={p.id} delay={(i % 6) * 70} className="revelar--item">
-                  <ProductCard producto={p} />
+                  <div className="comparar-item">
+                    <button
+                      type="button"
+                      className={`comparar-toggle ${comparando.includes(p.id) ? 'comparar-toggle--activo' : ''}`}
+                      onClick={() =>
+                        setComparando((prev) => {
+                          if (prev.includes(p.id)) return prev.filter((id) => id !== p.id)
+                          if (prev.length >= 3) {
+                            mostrar('Solo podés comparar hasta 3 productos.', 'error')
+                            return prev
+                          }
+                          return [...prev, p.id]
+                        })
+                      }
+                      aria-pressed={comparando.includes(p.id)}
+                      title={comparando.includes(p.id) ? 'Quitar de la comparación' : 'Agregar a la comparación'}
+                    >
+                      <i className="fi fi-rr-columns-3" aria-hidden="true" />
+                      {comparando.includes(p.id) ? 'Quitar' : 'Comparar'}
+                    </button>
+                    <ProductCard producto={p} />
+                  </div>
                 </Revelar>
               ))}
             </div>
@@ -509,6 +607,103 @@ export default function Productos() {
           )}
         </div>
       </div>
+
+      {comparando.length > 0 && (
+        <aside className="comparar-bar" aria-label="Barra de comparación">
+          <div className="contenedor comparar-bar__interior">
+            <div className="comparar-bar__productos">
+              {productosSeleccionados.map((p) => (
+                <span key={p.id} className="comparar-bar__nav">
+                  <span>{p.nombre.slice(0, 42)}{p.nombre.length > 42 ? '…' : ''}</span>
+                  <button type="button" onClick={() => quitarDeComparacion(p.id)} aria-label="Quitar de la comparación">
+                    <i className="fi fi-rr-x" aria-hidden="true" />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="comparar-bar__acciones">
+              <button type="button" className="boton boton--fantasma boton--chico" onClick={() => setComparando([])}>
+                Limpiar
+              </button>
+              <button
+                type="button"
+                className="boton boton--primario"
+                disabled={comparando.length < 2}
+                onClick={() => setCompararAbierto(true)}
+              >
+                <i className="fi fi-rr-columns-3" aria-hidden="true" /> Comparar ({comparando.length})
+              </button>
+            </div>
+          </div>
+        </aside>
+      )}
+
+      {compararAbierto && comparando.length >= 2 && (
+        <div
+          className="comparar-modal"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Comparación de productos"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setCompararAbierto(false)
+          }}
+        >
+          <div className="card comparar-modal__panel">
+            <header className="comparar-modal__cabecera">
+              <h2>Comparar productos</h2>
+              <button type="button" className="boton boton--fantasma boton--chico" onClick={() => setCompararAbierto(false)} aria-label="Cerrar">
+                <i className="fi fi-rr-x" aria-hidden="true" /> Cerrar
+              </button>
+            </header>
+
+            <div className="comparar-modal__scroll">
+              <div className="comparar-grid" style={{ gridTemplateColumns: `10rem repeat(${productosSeleccionados.length}, minmax(160px, 1fr))` }}>
+                <div className="comparar-grid__esquina"></div>
+                {productosSeleccionados.map((p) => (
+                  <div key={`head-${p.id}`} className="comparar-grid__celda comparar-grid__celda--head">
+                    <button type="button" className="comparar-quitar" onClick={() => quitarDeComparacion(p.id)} aria-label="Quitar">
+                      <i className="fi fi-rr-x" aria-hidden="true" />
+                    </button>
+                    {p.imagen && (String(p.imagen) === '0' || /\d+/.test(String(p.imagen))) ? (
+                      <img src={`/productos/${String(p.imagen).replace(/[^\d]/g, '') || p.imagen}.jpg`} alt={p.nombre} />
+                    ) : (
+                      <span className="comparar-icono" aria-hidden="true"><i className="fi fi-rr-utensils" /></span>
+                    )}
+                    <strong className="comparar-nombre">{p.nombre}</strong>
+                    <input type="hidden" aria-hidden="true" value={p.id} readOnly />
+                  </div>
+                ))}
+
+                {[
+                  ['Categoría', (p) => p.categoria],
+                  ['Subcategoría', (p) => p.subcategoria || '—'],
+                  ['Precio', (p) => dinero(p.precio)],
+                  ['Precio anterior', (p) => Number(p.precio_tachado) > Number(p.precio) ? dinero(p.precio_tachado) : '—'],
+                  ['Descuento', (p) => ahorroPorcentaje(p.precio, p.precio_tachado) > 0 ? `${ahorroPorcentaje(p.precio, p.precio_tachado)}% OFF` : '—'],
+                  ['12 cuotas', (p) => `12 × ${dinero(Math.max(0, p.precio / 12))} sin interés`],
+                  ['Envío gratis', (p) => Number(p.precio) >= 150000 ? 'Sí' : 'No (+costo)'],
+                  ['Garantía', () => '2 años oficial'],
+                  ['Stock', (p) => p.stock > 0 ? `${p.stock} u.` : 'Sin stock'],
+                  ['Rating', (p) => Number(p.cantidad_resenas) > 0 ? `⭐ ${Number(p.promedio_resenas).toFixed(1)} (${p.cantidad_resenas})` : 'Sin reseñas']
+                ].map(([etiqueta, valor]) => (
+                  <FragmentRow key={etiqueta} etiqueta={etiqueta} productos={productosSeleccionados} valor={valor} />
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
+  )
+}
+
+function FragmentRow({ etiqueta, productos, valor }) {
+  return (
+    <>
+      <div className="comparar-grid__label">{etiqueta}</div>
+      {productos.map((p) => (
+        <div key={`${etiqueta}-${p.id}`} className="comparar-grid__celda">{valor(p)}</div>
+      ))}
+    </>
   )
 }

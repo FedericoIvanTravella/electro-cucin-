@@ -4990,6 +4990,7 @@ textarea:focus {
   padding: 0.75rem 0.6rem 0.9rem;
   position: relative;
   min-height: 210px;
+  background: linear-gradient(180deg, #ffffff 0%, #f2eee3 100%);
 }
 .comparar-grid__celda--head img {
   max-width: 140px;
@@ -5013,7 +5014,10 @@ textarea:focus {
 }
 .comparar-nombre {
   font-size: 0.82rem;
-  color: var(--tinta);
+  color: #26201b;
+}
+.comparar-grid__celda--head .comparar-icono {
+  color: #6b6f66;
 }
 .comparar-icono {
   font-size: 3.5rem;
@@ -5169,8 +5173,18 @@ textarea:focus {
 }
 
 [data-tema='navideño'] .producto__media {
-  background: linear-gradient(180deg, #1e4434 0%, #0d271e 100%);
+  background: linear-gradient(180deg, #ffffff 0%, #f2eee3 100%);
   border-bottom: 1px solid #ffd166;
+}
+
+[data-tema='navideño'] .producto__media .producto__icono,
+[data-tema='navideño'] .pdp-media .pdp-icono {
+  color: #4a5b50;
+  opacity: 0.9;
+}
+
+[data-tema='navideño'] .pdp-media {
+  background: linear-gradient(180deg, #ffffff, #f2eee3);
 }
 
 [data-tema='navideño'] .boton--primario {

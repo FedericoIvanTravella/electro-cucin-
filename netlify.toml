@@ -1,0 +1,20 @@
+# Netlify — demo estática de Electro Cuciné
+# Conectá el repo en app.netlify.com → Add new site → Import from GitHub.
+# Cada push a `main` dispara build + deploy automático (~1-2 min).
+
+[build]
+  base = "FrontEnd/client"
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  # La demo ignora /api y responde con el snapshot del catálogo
+  VITE_DEMO = "1"
+  # Vite 7 / React 19: Node >= 20.19 / 22.5
+  NODE_VERSION = "22"
+
+# SPA: cualquier ruta la sirve el index (basenames propias de Netlify en raíz)
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

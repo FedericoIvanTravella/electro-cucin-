@@ -120,6 +120,16 @@ Imagen todo-en-uno: compila el frontend, instala deps de producción del backend
 - La SPA vive en la subcarpeta `/electro-cucin-/`: el workflow compila con `--base=/electro-cucin-/`, el router toma ese basename y se copia `index.html` como `404.html` para que los deep links (p. ej. `/electro-cucin-/producto/5`) recarguen bien.
 - El sitio completo con backend sigue siendo `npm start` (o la imagen Docker) en el puerto 3001.
 
+## Netlify (alternativa para la demo)
+
+Si el repo queda **privado**, Netlify lo publica gratis conectando tu GitHub: `app.netlify.com` → **Add new site** → **Import an existing project** → elegís el repo y Netlify toma `netlify.toml` (build en `FrontEnd/client`, `VITE_DEMO=1`, SPA con redirects a `/index.html`).
+
+- **Cada push a `main` redespliega solo** (~1–2 min). No se actualiza desde tu disco: tiene que haber commit + push.
+- Lo mismo aplica para PRs: cada PR genera un *deploy preview*.
+- Arrastrar la carpeta `dist` (drag & drop) también funciona pero **no** se actualiza solo — es un one-shot.
+- Netlify no corre el backend Express/SQLite: publica el mismo build demo que GitHub Pages.
+- Si preferís Netlify sobre Pages, no hace falta cambiar nada del código: el `dist` ya funciona en raíz.
+
 ## Ofertas y descuentos
 
 No todos los productos llevan oferta: **cada 3er producto** (id múltiplo de 3) se muestra a precio normal. El resto trae `precio_tachado` > precio con el % OFF correspondiente. Se puede editar producto por producto desde el panel del superusuario.

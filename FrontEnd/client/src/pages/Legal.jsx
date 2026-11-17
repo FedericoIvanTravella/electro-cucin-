@@ -63,7 +63,7 @@ const RUTAS = {
       },
       {
         h: '2. Datos que recolectamos',
-        p: 'Al registrarte: nombre y apellido, correo, fecha de nacimiento (para descuento 65+) y, opcionalmente, correo de contacto. Al comprar: dirección de envío, datos de pago (la tarjeta nunca se almacena en nuestros servidores; la operación se procesa con Mercado Pago / tarjetas bajo PCI DSS). Datos de navegación: cookies propias y de herramientas analíticas (ver sección 6).'
+        p: 'Al registrarte: nombre y apellido, correo electrónico y fecha de nacimiento (para descuento 65+). Al comprar: dirección de envío y datos de pago (la tarjeta nunca se almacena en nuestros servidores; la operación se procesa con Mercado Pago / tarjetas bajo PCI DSS). Datos de navegación: cookies propias y de herramientas analíticas (ver sección 6).'
       },
       {
         h: '3. Finalidad y legitimación',

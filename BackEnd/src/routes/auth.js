@@ -48,14 +48,14 @@ function limpiarCookies(res) {
 router.post('/register', (req, res) => {
   const { username, password, nombre, email = '', fecha_nacimiento = '' } = req.body || {}
 
-  if (!username || !password || !nombre) {
-    return res.status(400).json({ error: 'Usuario, contraseña y nombre son obligatorios.' })
+  if (!username || !password || !nombre || !email) {
+    return res.status(400).json({ error: 'Usuario, contraseña, nombre y email son obligatorios.' })
   }
   if (!/^[\w.-]{3,30}$/u.test(String(username).trim())) {
     return res.status(400).json({ error: 'El usuario solo puede tener letras, números, ".", "_" y "-" (3 a 30 caracteres).' })
   }
-  if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email).trim())) {
-    return res.status(400).json({ error: 'El email no tiene un formato válido.' })
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(String(email).trim())) {
+    return res.status(400).json({ error: 'El email es obligatorio y debe tener un formato válido.' })
   }
   const errorPassword = validarContrasena(password, String(username).trim())
   if (errorPassword) {

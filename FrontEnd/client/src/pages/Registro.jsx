@@ -104,7 +104,9 @@ export default function Registro() {
               type="email"
               value={form.email}
               onChange={(e) => actualizar('email', e.target.value)}
-              placeholder="opcional"
+              placeholder="tucorreo@gmail.com"
+              autoComplete="email"
+              required
             />
           </label>
         </div>

@@ -225,15 +225,16 @@ export default function Pago() {
         </label>
 
         <label className="campo">
-          <span>Correo para la confirmación (opcional)</span>
+          <span>Correo para la confirmación</span>
           <input
             type="email"
             value={form.email}
             onChange={(e) => actualizar('email', e.target.value)}
             placeholder="tu@correo.com"
             autoComplete="email"
+            required
           />
-          <small className="campo__nota">Si lo dejás vacío usamos el correo de tu cuenta. Te llega el detalle del pedido.</small>
+          <small className="campo__nota">Te llega el detalle del pedido a este correo (por defecto, el de tu cuenta).</small>
         </label>
 
         <div className="fila-campos">

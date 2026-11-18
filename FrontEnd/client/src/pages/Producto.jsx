@@ -262,6 +262,11 @@ export default function Producto() {
                 {descuento65}% de descuento por tener 65 años o más (se aplica en el pago).
               </p>
             )}
+            {Number(producto.precio) >= 150000 && (
+              <p className="pdp-envio-gratis">
+                <i className="fi fi-rr-truck-side" aria-hidden="true" /> Envío gratis en este producto
+              </p>
+            )}
           </div>
 
           {/* ---------- Beneficios rápidos ---------- */}

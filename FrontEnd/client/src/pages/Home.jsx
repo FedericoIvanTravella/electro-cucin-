@@ -6,6 +6,7 @@ import MascotaAsistente from '../components/MascotaAsistente'
 import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
+import { useTema } from '../context/TemaContext'
 import { api } from '../lib/api'
 import { dinero, imagenProducto, ahorroPorcentaje } from '../lib/format'
 
@@ -25,6 +26,8 @@ const categorias = [
 
 export default function Home() {
   const { usuario } = useAuth()
+  const { tema } = useTema()
+  const esNavidad = tema === 'navideño'
   const [destacados, setDestacados] = useState([])
   const [recientes, setRecientes] = useState([])
   const [cargando, setCargando] = useState(true)
@@ -61,13 +64,14 @@ export default function Home() {
     <div className="home">
       <section className="hero">
         <div className="hero__texto">
-          <p className="hero__etiqueta">Cocina con tecnología</p>
+          <p className="hero__etiqueta">{esNavidad ? 'Especial Navidad 2026' : 'Cocina con tecnología'}</p>
           <h1>
-            Electrodomésticos que <span>enamoran tu cocina</span>
+            {esNavidad ? 'Regalos que ' : 'Electrodomésticos que '}<span>enamoran tu cocina</span>
           </h1>
           <p className="hero__bajada">
-            Batidoras, hornos, cafeteras y más. Elegí tus productos, revisá el carrito y pagá en
-            minutos.
+            {esNavidad
+              ? 'Surprendé con la pava eléctrica, la cafetera o la freidora de aire que ya miran desde hace meses. Con NAVIDAD25, 25% OFF en todo.'
+              : 'Batidoras, hornos, cafeteras y más. Elegí tus productos, revisá el carrito y pagá en minutos.'}
           </p>
           <div className="hero__acciones">
             <Link to="/productos" className="boton boton--primario boton--grande">

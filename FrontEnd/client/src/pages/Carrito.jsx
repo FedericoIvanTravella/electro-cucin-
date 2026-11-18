@@ -55,6 +55,31 @@ export default function Carrito() {
           </button>
         </div>
 
+        {(() => {
+          const FALTA = Math.max(0, 150000 - totales.subtotal)
+          const progreso = Math.min(100, (totales.subtotal / 150000) * 100)
+          return (
+            <div className={`envio-gratis ${FALTA === 0 ? 'envio-gratis--ok' : ''}`} role="status">
+              <i className={`fi ${FALTA === 0 ? 'fi-rr-check' : 'fi-rr-truck-side'}`} aria-hidden="true" />
+              <div className="envio-gratis__cuerpo">
+                <p className="envio-gratis__texto">
+                  {FALTA === 0 ? (
+                    <>¡Tenés <strong>envío gratis</strong> a todo el país!</>
+                  ) : (
+                    <>
+                      Te faltan <strong>{dinero(FALTA)}</strong> para el <strong>envío gratis</strong>
+                    </>
+                  )}
+                </p>
+                <div className="envio-gratis__barra" aria-hidden="true">
+                  <div className="envio-gratis__relleno" style={{ width: `${progreso}%` }} />
+                </div>
+                <small>Envío gratis en compras superiores a $150.000</small>
+              </div>
+            </div>
+          )
+        })()}
+
         <div className="card lista-carrito">
           {items.map((item) => (
             <div key={item.producto_id} className="linea-carrito">
@@ -171,7 +196,7 @@ export default function Carrito() {
           <div className="resumen-nota">
             {usuario ? (
               <p>
-                {usuario.edad !== null
+                {typeof usuario.edad === 'number'
                   ? `Tenés ${usuario.edad} años. El 30% se aplica automáticamente desde los 65 años.`
                   : 'Cargá tu fecha de nacimiento para acceder al descuento de 65+.'}
               </p>

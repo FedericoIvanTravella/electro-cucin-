@@ -26,8 +26,13 @@ const MENSAJES = [
   },
   {
     icono: 'fi-rr-ticket',
-    texto: 'Cupón CUCINE5: $5.000 de descuento en electrodométicos. ¡Copialo!',
+    texto: 'Cupón CUCINE5: $5.000 de descuento en electrodomésticos. ¡Copialo!',
     cupon: 'CUCINE5'
+  },
+  {
+    icono: 'fi-rr-gift',
+    texto: 'Cupón NAVIDAD25: 25% OFF en todo el catálogo. ¡Copialo y usalo en el checkout!',
+    cupon: 'NAVIDAD25'
   },
   {
     icono: 'fi-rr-shield-check',

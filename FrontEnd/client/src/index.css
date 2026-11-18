@@ -5491,3 +5491,92 @@ textarea:focus {
     animation: none;
   }
 }
+
+/* ================================================================
+   Envío gratis: card en el carrito, badge en cards y detalle
+   ================================================================ */
+.envio-gratis {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 12px;
+  border: 1px dashed var(--borde);
+  background: var(--azul-claro);
+  margin-bottom: 1rem;
+}
+
+.envio-gratis > .fi {
+  flex: none;
+  font-size: 1.5rem;
+  color: var(--azul);
+}
+
+.envio-gratis--ok {
+  background: var(--exito-claro);
+  border-color: var(--exito);
+}
+
+.envio-gratis--ok > .fi {
+  color: var(--exito);
+}
+
+.envio-gratis__cuerpo {
+  flex: 1;
+  min-width: 0;
+}
+
+.envio-gratis__texto {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--tinta);
+}
+
+.envio-gratis__barra {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--gris-claro);
+  overflow: hidden;
+  margin-top: 0.4rem;
+}
+
+.envio-gratis__relleno {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #f2542d, #ff9a5a);
+  transition: width 0.6s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.envio-gratis--ok .envio-gratis__relleno {
+  background: var(--exito);
+}
+
+.envio-gratis small {
+  display: block;
+  margin-top: 0.3rem;
+  font-size: 0.68rem;
+  color: var(--texto-sec);
+}
+
+.producto__envio-gratis {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  color: var(--exito);
+  font-weight: 700;
+  font-size: 0.76rem;
+  margin: 0.15rem 0 0;
+}
+
+.pdp-envio-gratis {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.35rem 0 0;
+  padding: 0.35rem 0.65rem;
+  border-radius: 999px;
+  background: var(--exito-claro);
+  color: var(--exito);
+  font-weight: 800;
+  font-size: 0.82rem;
+}

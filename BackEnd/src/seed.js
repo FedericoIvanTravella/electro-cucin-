@@ -51,12 +51,14 @@ export function seedInicial() {
   }
 
   
-  const cantidadCupones = db.prepare('SELECT COUNT(*) AS n FROM cupones').get().n
-  if (cantidadCupones === 0) {
-    const stmt = db.prepare('INSERT INTO cupones (codigo, tipo, valor) VALUES (?, ?, ?)')
-    stmt.run('COCINA10', 'porcentaje', 10)
-    stmt.run('CUCINE5', 'fijo', 5000)
-    console.log('[seed] 2 cupones cargados: COCINA10 (-10%) y CUCINE5 (-$5.000)')
+  const semillaCupones = [
+    ['COCINA10', 'porcentaje', 10, null],
+    ['CUCINE5', 'fijo', 5000, null],
+    ['NAVIDAD25', 'porcentaje', 25, 250]
+  ]
+  const insertarCupon = db.prepare('INSERT OR IGNORE INTO cupones (codigo, tipo, valor, usos_max) VALUES (?, ?, ?, ?)')
+  for (const cupon of semillaCupones) {
+    insertarCupon.run(...cupon)
   }
 
   const cantidad = db.prepare('SELECT COUNT(*) AS n FROM productos').get().n

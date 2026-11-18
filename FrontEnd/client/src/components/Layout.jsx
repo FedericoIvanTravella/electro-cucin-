@@ -9,12 +9,25 @@ import Nieve from './Nieve'
 import Guirnalda from './Guirnalda'
 import { api } from '../lib/api'
 
+// Cuenta regresiva para Navidad (se calcula al cargar el módulo).
+const diasNavidad = (() => {
+  const hoy = new Date()
+  hoy.setHours(0, 0, 0, 0)
+  const navidad = new Date(hoy.getFullYear(), 11, 25)
+  if (hoy > navidad) navidad.setFullYear(navidad.getFullYear() + 1)
+  return Math.round((navidad - hoy) / 86400000)
+})()
+
 // Barra superior: cinta de beneficios deslizante (marquee infinito).
 const PROMOS = [
   { icono: 'fi-rr-shipping-fast', texto: 'Envío sin cargo en compras superiores a $150.000' },
   { icono: 'fi-rr-credit-card', texto: '12 cuotas sin interés con tarjetas seleccionadas' },
+  ...(diasNavidad > 0 && diasNavidad <= 90
+    ? [{ icono: 'fi-rr-calendar', texto: `Faltan ${diasNavidad} días para Navidad` }]
+    : []),
   { icono: 'fi-rr-person-walking-with-cane', texto: '30% de descuento para mayores de 65 años' },
-  { icono: 'fi-rr-shield-check', texto: '2 años de garantía en todos los productos' }
+  { icono: 'fi-rr-shield-check', texto: '2 años de garantía en todos los productos' },
+  { icono: 'fi-rr-gift', texto: 'Cupón NAVIDAD25: 25% OFF en todo el catálogo' }
 ]
 
 function BarraPromos() {
@@ -193,6 +206,15 @@ function Footer() {
             <a href="https://wa.me/5491100000000" aria-label="WhatsApp" title="WhatsApp">
               <i className="fi fi-brands-whatsapp" />
             </a>
+            <a
+              href="https://github.com/FedericoIvanTravella/electro-cucin-"
+              aria-label="Código fuente en GitHub"
+              title="Ver el código en GitHub"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              <i className="fi fi-brands-github" />
+            </a>
           </div>
         </div>
         <div>
@@ -249,7 +271,15 @@ function Footer() {
       </div>
       <p className="footer__legal">
         <Link to="/terminos">Términos y condiciones</Link> · <Link to="/privacidad">Privacidad</Link> ·{' '}
-        <Link to="/devoluciones">Devoluciones</Link><br />
+        <Link to="/devoluciones">Devoluciones</Link> ·{' '}
+        <a
+          href="https://github.com/FedericoIvanTravella/electro-cucin-"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Código en GitHub
+        </a>
+        <br />
         © {new Date().getFullYear()} Electro Cuciné · Proyecto académico · Íconos por{' '}
         <a href="https://www.flaticon.com" target="_blank" rel="noreferrer">
           Flaticon

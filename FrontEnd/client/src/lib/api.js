@@ -23,6 +23,7 @@ const DEMO_USER = {
   username: 'martinpereyra',
   email: 'martin.pereyra@electrocucine.com',
   rol: 'cliente',
+  edad: 34,
   descuento: { activo: false }
 }
 
@@ -87,6 +88,10 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
       if (codigo === 'CUCINE5') {
         return { cupon: { codigo, tipo: 'fijo', valor: 5000 }, descuento: Math.min(5000, subtotal) }
       }
+      if (codigo === 'NAVIDAD25') {
+        const descuento = Math.round(subtotal * 0.25 * 100) / 100
+        return { cupon: { codigo, tipo: 'porcentaje', valor: 25 }, descuento }
+      }
       throw errorStatus('Cupón no válido.', 404)
     }
     if (ruta === '/ventas') {
@@ -108,6 +113,7 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
       let cuponDescuento = 0
       if (cuponCodigo === 'COCINA10') cuponDescuento = Math.round(subtotal * 0.1 * 100) / 100
       else if (cuponCodigo === 'CUCINE5') cuponDescuento = Math.min(5000, subtotal)
+      else if (cuponCodigo === 'NAVIDAD25') cuponDescuento = Math.round(subtotal * 0.25 * 100) / 100
       const total = Math.max(0, Number((subtotal - cuponDescuento).toFixed(2)))
       return {
         venta: {

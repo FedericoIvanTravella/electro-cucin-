@@ -8,7 +8,7 @@ import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
 import { ahorroPorcentaje, dinero } from '../lib/format'
 
-const INICIAL = { busqueda: '', categorias: [], subcategorias: [], min: '', max: '', soloStock: false, conDescuento: false, minEstrellas: 0 }
+const INICIAL = { busqueda: '', categorias: [], subcategorias: [], min: '', max: '', soloStock: false, conDescuento: false, minEstrellas: 0, paraRegalar: false }
 const POR_PAGINA = 18
 const ICONO_CATEGORIA = {
   Cocción: 'fi-rr-pot',
@@ -81,6 +81,7 @@ export default function Productos() {
       if (filtros.minEstrellas && Number(p.promedio_resenas || 0) < filtros.minEstrellas) return false
       if (filtros.soloStock && p.stock <= 0) return false
       if (filtros.conDescuento && ahorroPorcentaje(p.precio, p.precio_tachado) === 0) return false
+      if (filtros.paraRegalar && Number(p.precio) < 150000) return false
       if (filtros.min !== '' && p.precio < Number(filtros.min)) return false
       if (filtros.max !== '' && p.precio > Number(filtros.max)) return false
       return true
@@ -127,7 +128,7 @@ export default function Productos() {
     setPagina(1)
   }
 
-  const activos = filtros.busqueda || filtros.categorias.length || filtros.subcategorias.length || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento || filtros.minEstrellas > 0
+  const activos = filtros.busqueda || filtros.categorias.length || filtros.subcategorias.length || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento || filtros.minEstrellas > 0 || filtros.paraRegalar
 
   const totalPaginas = Math.max(1, Math.ceil(visibles.length / POR_PAGINA))
   const paginaActual = Math.min(pagina, totalPaginas)
@@ -395,6 +396,19 @@ export default function Productos() {
           <div className="top-chips" aria-label="Filtros rápidos">
             <button
               type="button"
+              className={`top-chip ${filtros.paraRegalar ? 'top-chip--activo' : ''}`}
+              onClick={() => {
+                const activo = !filtros.paraRegalar
+                cambiarFiltro({ paraRegalar: activo })
+                setOrden(activo ? 'mas-vendidos' : 'relevancia')
+              }}
+              title="Los más regalados: mejor vendidos con envío gratis"
+              aria-pressed={filtros.paraRegalar}
+            >
+              <i className="fi fi-rr-gift" aria-hidden="true" /> Para regalar
+            </button>
+            <button
+              type="button"
               className={`top-chip ${filtros.conDescuento ? 'top-chip--activo' : ''}`}
               onClick={() => cambiarFiltro({ conDescuento: !filtros.conDescuento })}
             >
@@ -461,7 +475,7 @@ export default function Productos() {
             </button>
           </div>
 
-          {(filtros.busqueda || filtros.categorias.length > 0 || filtros.subcategorias.length > 0 || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento) && (
+          {(filtros.busqueda || filtros.categorias.length > 0 || filtros.subcategorias.length > 0 || filtros.min || filtros.max || filtros.soloStock || filtros.conDescuento || filtros.paraRegalar) && (
             <div className="filtros-activos" aria-label="Filtros activos">
               <span className="filtros-activos__label">Filtros activos:</span>
               {filtros.busqueda && (
@@ -502,6 +516,18 @@ export default function Productos() {
               {filtros.soloStock && (
                 <button type="button" className="filtro-activo" onClick={() => cambiarFiltro({ soloStock: false })}>
                   Solo en stock <i className="fi fi-rr-x" aria-hidden="true" />
+                </button>
+              )}
+              {filtros.paraRegalar && (
+                <button
+                  type="button"
+                  className="filtro-activo"
+                  onClick={() => {
+                    cambiarFiltro({ paraRegalar: false })
+                    setOrden('relevancia')
+                  }}
+                >
+                  Para regalar <i className="fi fi-rr-x" aria-hidden="true" />
                 </button>
               )}
               {filtros.conDescuento && (

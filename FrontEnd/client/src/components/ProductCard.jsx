@@ -108,6 +108,11 @@ export default function ProductCard({ producto, destacado = false, topRank = 0, 
           {producto.precio > 0 && (
             <p className="producto__cuota">12 cuotas de {dinero(cuotaMensual)}</p>
           )}
+          {Number(producto.precio) >= 150000 && (
+            <p className="producto__envio-gratis">
+              <i className="fi fi-rr-truck-side" aria-hidden="true" /> Envío gratis
+            </p>
+          )}
         </div>
 
       </div>

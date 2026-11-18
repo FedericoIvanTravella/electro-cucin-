@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext'
 import TarjetaCredito from '../components/TarjetaCredito'
 import EstadoVacio from '../components/EstadoVacio'
 import RutaEntrega from '../components/RutaEntrega'
+import Confetti from '../components/Confetti'
 import { api } from '../lib/api'
 import { dinero } from '../lib/format'
 
@@ -35,6 +36,7 @@ export default function Pago() {
   if (venta) {
     return (
       <div className="pago-exitoso card">
+        <Confetti />
         <span className="pago-exitoso__icono" aria-hidden="true">
           <i className="fi fi-rr-check" />
         </span>

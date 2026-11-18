@@ -31,6 +31,7 @@ export function ToastProvider({ children }) {
               <i className={`fi ${t.tipo === 'exito' ? 'fi-rr-check' : t.tipo === 'error' ? 'fi-rr-exclamation' : 'fi-rr-info'}`} />
             </span>
             <span>{t.mensaje}</span>
+            <span className="toast__progreso" aria-hidden="true" />
           </div>
         ))}
       </div>

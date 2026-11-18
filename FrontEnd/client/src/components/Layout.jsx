@@ -7,6 +7,7 @@ import { useTema } from '../context/TemaContext'
 import { useToast } from '../context/ToastContext'
 import Nieve from './Nieve'
 import Guirnalda from './Guirnalda'
+import VolverArriba from './VolverArriba'
 import { api } from '../lib/api'
 
 // Cuenta regresiva para Navidad (se calcula al cargar el módulo).
@@ -42,6 +43,38 @@ function BarraPromos() {
           </span>
         ))}
       </div>
+    </div>
+  )
+}
+
+// Barra fina arriba de todo que muestra cuánto del artículo se recorrió.
+function BarraScroll() {
+  const [progreso, setProgreso] = useState(0)
+
+  useEffect(() => {
+    let raf = 0
+    const medir = () => {
+      const doc = document.documentElement
+      const max = doc.scrollHeight - window.innerHeight
+      setProgreso(max > 0 ? Math.min(1, window.scrollY / max) : 0)
+    }
+    const onScroll = () => {
+      cancelAnimationFrame(raf)
+      raf = requestAnimationFrame(medir)
+    }
+    medir()
+    window.addEventListener('scroll', onScroll, { passive: true })
+    window.addEventListener('resize', medir)
+    return () => {
+      cancelAnimationFrame(raf)
+      window.removeEventListener('scroll', onScroll)
+      window.removeEventListener('resize', medir)
+    }
+  }, [])
+
+  return (
+    <div className="scroll-progreso" aria-hidden="true">
+      <div className="scroll-progreso__relleno" style={{ transform: `scaleX(${progreso})` }} />
     </div>
   )
 }
@@ -119,7 +152,8 @@ function Navbar() {
           </button>
 
           <Link to="/carrito" className="carrito-boton" title="Ver carrito">
-            <i className="fi fi-rr-shopping-cart" aria-hidden="true" /> Carrito
+            <i className="fi fi-rr-shopping-cart" aria-hidden="true" />{' '}
+            <span className="carrito-boton__texto">Carrito</span>
             {totales.unidades > 0 && (
               <span className="badge-carrito badge-carrito--bump" key={totales.unidades}>
                 {totales.unidades}
@@ -299,6 +333,7 @@ export default function Layout() {
           <Guirnalda />
         </>
       )}
+      <BarraScroll />
       <BarraPromos />
       <Navbar />
       <main className="contenedor main">
@@ -315,6 +350,7 @@ export default function Layout() {
       >
         <i className="fi fi-brands-whatsapp" aria-hidden="true" />
       </a>
+      <VolverArriba />
     </div>
   )
 }

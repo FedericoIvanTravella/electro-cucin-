@@ -1,0 +1,19 @@
+# Electro Cuciné — deploy en Fly.io
+# El volumen ec_data persiste la base SQLite en /app/BackEnd/data.
+# SMTP/ADMIN se inyectan con `flyctl secrets set` (no van al repo).
+
+app = "electrocucine"
+primary_region = "gru"
+
+[http_service]
+  internal_port = 3001
+  force_https = true
+
+[env]
+  NODE_ENV = "production"
+  TRUST_PROXY = "1"
+  SITE_URL = "https://electrocucine.fly.dev"
+
+[[mounts]]
+  source = "ec_data"
+  destination = "/app/BackEnd/data"

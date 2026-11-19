@@ -901,6 +901,7 @@ textarea:focus {
 .linea-carrito {
   display: grid;
   grid-template-columns: 64px 1fr auto auto auto;
+  grid-template-areas: 'media info selector total quitar';
   gap: 1rem;
   align-items: center;
   padding-block: 1rem;
@@ -912,6 +913,7 @@ textarea:focus {
 }
 
 .linea-carrito__media {
+  grid-area: media;
   width: 64px;
   height: 64px;
   border-radius: 10px;
@@ -920,6 +922,10 @@ textarea:focus {
   place-items: center;
   font-size: 1.6rem;
   overflow: hidden;
+}
+
+.linea-carrito__info {
+  grid-area: info;
 }
 
 .linea-carrito__media img {
@@ -947,6 +953,7 @@ textarea:focus {
 }
 
 .linea-carrito__total {
+  grid-area: total;
   font-weight: 800;
   color: var(--marino);
   min-width: 6rem;
@@ -954,6 +961,7 @@ textarea:focus {
 }
 
 .cantidad {
+  grid-area: selector;
   display: inline-flex;
   align-items: center;
   gap: 0.15rem;
@@ -961,6 +969,11 @@ textarea:focus {
   border-radius: 9px;
   overflow: hidden;
   background: var(--superficie);
+}
+
+.linea-carrito > .boton--peligro {
+  grid-area: quitar;
+  justify-self: end;
 }
 
 .cantidad button {
@@ -2346,19 +2359,21 @@ textarea:focus {
   }
 
   .linea-carrito {
-    grid-template-columns: 48px 1fr auto auto;
-    gap: 0.6rem;
+    grid-template-columns: 48px 1fr auto;
+    grid-template-areas:
+      'media info quitar'
+      'media selector total';
+    gap: 0.5rem 0.6rem;
   }
 
   .linea-carrito__media {
     width: 48px;
-    height: 48px;
+    height: 64px;
     font-size: 1.3rem;
   }
 
-  .linea-carrito__total {
-    grid-column: 2 / 4;
-    text-align: right;
+  .cantidad {
+    justify-self: start;
   }
 
   .usuario__datos {
@@ -2373,15 +2388,45 @@ textarea:focus {
 
   .linea-carrito {
     grid-template-columns: 44px 1fr auto;
+    gap: 0.35rem 0.5rem;
+    padding-block: 0.75rem;
   }
 
-  .linea-carrito__precio,
-  .linea-carrito__categoria {
+  .linea-carrito__media {
+    width: 44px;
+    height: 56px;
+    font-size: 1.2rem;
+  }
+
+  .cantidad {
+    justify-self: start;
+  }
+
+  .linea-carrito__info h3 {
+    font-size: 0.85rem;
+  }
+
+  .linea-carrito__precio {
     display: none;
   }
 
   .linea-carrito__total {
-    grid-column: auto;
+    min-width: 0;
+    font-size: 0.95rem;
+  }
+
+  .cantidad button {
+    width: 1.8rem;
+    height: 2rem;
+  }
+
+  .cantidad input {
+    width: 2.5rem;
+    padding: 0.25rem;
+  }
+
+  .linea-carrito > .boton--peligro {
+    padding: 0.35rem 0.45rem;
   }
 }
 
@@ -5105,6 +5150,7 @@ textarea:focus {
   inset: 0;
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   z-index: 80;
   pointer-events: none;
 }
@@ -5758,5 +5804,47 @@ textarea:focus {
   .scroll-progreso__relleno {
     animation: none;
     transition: none;
+  }
+}
+
+/* ================================================================
+   MOBILE — categorías de la home como tarjetas compactas de producto
+   ================================================================ */
+@media (max-width: 760px) {
+  .categorias-strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+  }
+  .card.categoria-card {
+    padding: 0.65rem 0.7rem 0.7rem;
+    gap: 0.15rem;
+  }
+  .categoria-card__icono {
+    flex: none;
+    width: 2.1rem;
+    height: 2.1rem;
+    border-radius: 10px;
+    background: var(--azul-claro);
+    color: var(--azul);
+    font-size: 1.25rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 0 0.15rem;
+  }
+  .categoria-card h3 {
+    font-size: 0.85rem;
+    line-height: 1.2;
+  }
+  .categoria-card p {
+    font-size: 0.7rem;
+    line-height: 1.25;
+    display: -webkit-box;
+    -webkit-line-clamp: 1;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .categoria-card__link {
+    display: none;
   }
 }

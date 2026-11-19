@@ -51,17 +51,24 @@ export default function Nieve() {
     }
     raf = requestAnimationFrame(tick)
 
-    const onResize = () => {
-      ancho = window.innerWidth
-      alto = window.innerHeight
+    const ajustar = () => {
+      const nuevoAncho = window.innerWidth
+      const nuevoAlto = window.innerHeight
+      if (Math.abs(nuevoAncho - ancho) < 2 && Math.abs(nuevoAlto - alto) < 2) return
+      ancho = nuevoAncho
+      alto = nuevoAlto
       canvas.width = ancho
       canvas.height = alto
     }
-    window.addEventListener('resize', onResize)
+    window.addEventListener('resize', ajustar)
+    // En celulares, la barra del navegador se oculta/encoge al scrollear:
+    // visualViewport avisa en cada cambio de alto visible.
+    window.visualViewport?.addEventListener('resize', ajustar)
 
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('resize', onResize)
+      window.removeEventListener('resize', ajustar)
+      window.visualViewport?.removeEventListener('resize', ajustar)
     }
   }, [])
 

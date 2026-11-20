@@ -194,6 +194,13 @@ function migrar() {
     db.exec('ALTER TABLE cupones ADD COLUMN usos_max INTEGER')
   }
 
+  // Carrito sincronizado con la cuenta: guarda solo [{producto_id, cantidad}]
+  // y se rehidrata desde productos en cada lectura (precios/stock siempre frescos).
+  const columnasUsuarios = db.prepare('PRAGMA table_info(usuarios)').all().map((c) => c.name)
+  if (!columnasUsuarios.includes('carrito')) {
+    db.exec("ALTER TABLE usuarios ADD COLUMN carrito TEXT NOT NULL DEFAULT '[]'")
+  }
+
   
   
   

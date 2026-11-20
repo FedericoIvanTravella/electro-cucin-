@@ -484,3 +484,43 @@ test('ruta /api inexistente responde 404 JSON', async () => {
   const res = await request(app).get('/api/no-existe')
   if (res.status !== 404) throw new Error('status ' + res.status)
 })
+
+test('carrito de la cuenta: requiere sesión, guarda y rehidrata con stock real', async () => {
+  const anonimo = await request(app).get('/api/carrito')
+  if (anonimo.status !== 401) throw new Error('anónimo: ' + anonimo.status)
+
+  const cliente = await login('usuariotest', 'claveSegura123')
+  const cookie = headerCookie(cliente.cookies)
+  const csrf = cliente.cookies.ec_csrf
+
+  const vacio = await request(app).get('/api/carrito').set('Cookie', cookie)
+  if (vacio.status !== 200 || !Array.isArray(vacio.body.items)) throw new Error('GET inicial: ' + vacio.status)
+
+  // Cantidad mayor al stock y un producto inexistente: el servidor debe corregirlos.
+  const guardar = await request(app)
+    .put('/api/carrito')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', csrf)
+    .send({ items: [{ producto_id: 6, cantidad: 5000 }, { producto_id: 999999, cantidad: 1 }] })
+  if (guardar.status !== 200) throw new Error('PUT: ' + guardar.status)
+  const producto6 = guardar.body.items.find((i) => i.producto_id === 6)
+  if (!producto6) throw new Error('no rehidrató el producto 6')
+  if (producto6.cantidad > producto6.stock) throw new Error('cantidad supera el stock')
+  if (guardar.body.items.some((i) => i.producto_id === 999999)) throw new Error('quedó el producto inexistente')
+  if (typeof producto6.precio !== 'number' || !producto6.nombre) throw new Error('faltan datos del catálogo')
+
+  // Otra sesión (dispositivo distinto) ve el mismo carrito.
+  const otraSesion = await login('usuariotest', 'claveSegura123')
+  const rerecuperado = await request(app).get('/api/carrito').set('Cookie', headerCookie(otraSesion.cookies))
+  if (rerecuperado.body.items.find((i) => i.producto_id === 6)?.cantidad !== producto6.cantidad) {
+    throw new Error('el carrito no persistió entre sesiones')
+  }
+
+  // Vaciar desde el cliente también limpia lo guardado.
+  const vaciar = await request(app)
+    .put('/api/carrito')
+    .set('Cookie', cookie)
+    .set('X-CSRF-Token', csrf)
+    .send({ items: [] })
+  if (vaciar.status !== 200 || vaciar.body.items.length !== 0) throw new Error('vaciar: ' + vaciar.status)
+})

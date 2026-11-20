@@ -75,6 +75,7 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
     if (ruta === '/auth/me') return { usuario: DEMO_USER }
     if (ruta === '/ventas/mias') return { ventas: [] }
     if (ruta === '/newsletter') return { ok: true }
+    if (ruta === '/carrito') return { items: [] }
   }
 
   if (metodo === 'POST') {
@@ -134,6 +135,7 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
     }
     if (ruta === '/newsletter') return { ok: true }
     if (ruta === '/avisos') return { ok: true }
+    if (ruta === '/carrito') return { items: Array.isArray(body?.items) ? body.items : [] }
     if (ruta === '/auth/login' || ruta === '/auth/register' || ruta === '/auth/logout' || ruta === '/auth/revocar-sesiones') {
       return { usuario: DEMO_USER, ok: true }
     }

@@ -124,6 +124,7 @@ function Navbar() {
           <NavLink to="/">Inicio</NavLink>
           <NavLink to="/productos">Productos</NavLink>
           <NavLink to="/favoritos">Favoritos{favs > 0 ? ` (${favs})` : ''}</NavLink>
+          <NavLink to="/blog">Blog</NavLink>
           <NavLink to="/ayuda">Ayuda</NavLink>
           {usuario && <NavLink to="/mis-compras">Mis compras</NavLink>}
           {esAdmin && <NavLink to="/admin">Panel del superusuario</NavLink>}
@@ -257,6 +258,9 @@ function Footer() {
           <p>lunes a sábados de 9 a 20 h</p>
           <p>
             <Link to="/ayuda">Ayuda al comprador</Link>
+          </p>
+          <p>
+            <Link to="/blog">Blog y consejos</Link>
           </p>
         </div>
         <div>

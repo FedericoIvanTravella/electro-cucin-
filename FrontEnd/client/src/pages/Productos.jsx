@@ -7,6 +7,8 @@ import EstadoVacio from '../components/EstadoVacio'
 import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
 import { ahorroPorcentaje, dinero } from '../lib/format'
+import { landingDe } from '../data/landings'
+import { useTitulo } from '../lib/useTitulo'
 
 const INICIAL = { busqueda: '', categorias: [], subcategorias: [], min: '', max: '', soloStock: false, conDescuento: false, minEstrellas: 0, paraRegalar: false }
 const POR_PAGINA = 18
@@ -143,6 +145,16 @@ export default function Productos() {
 
   const productosSeleccionados = productos.filter((p) => comparando.includes(p.id))
 
+  // Landing de categoría: cuando hay exactamente una categoría seleccionada
+  // mostramos título y texto propio (contenido indexable + contexto).
+  const categoriaUnica = filtros.categorias.length === 1 ? filtros.categorias[0] : null
+  const landing = categoriaUnica ? landingDe(categoriaUnica) : null
+  useTitulo(
+    landing
+      ? `${landing.titulo} | Electro Cuciné`
+      : 'Pequeños electrodomésticos | Electro Cuciné'
+  )
+
   const quitarDeComparacion = (id) => setComparando((prev) => prev.filter((x) => x !== id))
 
   const numerosPagina = () => {
@@ -161,10 +173,16 @@ export default function Productos() {
     <div className="seccion">
       <div className="seccion__cabecera">
         <div>
-          <h1>Pequeños electrodomésticos</h1>
+          <h1>{landing ? landing.titulo : 'Pequeños electrodomésticos'}</h1>
           <p className="seccion__bajada">
-            {cargando ? 'Cargando…' : `${visibles.length} productos en la tienda`}
+            {landing && !cargando ? landing.bajada : cargando ? 'Cargando…' : `${visibles.length} productos en la tienda`}
           </p>
+          {landing && !cargando && (
+            <p className="seccion__bajada seccion__bajada--landing">
+              {landing.texto}{' '}
+              <strong>{visibles.length} productos</strong> disponibles en esta categoría.
+            </p>
+          )}
         </div>
         <button
           type="button"

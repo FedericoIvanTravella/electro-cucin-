@@ -1,0 +1,36 @@
+# Deploy automático a Fly.io: cada push a main compila y publica
+# la app (frontend + backend) con el volumen persistente de la base.
+#
+# Requiere el secreto FLY_API_TOKEN en Settings → Secrets → Actions.
+# Se crea con: flyctl tokens create deploy
+name: Deploy a Fly.io
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    # Solo deploy si los tests del backend pasan (mismo gate que ci.yml).
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Preparar Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+
+      - name: Tests del backend
+        run: npm ci --omit=dev && npm test
+        working-directory: BackEnd
+
+      - name: Instalar flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@master
+
+      - name: Deploy
+        run: flyctl deploy --remote-only --app electrocucine
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}

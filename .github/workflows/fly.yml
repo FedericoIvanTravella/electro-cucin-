@@ -24,7 +24,7 @@ jobs:
           node-version: 24
 
       - name: Tests del backend
-        run: npm ci --omit=dev && npm test
+        run: npm ci && npm test
         working-directory: BackEnd
 
       - name: Instalar flyctl

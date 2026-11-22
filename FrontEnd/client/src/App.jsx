@@ -11,6 +11,8 @@ import Carrito from './pages/Carrito.jsx'
 import Pago from './pages/Pago.jsx'
 import Login from './pages/Login.jsx'
 import Registro from './pages/Registro.jsx'
+import Recuperar from './pages/Recuperar.jsx'
+import Restablecer from './pages/Restablecer.jsx'
 import MisCompras from './pages/MisCompras.jsx'
 import Ayuda from './pages/Ayuda.jsx'
 import Blog from './pages/Blog.jsx'
@@ -71,6 +73,8 @@ export default function App() {
           />
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
+          <Route path="/recuperar" element={<Recuperar />} />
+          <Route path="/restablecer" element={<Restablecer />} />
           <Route
             path="/mis-compras"
             element={

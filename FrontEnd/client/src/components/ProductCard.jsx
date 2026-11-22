@@ -5,7 +5,7 @@ import { useFavoritos } from '../context/FavoritosContext'
 import { useToast } from '../context/ToastContext'
 import Lightbox from './Lightbox'
 import Stars from './Stars'
-import { ahorroPorcentaje, cuota, dinero, imagenProducto } from '../lib/format'
+import { ahorroPorcentaje, cuota, dinero, imagenProducto, fotoRecargada } from '../lib/format'
 
 export default function ProductCard({ producto, destacado = false, topRank = 0, mediaExtras = null }) {
   const { agregar } = useCart()
@@ -55,7 +55,12 @@ export default function ProductCard({ producto, destacado = false, topRank = 0, 
               className="producto__media-link"
               aria-label={`Ver ${producto.nombre}`}
             >
-              <img src={imagen} alt={producto.nombre} loading="lazy" />
+              <img
+                src={imagen}
+                alt={producto.nombre}
+                loading="lazy"
+                className={fotoRecargada(producto) ? 'foto-serenada' : undefined}
+              />
             </Link>
             <button
               type="button"

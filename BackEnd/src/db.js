@@ -139,9 +139,26 @@ db.exec(`
     creado TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
   );
 
+  CREATE TABLE IF NOT EXISTS recuperaciones (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    usuario_id INTEGER NOT NULL REFERENCES usuarios(id) ON DELETE CASCADE,
+    token_hash TEXT NOT NULL UNIQUE,
+    creado_en TEXT NOT NULL,
+    expira_en TEXT NOT NULL,
+    usado INTEGER NOT NULL DEFAULT 0
+  );
+
   CREATE TABLE IF NOT EXISTS meta (
     clave TEXT PRIMARY KEY,
     valor TEXT NOT NULL
+  );
+
+  CREATE TABLE IF NOT EXISTS chat_preguntas (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    pregunta TEXT NOT NULL,
+    usuario_id INTEGER REFERENCES usuarios(id) ON DELETE SET NULL,
+    fecha TEXT NOT NULL DEFAULT (datetime('now', 'localtime')),
+    respondida INTEGER NOT NULL DEFAULT 0
   );
 
   CREATE INDEX IF NOT EXISTS idx_sesiones_expira ON sesiones (expira_en);
@@ -150,6 +167,8 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_venta_items_venta ON venta_items (venta_id);
   CREATE INDEX IF NOT EXISTS idx_ventas_fecha ON ventas (fecha);
   CREATE INDEX IF NOT EXISTS idx_auditoria_fecha ON auditoria (fecha);
+  CREATE INDEX IF NOT EXISTS idx_recuperaciones_usuario ON recuperaciones (usuario_id);
+  CREATE INDEX IF NOT EXISTS idx_chat_preguntas_fecha ON chat_preguntas (fecha);
 `)
 
 function leerMeta(clave) {

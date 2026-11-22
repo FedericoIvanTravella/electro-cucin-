@@ -4,7 +4,7 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import EstadoVacio from '../components/EstadoVacio'
 import { api } from '../lib/api'
-import { dinero, imagenProducto, tieneImagen } from '../lib/format'
+import { dinero, imagenProducto, tieneImagen, fotoRecargada } from '../lib/format'
 
 export default function Carrito() {
   const { items, agregar, cambiarCantidad, quitar, vaciar, totales } = useCart()
@@ -85,7 +85,11 @@ export default function Carrito() {
             <div key={item.producto_id} className="linea-carrito">
               <div className="linea-carrito__media" aria-hidden="true">
                 {imagenProducto(item) ? (
-                  <img src={imagenProducto(item)} alt="" />
+                  <img
+                    src={imagenProducto(item)}
+                    alt=""
+                    className={fotoRecargada(item) ? 'foto-serenada' : undefined}
+                  />
                 ) : (
                   <span aria-hidden="true"><i className="fi fi-rr-utensils" /></span>
                 )}

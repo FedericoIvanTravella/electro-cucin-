@@ -41,6 +41,110 @@ function errorStatus(mensaje, status) {
   return error
 }
 
+// Respuestas del chat cuando no hay backend: usan el mismo snapshot del
+// catálogo y las mismas políticas que la tienda, sin inventar datos.
+function responderChatDemo(mensaje, demo) {
+  const normalizar = (texto) =>
+    String(texto || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[¿?¡!.,;:()]/g, ' ')
+  const texto = normalizar(mensaje)
+  const wa = (consulta) =>
+    `https://wa.me/5490800123456?text=${encodeURIComponent(
+      consulta
+        ? `Hola, vengo de Electro Cuciné. Necesito ayuda con: ${consulta}`
+        : 'Hola, vengo de Electro Cuciné. Quiero consultar por un producto.'
+    )}`
+  const base = { productos: [], enlaces: [], humano: false, sugerencias: ['¿Qué freidoras tenés?', '¿Cuánto cuesta el envío?', '¿Cómo hago una devolución?'] }
+  const con = (respuesta, extra = {}) => ({ ...base, ...extra, respuesta })
+
+  if (/\b(human|persona|agente|whatsapp|llamar)\b/.test(texto)) {
+    return con('Te paso a una persona por WhatsApp. Estamos de lunes a sábados de 9 a 20 h.', {
+      tipo: 'humano',
+      humano: true,
+      enlaces: [{ etiqueta: 'Hablar por WhatsApp', to: wa(mensaje), externo: true }]
+    })
+  }
+  if (/\b(roto|danad|golpead|no funciona|faltante|accesorio)\b/.test(texto)) {
+    return con('Si el producto llegó dañado o le falta una pieza, conservá el embalaje, sacá fotos y escribinos dentro de los 7 días con el número de pedido.', {
+      tipo: 'dano',
+      humano: true,
+      enlaces: [{ etiqueta: 'Ver ayuda y contacto', to: '/ayuda' }]
+    })
+  }
+  if (/\b(devoluc|cambio|cambiar|arrepentim|garantia|reembolso)\b/.test(texto)) {
+    return con('Tenés 30 días desde la entrega para cambios y devoluciones, con el producto en su caja original. Todos los electrodomésticos tienen 2 años de garantía oficial.', {
+      tipo: 'devolucion',
+      enlaces: [{ etiqueta: 'Ver devoluciones', to: '/devoluciones' }]
+    })
+  }
+  if (/\b(mi pedido|mis pedidos|mi compra|mis compras|seguimiento|estado de mi)\b/.test(texto)) {
+    return con('Todavía no hay compras registradas en tu cuenta. Cuando hagas una, vas a poder ver el estado acá.', {
+      tipo: 'pedido',
+      enlaces: [{ etiqueta: 'Ver mis compras', to: '/mis-compras' }]
+    })
+  }
+  if (/\b(envio|envios|flete|demora|entrega)\b/.test(texto)) {
+    return con('El envío es sin cargo en compras superiores a $150.000, a todo el país. Por debajo de ese monto se calcula según tu código postal. Entrega estimada: 24–48 h hábiles en CABA y GBA, hasta 5 días en el interior.', {
+      tipo: 'envio',
+      enlaces: [{ etiqueta: 'Ver mi carrito', to: '/carrito' }]
+    })
+  }
+  if (/\b(cupon|codigo de descuento)\b/.test(texto)) {
+    return con('Los cupones disponibles son COCINA10 (10% OFF), CUCINE5 ($5.000 de descuento) y NAVIDAD25 (25% OFF). Ingresalos en el checkout.', {
+      tipo: 'cupon',
+      enlaces: [{ etiqueta: 'Ir al carrito', to: '/carrito' }]
+    })
+  }
+  if (/\b(cuotas|pagar|pago|tarjeta|transferencia)\b/.test(texto)) {
+    return con('Podés pagar con tarjeta de crédito o débito, transferencia, efectivo y MercadoPago, en 1, 3, 6 o 12 cuotas.', {
+      tipo: 'pago',
+      enlaces: [{ etiqueta: 'Ver ayuda', to: '/ayuda' }]
+    })
+  }
+
+  const vacias = new Set('hola buenas quiero necesito busco tenes hay cuanto cuesta precio productos producto los las el la un una de del para con en y o que como mi mis stock disponible'.split(' '))
+  const tokens = texto.split(' ').filter((token) => token.length >= 3 && !vacias.has(token))
+  const productos = demo.productos
+    .filter((producto) => producto.activo)
+    .map((producto) => {
+      const nombre = normalizar(producto.nombre)
+      const puntos = tokens.reduce((suma, token) => suma + (nombre.includes(token) ? 5 : nombre.includes(token.slice(0, -1)) ? 4 : 0), 0)
+      return { producto, puntos }
+    })
+    .filter(({ puntos }) => puntos > 0)
+    .sort((a, b) => b.puntos - a.puntos)
+    .slice(0, 3)
+    .map(({ producto }) => ({
+      id: Number(producto.id),
+      nombre: producto.nombre,
+      precio: Number(producto.precio),
+      stock: Number(producto.stock),
+      imagen: producto.imagen || '',
+      url: `/producto/${producto.id}`
+    }))
+
+  if (productos.length) {
+    return con(`Encontré ${productos.length === 1 ? 'esta opción' : `${productos.length} opciones`} en el catálogo:`, {
+      tipo: 'producto',
+      productos,
+      enlaces: [{ etiqueta: 'Ver todo el catálogo', to: '/productos' }]
+    })
+  }
+  if (/\b(hola|buenas|gracias)\b/.test(texto)) {
+    return con('¡Hola! Soy Nero, el asistente de Electro Cuciné. Puedo ayudarte con productos, precios, envíos, devoluciones y pedidos. ¿Qué necesitás?', {
+      tipo: 'saludo'
+    })
+  }
+  return con('Solo puedo responder sobre la tienda: productos, precios, envíos, devoluciones, cupones y pedidos. Si necesitás otra cosa, te paso a una persona por WhatsApp.', {
+    tipo: 'desconocida',
+    humano: true,
+    enlaces: [{ etiqueta: 'Hablar por WhatsApp', to: wa(mensaje), externo: true }]
+  })
+}
+
 async function apiDemo(path, { method = 'GET', body } = {}) {
   const metodo = String(method).toUpperCase()
   const [ruta, qs] = String(path).split('?')
@@ -73,12 +177,14 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
       return { resenas: demo.resenas.filter((r) => String(r.producto_id) === matchDetalle[1]) }
     }
     if (ruta === '/auth/me') return { usuario: DEMO_USER }
+    if (ruta === '/auth/recuperar/verificar') return { valido: Boolean(params.get('token')) }
     if (ruta === '/ventas/mias') return { ventas: [] }
     if (ruta === '/newsletter') return { ok: true }
     if (ruta === '/carrito') return { items: [] }
   }
 
   if (metodo === 'POST') {
+    if (ruta === '/chat') return responderChatDemo(String(body?.mensaje || ''), demo)
     if (ruta === '/cupones/validar') {
       const codigo = String(body?.codigo || '').trim().toUpperCase()
       const subtotal = Number(body?.subtotal || 0)
@@ -136,6 +242,23 @@ async function apiDemo(path, { method = 'GET', body } = {}) {
     if (ruta === '/newsletter') return { ok: true }
     if (ruta === '/avisos') return { ok: true }
     if (ruta === '/carrito') return { items: Array.isArray(body?.items) ? body.items : [] }
+    if (ruta === '/auth/recuperar') {
+      const email = String(body?.email || '').trim()
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+        throw errorStatus('Ingresá un email válido.', 400)
+      }
+      return {
+        mensaje:
+          'Si el email está registrado, te enviamos un enlace para restablecer la contraseña. Revisá también la carpeta de spam.'
+      }
+    }
+    if (ruta === '/auth/restablecer') {
+      const pw = String(body?.password || '')
+      if (pw.length < 8 || !/[A-Za-zÁÉÍÓÚáéíóúÑñ]/.test(pw) || !/[0-9]/.test(pw)) {
+        throw errorStatus('La contraseña debe tener al menos 8 caracteres y combinar letras y números.', 400)
+      }
+      return { ok: true, mensaje: 'Contraseña actualizada. Ya podés ingresar con la nueva.' }
+    }
     if (ruta === '/auth/login' || ruta === '/auth/register' || ruta === '/auth/logout' || ruta === '/auth/revocar-sesiones') {
       return { usuario: DEMO_USER, ok: true }
     }

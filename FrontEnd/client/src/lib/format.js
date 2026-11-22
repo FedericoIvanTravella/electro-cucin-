@@ -41,6 +41,16 @@ export function tieneImagen(producto) {
   return Boolean(imagenProducto(producto))
 }
 
+// Fotos con fondos muy cargados (cocinas, personas, alimentos): se atenúan un
+// poco para que el electrodoméstico sea el protagonista de la vidriera.
+const FOTOS_RECARGADAS = new Set(['1', '13', '37', '40', '91', '98'])
+
+export function fotoRecargada(producto) {
+  const img = String(producto?.imagen ?? '')
+  const id = img.match(/\d+/)?.[0] || String(producto?.id ?? '')
+  return FOTOS_RECARGADAS.has(id)
+}
+
 export function fecha(fechaTexto) {
   if (!fechaTexto) return '—'
   const fecha = new Date(String(fechaTexto).replace(' ', 'T'))

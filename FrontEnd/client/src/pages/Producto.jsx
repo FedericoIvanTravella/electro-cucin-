@@ -10,7 +10,7 @@ import { useCart } from '../context/CartContext'
 import { useFavoritos } from '../context/FavoritosContext'
 import { useToast } from '../context/ToastContext'
 import { api } from '../lib/api'
-import { ahorroPorcentaje, cuota, dinero, fecha, imagenProducto } from '../lib/format'
+import { ahorroPorcentaje, cuota, dinero, fecha, imagenProducto, fotoRecargada } from '../lib/format'
 
 // Página de detalle de producto, al estilo MercadoLibre:
 // galería, precio con descuento, cuotas, stock, cantidad, comprar,
@@ -215,7 +215,11 @@ export default function Producto() {
                 onClick={() => setZoom(true)}
                 aria-label={`Ampliar imagen de ${producto.nombre}`}
               >
-                <img src={imagen} alt={producto.nombre} />
+                <img
+                  src={imagen}
+                  alt={producto.nombre}
+                  className={fotoRecargada(producto) ? 'foto-serenada' : undefined}
+                />
               </button>
             ) : (
               <span className="pdp-icono" aria-hidden="true">

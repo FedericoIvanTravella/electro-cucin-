@@ -57,6 +57,10 @@ export default function Login() {
           />
         </label>
 
+        <p className="auth__olvide">
+          <Link to="/recuperar">¿Olvidaste tu contraseña?</Link>
+        </p>
+
         <button type="submit" className="boton boton--primario boton--grande boton--bloque" disabled={enviando}>
           {enviando ? 'Ingresando…' : 'Ingresar'}
         </button>

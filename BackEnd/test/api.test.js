@@ -524,3 +524,84 @@ test('carrito de la cuenta: requiere sesión, guarda y rehidrata con stock real'
     .send({ items: [] })
   if (vaciar.status !== 200 || vaciar.body.items.length !== 0) throw new Error('vaciar: ' + vaciar.status)
 })
+
+test('recuperación de contraseña: mail, token de un solo uso y cierre de sesiones', async () => {
+  const email = 'recupero@example.com'
+  const csrfRegistro = await obtenerCsrf()
+  const alta = await request(app)
+    .post('/api/auth/register')
+    .set('Cookie', `ec_csrf=${csrfRegistro}`)
+    .set('X-CSRF-Token', csrfRegistro)
+    .send({
+      username: 'recupero',
+      password: 'claveVieja123',
+      nombre: 'Recupero Prueba',
+      email,
+      fecha_nacimiento: '1990-01-01'
+    })
+  if (alta.status !== 201) throw new Error('registro: ' + alta.status)
+
+  const csrf = await obtenerCsrf()
+  const pedido = await request(app)
+    .post('/api/auth/recuperar')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ email })
+  if (pedido.status !== 200) throw new Error('recuperar: ' + pedido.status)
+
+  // Un email inexistente recibe exactamente la misma respuesta (no se filtra si existe).
+  const inexistente = await request(app)
+    .post('/api/auth/recuperar')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ email: 'nadie@example.com' })
+  if (inexistente.status !== 200 || inexistente.body.mensaje !== pedido.body.mensaje) {
+    throw new Error('la respuesta revela si el email existe')
+  }
+
+  const invalido = await request(app)
+    .post('/api/auth/recuperar')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ email: 'no-es-un-email' })
+  if (invalido.status !== 400) throw new Error('aceptó un email inválido')
+
+  // El enlace se escribe en el outbox de correo.
+  let token = ''
+  for (const archivo of fs.readdirSync(OUTBOX).filter((f) => f.endsWith('.json'))) {
+    const contenido = JSON.parse(fs.readFileSync(path.join(OUTBOX, archivo), 'utf8'))
+    if (contenido.para !== email) continue
+    const encontrado = String(contenido.texto || '').match(/token=([a-f0-9]{64})/)
+    if (encontrado) token = encontrado[1]
+  }
+  if (!token) throw new Error('no se encontró el token en el correo')
+
+  const verificar = await request(app).get('/api/auth/recuperar/verificar').query({ token })
+  if (!verificar.body.valido) throw new Error('el token recién emitido debería ser válido')
+
+  const debil = await request(app)
+    .post('/api/auth/restablecer')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ token, password: '123' })
+  if (debil.status !== 400) throw new Error('aceptó una contraseña débil')
+
+  const cambio = await request(app)
+    .post('/api/auth/restablecer')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ token, password: 'claveNueva456' })
+  if (cambio.status !== 200) throw new Error('restablecer: ' + cambio.status)
+
+  const vieja = await login('recupero', 'claveVieja123')
+  if (vieja.status !== 401) throw new Error('la contraseña vieja sigue funcionando')
+  const nueva = await login('recupero', 'claveNueva456')
+  if (nueva.status !== 200) throw new Error('la contraseña nueva no funciona')
+
+  const repetido = await request(app)
+    .post('/api/auth/restablecer')
+    .set('Cookie', `ec_csrf=${csrf}`)
+    .set('X-CSRF-Token', csrf)
+    .send({ token, password: 'otraClave789' })
+  if (repetido.status !== 400) throw new Error('el token se pudo reutilizar')
+})

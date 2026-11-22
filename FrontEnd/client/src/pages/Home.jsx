@@ -2,13 +2,12 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import ProductCard from '../components/ProductCard'
 import TestimoniosCarrusel from '../components/TestimoniosCarrusel'
-import MascotaAsistente from '../components/MascotaAsistente'
 import Revelar from '../components/Revelar'
 import { GrillaSkeleton } from '../components/SkeletonProducto'
 import { useAuth } from '../context/AuthContext'
 import { useTema } from '../context/TemaContext'
 import { api } from '../lib/api'
-import { dinero, imagenProducto, ahorroPorcentaje } from '../lib/format'
+import { dinero, imagenProducto, ahorroPorcentaje, fotoRecargada } from '../lib/format'
 
 const beneficios = [
   { icono: 'fi-rr-shipping-fast', titulo: 'Envío sin cargo', texto: 'En compras superiores a $150.000 en todo el país.' },
@@ -110,7 +109,11 @@ export default function Home() {
           {imagenHero ? (
             <div className="hero__producto">
               <Link to={`/producto/${productoHero.id}`} className="hero__producto-enlace" aria-label={`Ver ${productoHero.nombre}`}>
-                <img src={imagenHero} alt={productoHero.nombre} className="hero__producto-img" />
+                <img
+                  src={imagenHero}
+                  alt={productoHero.nombre}
+                  className={`hero__producto-img ${fotoRecargada(productoHero) ? 'foto-serenada' : ''}`}
+                />
                 <span className="hero__producto-etiqueta">{productoHero.categoria}</span>
                 <span className="hero__producto-oferta">
                   <i className="fi fi-rr-badge-percent" aria-hidden="true" /> {ahorroPorcentaje(productoHero.precio, productoHero.precio_tachado)}% OFF
@@ -238,7 +241,6 @@ export default function Home() {
         </Link>
       </Revelar>
 
-      <MascotaAsistente />
     </div>
   )
 }

@@ -164,3 +164,41 @@ export async function enviarEstadoPedido(venta, usuario, estadoNuevo) {
   const texto = `${info.titulo}\n${info.texto.replace(/<[^>]+>/g, '')}`
   return enviarCorreo({ para: correo, asunto: info.asunto, html: marcoBase(contenido), texto })
 }
+
+function escaparHtml(valor) {
+  return String(valor ?? '').replace(/[&<>"']/g, (c) => {
+    return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]
+  })
+}
+
+export async function enviarRecuperacion(usuario, token) {
+  const correo = usuario?.email
+  if (!correo || !/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(correo)) return { enviado: false, via: 'sin-correo' }
+  const base = (process.env.SITE_URL || 'http://localhost:3001').replace(/\/$/, '')
+  const enlace = `${base}/restablecer?token=${encodeURIComponent(token)}`
+  const nombre = escaparHtml(String(usuario.nombre || usuario.username || '').split(' ')[0])
+  const usuarioSeguro = escaparHtml(usuario.username)
+  const contenido = `
+    <h1 style="margin:0 0 8px;font-size:22px;">Restablecé tu contraseña</h1>
+    <p style="margin:0 0 14px;color:#6e645a;">Hola ${nombre}, recibimos un pedido para cambiar la contraseña de la cuenta <strong>${usuarioSeguro}</strong>.</p>
+    <p style="margin:0 0 18px;">
+      <a href="${enlace}" style="display:inline-block;background:#f2542d;color:#ffffff;text-decoration:none;font-weight:800;padding:12px 24px;border-radius:10px;">Elegir nueva contraseña</a>
+    </p>
+    <p style="margin:0 0 10px;color:#6e645a;font-size:14px;">El enlace vence en <strong>1 hora</strong> y se puede usar una sola vez.</p>
+    <p style="margin:0;color:#6e645a;font-size:13px;">Si no pediste este cambio, ignorá este correo: tu contraseña actual sigue funcionando.</p>
+    <p style="margin:14px 0 0;color:#9a8f83;font-size:12px;word-break:break-all;">${enlace}</p>`
+  const texto = [
+    'Restablecé tu contraseña',
+    `Hola ${usuario.nombre || usuario.username}, recibimos un pedido para cambiar la contraseña de la cuenta ${usuario.username}.`,
+    `Abrí este enlace para elegir una nueva contraseña (vence en 1 hora y sirve una sola vez):`,
+    enlace,
+    '',
+    'Si no pediste este cambio, ignorá este correo: tu contraseña actual sigue funcionando.'
+  ].join('\n')
+  return enviarCorreo({
+    para: correo,
+    asunto: 'Restablecer tu contraseña — Electro Cuciné',
+    html: marcoBase(contenido),
+    texto
+  })
+}

@@ -122,7 +122,7 @@ Imagen todo-en-uno: compila el frontend, instala deps de producción del backend
 
 ## Imágenes y créditos
 
-- 37 productos con fotos reales (1–5 + las 32 elegidas por el dueño) en `FrontEnd/client/public/productos/`; el mapa id→archivo es `BackEnd/src/imagenes-reales.json` (reasignable desde el panel del superusuario).
+- 53 productos con fotos reales (1–5 + 48 asignadas por el dueño) en `FrontEnd/client/public/productos/`; el mapa id→archivo es `BackEnd/src/imagenes-reales.json` (reasignable desde el panel del superusuario).
 - El resto no lleva imagen a propósito (se muestra un ícono vectorial por defecto).
 - **Íconos**: [Flaticon UIcons](https://www.flaticon.com/uicons) vía el paquete oficial `@flaticon/flaticon-uicons` (uso gratuito con atribución, incluida en el footer del sitio).
 

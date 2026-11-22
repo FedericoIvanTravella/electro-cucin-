@@ -24,6 +24,20 @@ npm start              # la API sirve también el build (http://localhost:3001)
 
 El superusuario se crea **en el primer arranque** desde variables de entorno (ver `.env.example`). Si `ADMIN_PASSWORD` está vacía, se genera una aleatoria y **se muestra una sola vez por consola**.
 
+## Capturas de pantalla
+
+| Vista | Captura | Qué demuestra |
+| --- | --- | --- |
+| Inicio | <img src="docs/capturas/01-home.png" alt="Inicio de Electro Cuciné con hero, categorías y beneficios" width="260"> | Home completa: hero, categorías y beneficios. |
+| Catálogo | <img src="docs/capturas/02-catalogo.png" alt="Catálogo de productos con filtros y grilla" width="260"> | Filtros, buscador y grilla de productos. |
+| Producto | <img src="docs/capturas/03-producto.png" alt="Detalle de producto con precio, stock y botones de compra" width="260"> | Detalle, precio, cuotas, stock y compra. |
+| Carrito | <img src="docs/capturas/04-carrito.png" alt="Carrito con un producto y resumen del pedido" width="260"> | Carrito, envío gratis y resumen. |
+| Nero | <img src="docs/capturas/05-chat-nero.png" alt="Chat de Nero respondiendo con freidoras reales" width="260"> | Asistente con productos reales y enlaces. |
+| Cuenta | <img src="docs/capturas/06-cuenta.png" alt="Menú de cuenta con sesión iniciada" width="260"> | Menú de cuenta y preferencias. |
+| Mis compras | <img src="docs/capturas/07-mis-compras.png" alt="Historial de pedidos con una compra registrada" width="260"> | Pedidos, estados y repetir compra. |
+
+Guía completa (criterios, texto alternativo y cómo regenerar cada imagen): **[docs/CAPTURAS.md](docs/CAPTURAS.md)**.
+
 ## Scripts (raíz)
 
 | Script             | Qué hace                                              |
